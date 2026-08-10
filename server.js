@@ -24,48 +24,80 @@ if (!cached) {
 
 let lastMongoError = null;
 
+function safeSanitizeMongoUri(rawUri) {
+  if (!rawUri || typeof rawUri !== 'string') return rawUri;
+  let uri = rawUri.trim();
+  
+  if ((uri.startsWith('"') && uri.endsWith('"')) || (uri.startsWith("'") && uri.endsWith("'"))) {
+    uri = uri.slice(1, -1).trim();
+  }
+
+  if (uri.includes('mongodb.net/?')) {
+    uri = uri.replace('mongodb.net/?', 'mongodb.net/spikers?');
+  } else if (uri.includes('mongodb.net/') && !uri.includes('mongodb.net/spikers') && !uri.includes('?')) {
+    uri = uri.endsWith('/') ? uri + 'spikers' : uri + '/spikers';
+  }
+
+  try {
+    const schemeIdx = uri.indexOf('://');
+    if (schemeIdx !== -1) {
+      const scheme = uri.slice(0, schemeIdx + 3);
+      const afterScheme = uri.slice(schemeIdx + 3);
+      const lastAtIdx = afterScheme.lastIndexOf('@');
+      if (lastAtIdx !== -1) {
+        const userInfo = afterScheme.slice(0, lastAtIdx);
+        const hostAndRest = afterScheme.slice(lastAtIdx + 1);
+        const firstColonIdx = userInfo.indexOf(':');
+        if (firstColonIdx !== -1) {
+          const rawUser = userInfo.slice(0, firstColonIdx);
+          const rawPass = userInfo.slice(firstColonIdx + 1);
+
+          let decodedUser = rawUser;
+          try { decodedUser = decodeURIComponent(rawUser); } catch(e) {}
+          const safeUser = encodeURIComponent(decodedUser);
+
+          let decodedPass = rawPass;
+          try { decodedPass = decodeURIComponent(rawPass); } catch(e) {}
+          const safePass = encodeURIComponent(decodedPass);
+
+          uri = `${scheme}${safeUser}:${safePass}@${hostAndRest}`;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[URI Parsing Warning]', err.message);
+  }
+
+  return uri;
+}
+
 async function connectToDatabase() {
-  let uri = process.env.MONGODB_URI;
-  if (!uri) {
+  const rawUri = process.env.MONGODB_URI;
+  if (!rawUri) {
     lastMongoError = 'MONGODB_URI environment variable is missing in Vercel Settings';
     return null;
   }
 
-  // Auto-fix unencoded special characters in username/password if present
-  try {
-    const match = uri.match(/^(mongodb(?:\+srv)?:\/\/)([^:]+):(.+)@([^@]+\.[^@]+)$/);
-    if (match) {
-      const prefix = match[1];
-      const user = match[2];
-      const pass = match[3];
-      const rest = match[4];
-      const encodedUser = encodeURIComponent(decodeURIComponent(user));
-      const encodedPass = encodeURIComponent(decodeURIComponent(pass));
-      uri = `${prefix}${encodedUser}:${encodedPass}@${rest}`;
-    }
-  } catch(e) {}
-
-  // Ensure DB name 'spikers' is targeted
-  if (uri.indexOf('mongodb.net/?') !== -1) {
-    uri = uri.replace('mongodb.net/?', 'mongodb.net/spikers?');
-  }
+  const uri = safeSanitizeMongoUri(rawUri);
 
   if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
   }
+
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
       serverSelectionTimeoutMS: 8000,
       dbName: 'spikers'
     };
-    console.log('[MongoDB Atlas] Connecting to database...');
+    console.log('[MongoDB Atlas] Connecting to database cluster...');
     cached.promise = mongoose.connect(uri, opts).then((m) => {
-      console.log('[MongoDB Atlas] Connected successfully to Cluster!');
+      console.log('[MongoDB Atlas] Connected successfully to spikers database!');
       lastMongoError = null;
       return m;
     });
   }
+
   try {
     cached.conn = await cached.promise;
   } catch (e) {
@@ -92,7 +124,7 @@ const clubSchema = new mongoose.Schema({
 
 const ClubDoc = mongoose.models.ClubDoc || mongoose.model('ClubDoc', clubSchema);
 
-// Helper: Read default data.json fallback
+// Helper: Read default data.json fallback (used ONLY for initial empty collection seeding or local standalone dev)
 function readLocalFileDB() {
   try {
     if (fs.existsSync(DATA_FILE)) {
@@ -103,16 +135,17 @@ function readLocalFileDB() {
   return { team: [], matches: [], news: [], sponsors: [], testimonials: [], stats: [], gallery: [] };
 }
 
-// Helper: Write to local data.json backup
 function writeLocalFileDB(data) {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
   } catch (err) {}
 }
 
-// Helper: Fetch full database from MongoDB Atlas
+// Helper: Fetch full database from MongoDB Atlas (Strict Production Mode)
 async function getDB() {
+  const hasUri = !!process.env.MONGODB_URI;
   const dbConn = await connectToDatabase();
+  
   if (dbConn) {
     try {
       let doc = await ClubDoc.findOne({ key: 'main' });
@@ -126,21 +159,31 @@ async function getDB() {
           doc = await ClubDoc.findOne({});
         }
       }
-      if (doc) return doc.toObject();
+      if (doc) return { success: true, data: doc.toObject() };
     } catch (err) {
       console.error('[MongoDB Atlas Error] Fetch failed:', err.message);
+      if (hasUri) {
+        return { success: false, error: err.message };
+      }
     }
   }
-  return readLocalFileDB();
+
+  if (hasUri) {
+    // In production with MONGODB_URI configured, DO NOT silently fall back to data.json if connection failed!
+    return { success: false, error: lastMongoError || 'Could not connect to MongoDB Atlas cluster' };
+  }
+
+  // Local standalone dev mode without MONGODB_URI
+  return { success: true, data: readLocalFileDB() };
 }
 
-// Helper: Save full database to MongoDB Atlas (returns result object with error details)
+// Helper: Save full database to MongoDB Atlas
 async function saveDB(data) {
   writeLocalFileDB(data);
   const uri = process.env.MONGODB_URI;
   if (!uri) {
     console.warn('[MongoDB Atlas Warning] MONGODB_URI not set in process.env');
-    return { success: false, error: 'MONGODB_URI environment variable is not configured in Vercel Settings' };
+    return { success: true, warning: 'Saved to local data.json fallback only' };
   }
   const dbConn = await connectToDatabase();
   if (!dbConn) {
@@ -207,7 +250,7 @@ app.get('/api/debug-db', async (req, res) => {
   }
 
   res.json({
-    success: true,
+    success: mongoConnected,
     hasMongoUri: hasUri,
     maskedUri: maskedUri,
     mongoConnected: mongoConnected,
@@ -219,8 +262,11 @@ app.get('/api/debug-db', async (req, res) => {
 
 // 1. Get full database
 app.get('/api/db', async (req, res) => {
-  const db = await getDB();
-  res.json({ success: true, data: db });
+  const result = await getDB();
+  if (!result.success) {
+    return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${result.error}`, error: result.error });
+  }
+  res.json({ success: true, data: result.data });
 });
 
 // 2. Save full database
@@ -238,14 +284,21 @@ app.post('/api/save-all', async (req, res) => {
 
 // 3. Get players team array
 app.get('/api/team', async (req, res) => {
-  const db = await getDB();
-  res.json({ success: true, team: db.team || [] });
+  const result = await getDB();
+  if (!result.success) {
+    return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${result.error}`, error: result.error });
+  }
+  res.json({ success: true, team: result.data.team || [] });
 });
 
 // 4. Add a player
 app.post('/api/team', async (req, res) => {
   try {
-    const db = await getDB();
+    const dbRes = await getDB();
+    if (!dbRes.success) {
+      return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${dbRes.error}`, error: dbRes.error });
+    }
+    const db = dbRes.data;
     const player = req.body;
     if (!player.n) {
       return res.status(400).json({ success: false, message: 'Player name is required' });
@@ -270,7 +323,11 @@ app.post('/api/team', async (req, res) => {
 // 5. Update a player by ID
 app.put('/api/team/:id', async (req, res) => {
   try {
-    const db = await getDB();
+    const dbRes = await getDB();
+    if (!dbRes.success) {
+      return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${dbRes.error}`, error: dbRes.error });
+    }
+    const db = dbRes.data;
     const { id } = req.params;
     const updatedPlayer = req.body;
     db.team = db.team || [];
@@ -298,7 +355,11 @@ app.put('/api/team/:id', async (req, res) => {
 // 6. Delete a player by ID
 app.delete('/api/team/:id', async (req, res) => {
   try {
-    const db = await getDB();
+    const dbRes = await getDB();
+    if (!dbRes.success) {
+      return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${dbRes.error}`, error: dbRes.error });
+    }
+    const db = dbRes.data;
     const { id } = req.params;
     db.team = db.team || [];
     const initialLen = db.team.length;
@@ -323,7 +384,11 @@ app.delete('/api/team/:id', async (req, res) => {
 // 7. Duplicate a player by ID
 app.post('/api/team/duplicate/:id', async (req, res) => {
   try {
-    const db = await getDB();
+    const dbRes = await getDB();
+    if (!dbRes.success) {
+      return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${dbRes.error}`, error: dbRes.error });
+    }
+    const db = dbRes.data;
     const { id } = req.params;
     db.team = db.team || [];
     const orig = db.team.find(p => String(p.id) === String(id));
@@ -349,14 +414,16 @@ app.post('/api/team/duplicate/:id', async (req, res) => {
 
 // 8. Admin PIN endpoints & verification
 app.get('/api/pin', async (req, res) => {
-  const db = await getDB();
+  const dbRes = await getDB();
+  const db = dbRes.success ? dbRes.data : {};
   const pin = process.env.ADMIN_PIN || db.pin || '2026';
   res.json({ success: true, pin });
 });
 
 app.post('/api/verify-pin', async (req, res) => {
   const { pin } = req.body;
-  const db = await getDB();
+  const dbRes = await getDB();
+  const db = dbRes.success ? dbRes.data : {};
   const expectedPin = process.env.ADMIN_PIN || db.pin || '2026';
   if (String(pin).trim() === String(expectedPin).trim()) {
     return res.json({ success: true, message: 'PIN Verified' });
@@ -369,7 +436,11 @@ app.post('/api/pin', async (req, res) => {
   if (!pin || pin.length < 4) {
     return res.status(400).json({ success: false, message: 'PIN must be at least 4 characters' });
   }
-  const db = await getDB();
+  const dbRes = await getDB();
+  if (!dbRes.success) {
+    return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${dbRes.error}`, error: dbRes.error });
+  }
+  const db = dbRes.data;
   db.pin = pin;
   await saveDB(db);
   res.json({ success: true, message: 'PIN updated' });
@@ -392,5 +463,3 @@ if (require.main === module) {
 }
 
 module.exports = app;
-
-// Vercel build trigger v1.0.1
