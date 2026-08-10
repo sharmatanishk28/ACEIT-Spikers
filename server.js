@@ -25,18 +25,25 @@ if (!cached) {
 let lastMongoError = null;
 
 async function connectToDatabase() {
-  const uri = process.env.MONGODB_URI;
+  let uri = process.env.MONGODB_URI;
   if (!uri) {
     lastMongoError = 'MONGODB_URI environment variable is missing in Vercel Settings';
     return null;
   }
+
+  // Ensure DB name 'spikers' is targeted
+  if (uri.indexOf('mongodb.net/?') !== -1) {
+    uri = uri.replace('mongodb.net/?', 'mongodb.net/spikers?');
+  }
+
   if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
   }
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 8000,
+      dbName: 'spikers'
     };
     console.log('[MongoDB Atlas] Connecting to database...');
     cached.promise = mongoose.connect(uri, opts).then((m) => {
