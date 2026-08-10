@@ -8,7 +8,6 @@ const mongoose = require('mongoose');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
-const MONGODB_URI = process.env.MONGODB_URI;
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -23,11 +22,15 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
+let lastMongoError = null;
+
 async function connectToDatabase() {
-  if (!MONGODB_URI) {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    lastMongoError = 'MONGODB_URI environment variable is missing in Vercel Settings';
     return null;
   }
-  if (cached.conn) {
+  if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
   }
   if (!cached.promise) {
@@ -36,8 +39,9 @@ async function connectToDatabase() {
       serverSelectionTimeoutMS: 5000,
     };
     console.log('[MongoDB Atlas] Connecting to database...');
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
+    cached.promise = mongoose.connect(uri, opts).then((m) => {
       console.log('[MongoDB Atlas] Connected successfully to Cluster!');
+      lastMongoError = null;
       return m;
     });
   }
@@ -45,7 +49,8 @@ async function connectToDatabase() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    console.error('[MongoDB Atlas Error] Connection failed:', e.message);
+    lastMongoError = e.message || String(e);
+    console.error('[MongoDB Atlas Error] Connection failed:', lastMongoError);
     return null;
   }
   return cached.conn;
@@ -108,17 +113,19 @@ async function getDB() {
   return readLocalFileDB();
 }
 
-// Helper: Save full database to MongoDB Atlas (returns false if MongoDB save fails)
+// Helper: Save full database to MongoDB Atlas (returns result object with error details)
 async function saveDB(data) {
   writeLocalFileDB(data);
-  if (!MONGODB_URI) {
-    console.warn('[MongoDB Atlas Warning] MONGODB_URI not set. Saved to local data.json backup only.');
-    return true;
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.warn('[MongoDB Atlas Warning] MONGODB_URI not set in process.env');
+    return { success: false, error: 'MONGODB_URI environment variable is not configured in Vercel Settings' };
   }
   const dbConn = await connectToDatabase();
   if (!dbConn) {
-    console.error('[MongoDB Atlas Save Failed] Could not establish MongoDB connection.');
-    return false;
+    const errReason = lastMongoError || 'Could not establish MongoDB connection';
+    console.error('[MongoDB Atlas Save Failed]', errReason);
+    return { success: false, error: errReason };
   }
   try {
     await ClubDoc.findOneAndUpdate(
@@ -135,10 +142,11 @@ async function saveDB(data) {
       { upsert: true, new: true }
     );
     console.log('[MongoDB Atlas Save Success] Saved document key "main" successfully!');
-    return true;
+    return { success: true };
   } catch (err) {
-    console.error('[MongoDB Atlas Save Failed]:', err.message);
-    return false;
+    const errReason = err.message || String(err);
+    console.error('[MongoDB Atlas Save Failed]:', errReason);
+    return { success: false, error: errReason };
   }
 }
 
@@ -150,6 +158,43 @@ function generateId() {
 // ==========================================
 // API ENDPOINTS
 // ==========================================
+
+// Diagnostic Endpoint
+app.get('/api/debug-db', async (req, res) => {
+  const uri = process.env.MONGODB_URI;
+  const hasUri = !!uri;
+  const maskedUri = hasUri ? uri.replace(/:([^@]+)@/, ':****@') : null;
+  let mongoConnected = false;
+  let docFound = false;
+  let docPlayerCount = 0;
+  let mongoError = null;
+
+  try {
+    const conn = await connectToDatabase();
+    mongoConnected = !!conn;
+    if (conn) {
+      const doc = await ClubDoc.findOne({ key: 'main' });
+      if (doc) {
+        docFound = true;
+        docPlayerCount = (doc.team || []).length;
+      }
+    } else {
+      mongoError = lastMongoError;
+    }
+  } catch (err) {
+    mongoError = err.message;
+  }
+
+  res.json({
+    success: true,
+    hasMongoUri: hasUri,
+    maskedUri: maskedUri,
+    mongoConnected: mongoConnected,
+    docFound: docFound,
+    docPlayerCount: docPlayerCount,
+    lastError: mongoError
+  });
+});
 
 // 1. Get full database
 app.get('/api/db', async (req, res) => {
@@ -163,9 +208,9 @@ app.post('/api/save-all', async (req, res) => {
   if (!db || typeof db !== 'object') {
     return res.status(400).json({ success: false, message: 'Invalid payload' });
   }
-  const saved = await saveDB(db);
-  if (!saved) {
-    return res.status(500).json({ success: false, message: 'Failed to persist changes to MongoDB Atlas' });
+  const result = await saveDB(db);
+  if (!result.success) {
+    return res.status(500).json({ success: false, message: `Failed to save to MongoDB Atlas: ${result.error}`, error: result.error });
   }
   res.json({ success: true, message: 'Database saved online to MongoDB Atlas' });
 });
@@ -178,91 +223,107 @@ app.get('/api/team', async (req, res) => {
 
 // 4. Add a player
 app.post('/api/team', async (req, res) => {
-  const db = await getDB();
-  const player = req.body;
-  if (!player.n) {
-    return res.status(400).json({ success: false, message: 'Player name is required' });
+  try {
+    const db = await getDB();
+    const player = req.body;
+    if (!player.n) {
+      return res.status(400).json({ success: false, message: 'Player name is required' });
+    }
+    player.id = player.id || generateId();
+    db.team = db.team || [];
+    db.team.push(player);
+    
+    const result = await saveDB(db);
+    if (!result.success) {
+      console.error(`[API Player Add Failed] Could not persist player in MongoDB Atlas: ${player.n} Error: ${result.error}`);
+      return res.status(500).json({ success: false, message: `Failed to persist player addition: ${result.error}`, error: result.error });
+    }
+    
+    console.log(`[API Player Add Success] Player added to MongoDB Atlas: ${player.n} (#${player.num}) ID: ${player.id}`);
+    res.json({ success: true, player, team: db.team });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, error: err.message });
   }
-  player.id = player.id || generateId();
-  db.team = db.team || [];
-  db.team.push(player);
-  
-  const saved = await saveDB(db);
-  if (!saved) {
-    console.error(`[API Player Add Failed] Could not persist player in MongoDB Atlas: ${player.n}`);
-    return res.status(500).json({ success: false, message: 'Failed to persist player addition to MongoDB Atlas' });
-  }
-  
-  console.log(`[API Player Add Success] Player added to MongoDB Atlas: ${player.n} (#${player.num}) ID: ${player.id}`);
-  res.json({ success: true, player, team: db.team });
 });
 
 // 5. Update a player by ID
 app.put('/api/team/:id', async (req, res) => {
-  const db = await getDB();
-  const { id } = req.params;
-  const updatedPlayer = req.body;
-  db.team = db.team || [];
-  const idx = db.team.findIndex(p => String(p.id) === String(id));
-  if (idx === -1) {
-    console.error(`[API Player Update Failed] Player ID not found: ${id}`);
-    return res.status(404).json({ success: false, message: 'Player not found' });
+  try {
+    const db = await getDB();
+    const { id } = req.params;
+    const updatedPlayer = req.body;
+    db.team = db.team || [];
+    const idx = db.team.findIndex(p => String(p.id) === String(id));
+    if (idx === -1) {
+      console.error(`[API Player Update Failed] Player ID not found: ${id}`);
+      return res.status(404).json({ success: false, message: 'Player not found' });
+    }
+    updatedPlayer.id = id;
+    db.team[idx] = updatedPlayer;
+    
+    const result = await saveDB(db);
+    if (!result.success) {
+      console.error(`[API Player Update Failed] Could not persist update: ${result.error}`);
+      return res.status(500).json({ success: false, message: `Failed to persist player update to MongoDB Atlas: ${result.error}`, error: result.error });
+    }
+    
+    console.log(`[API Player Update Success] Player updated in MongoDB Atlas: ${updatedPlayer.n} (Jersey #${updatedPlayer.num}) ID: ${id}`);
+    res.json({ success: true, player: updatedPlayer, team: db.team });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, error: err.message });
   }
-  updatedPlayer.id = id;
-  db.team[idx] = updatedPlayer;
-  
-  const saved = await saveDB(db);
-  if (!saved) {
-    console.error(`[API Player Update Failed] Could not persist player update in MongoDB Atlas: ${updatedPlayer.n} (${id})`);
-    return res.status(500).json({ success: false, message: 'Failed to persist player update to MongoDB Atlas' });
-  }
-  
-  console.log(`[API Player Update Success] Player updated in MongoDB Atlas: ${updatedPlayer.n} (Jersey #${updatedPlayer.num}) ID: ${id}`);
-  res.json({ success: true, player: updatedPlayer, team: db.team });
 });
 
 // 6. Delete a player by ID
 app.delete('/api/team/:id', async (req, res) => {
-  const db = await getDB();
-  const { id } = req.params;
-  db.team = db.team || [];
-  const initialLen = db.team.length;
-  db.team = db.team.filter(p => String(p.id) !== String(id));
-  if (db.team.length === initialLen) {
-    return res.status(404).json({ success: false, message: 'Player not found' });
+  try {
+    const db = await getDB();
+    const { id } = req.params;
+    db.team = db.team || [];
+    const initialLen = db.team.length;
+    db.team = db.team.filter(p => String(p.id) !== String(id));
+    if (db.team.length === initialLen) {
+      return res.status(404).json({ success: false, message: 'Player not found' });
+    }
+    
+    const result = await saveDB(db);
+    if (!result.success) {
+      console.error(`[API Player Delete Failed] Could not persist deletion: ${result.error}`);
+      return res.status(500).json({ success: false, message: `Failed to persist deletion: ${result.error}`, error: result.error });
+    }
+    
+    console.log(`[API Player Delete Success] Player deleted from MongoDB Atlas: ID ${id}`);
+    res.json({ success: true, message: 'Player deleted', team: db.team });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, error: err.message });
   }
-  
-  const saved = await saveDB(db);
-  if (!saved) {
-    console.error(`[API Player Delete Failed] Could not persist deletion in MongoDB Atlas for ID: ${id}`);
-    return res.status(500).json({ success: false, message: 'Failed to persist deletion to MongoDB Atlas' });
-  }
-  
-  console.log(`[API Player Delete Success] Player deleted from MongoDB Atlas: ID ${id}`);
-  res.json({ success: true, message: 'Player deleted', team: db.team });
 });
 
 // 7. Duplicate a player by ID
 app.post('/api/team/duplicate/:id', async (req, res) => {
-  const db = await getDB();
-  const { id } = req.params;
-  db.team = db.team || [];
-  const orig = db.team.find(p => String(p.id) === String(id));
-  if (!orig) {
-    return res.status(404).json({ success: false, message: 'Original player not found' });
+  try {
+    const db = await getDB();
+    const { id } = req.params;
+    db.team = db.team || [];
+    const orig = db.team.find(p => String(p.id) === String(id));
+    if (!orig) {
+      return res.status(404).json({ success: false, message: 'Original player not found' });
+    }
+    const copy = Object.assign({}, orig, { id: generateId(), n: orig.n + ' (Copy)' });
+    const idx = db.team.findIndex(p => String(p.id) === String(id));
+    db.team.splice(idx + 1, 0, copy);
+    
+    const result = await saveDB(db);
+    if (!result.success) {
+      console.error(`[API Player Duplicate Failed] Could not persist duplication: ${result.error}`);
+      return res.status(500).json({ success: false, message: `Failed to persist duplication: ${result.error}`, error: result.error });
+    }
+    
+    console.log(`[API Player Duplicate Success] Player duplicated in MongoDB Atlas: ${copy.n} (${copy.id})`);
+    res.json({ success: true, player: copy, team: db.team });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, error: err.message });
   }
-  const copy = Object.assign({}, orig, { id: generateId(), n: orig.n + ' (Copy)' });
-  const idx = db.team.findIndex(p => String(p.id) === String(id));
-  db.team.splice(idx + 1, 0, copy);
-  
-  const saved = await saveDB(db);
-  if (!saved) {
-    console.error(`[API Player Duplicate Failed] Could not persist duplication in MongoDB Atlas: ${copy.n}`);
-    return res.status(500).json({ success: false, message: 'Failed to persist player duplication to MongoDB Atlas' });
-  }
-  
-  console.log(`[API Player Duplicate Success] Player duplicated in MongoDB Atlas: ${copy.n} (${copy.id})`);
-  res.json({ success: true, player: copy, team: db.team });
 });
 
 // 8. Admin PIN endpoints & verification
@@ -303,7 +364,7 @@ if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`====================================================`);
     console.log(`ACEIT Spikers API Server running on port ${PORT}`);
-    console.log(`MongoDB Status: ${MONGODB_URI ? 'Atlas URI Configured' : 'Local Fallback (Set MONGODB_URI)'}`);
+    console.log(`MongoDB Status: ${process.env.MONGODB_URI ? 'Atlas URI Configured' : 'Local Fallback (Set MONGODB_URI)'}`);
     console.log(`Access website: http://localhost:${PORT}/`);
     console.log(`====================================================`);
   });
