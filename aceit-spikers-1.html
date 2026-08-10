@@ -917,6 +917,7 @@ footer{background:var(--navy);color:#C9C2B2;padding:var(--space-6) 0 var(--space
   <div class="lightbox-box">
     <button class="lightbox-close" id="lightboxClose" aria-label="Close">×</button>
     <p class="mono" id="lightboxLabel" style="letter-spacing:0.1em;text-transform:uppercase;font-size:13px;color:#C9C2B2;">Gallery Image</p>
+    <img id="lightboxImg" style="max-width:100%; max-height:70vh; border-radius:8px; margin-top:12px; display:none;" alt="">
   </div>
 </div>
 
@@ -1246,9 +1247,20 @@ function renderGalleryPublic(){
   DB.gallery.filter(function(g){ return currentGalleryFilter==='all' || g.cat===currentGalleryFilter; }).forEach(function(g){
     var el = document.createElement('div');
     el.className='g-item';
-    el.innerHTML='<div class="ph" style="height:'+g.h+'px;"></div><span class="tag">'+esc(g.label)+'</span>';
+    var hasPhoto = !!g.photo;
+    var bgStyle = hasPhoto ? ' background-image:url(''+g.photo+''); background-size:cover; background-position:center;' : '';
+    el.innerHTML='<div class="ph'+(hasPhoto?' has-photo':'')+'" style="height:'+(g.h||240)+'px;'+bgStyle+'"></div><span class="tag">'+esc(g.label || 'ACEIT Photo')+'</span>';
     el.addEventListener('click', function(){
-      document.getElementById('lightboxLabel').textContent = g.label;
+      document.getElementById('lightboxLabel').textContent = g.label || 'Gallery Image';
+      var lbImg = document.getElementById('lightboxImg');
+      if(lbImg){
+        if(hasPhoto){
+          lbImg.src = g.photo;
+          lbImg.style.display = 'block';
+        } else {
+          lbImg.style.display = 'none';
+        }
+      }
       document.getElementById('lightbox').classList.add('open');
     });
     masonry.appendChild(el);
@@ -1653,11 +1665,12 @@ var SCHEMAS = {
   gallery: {
     title:'Gallery', label:'Photo',
     fields:[
+      {key:'photo', label:'Gallery Image', type:'image', full:true},
       {key:'label', label:'Caption', type:'text', full:true},
       {key:'cat', label:'Category', type:'select', options:['matches','training','team','events']},
       {key:'h', label:'Card Height (px)', type:'number'}
     ],
-    summary:function(it){ return {title:it.label, sub:it.cat+' &middot; '+it.h+'px'}; }
+    summary:function(it){ return {title:it.label || 'Photo', sub:(it.cat || 'all')+' &middot; '+(it.h || 240)+'px', photo:it.photo}; }
   },
   testimonials: {
     title:'Testimonials', label:'Testimonial',
@@ -1696,7 +1709,9 @@ function renderAdminTab(tab){
   items.forEach(function(it){
     var s = schema.summary(it);
     var searchText = (String(s.title)+' '+String(s.sub||'')).replace(/&amp;/g,'&').replace(/&middot;|&mdash;/g,'').toLowerCase();
-    html += '<div class="admin-item" data-search="'+esc(searchText)+'"><div class="info"><b>'+s.title+'</b><span>'+ (s.sub||'') +'</span></div>'+
+    html += '<div class="admin-item" data-search="'+esc(searchText)+'">'+
+      (s.photo ? '<img src="'+s.photo+'" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;margin-right:12px;flex-shrink:0;">' : '')+
+      '<div class="info"><b>'+s.title+'</b><span>'+ (s.sub||'') +'</span></div>'+
       '<div class="actions"><button class="admin-btn" data-edit="'+it.id+'">Edit</button><button class="admin-btn" data-dup="'+it.id+'">Duplicate</button><button class="admin-btn danger" data-del="'+it.id+'">Delete</button></div></div>';
   });
   if(items.length===0){ html += '<p style="color:var(--charcoal-soft);font-size:14px;">No items yet — click "+ Add '+schema.label+'" to create one.</p>'; }
