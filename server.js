@@ -35,13 +35,17 @@ async function connectToDatabase() {
       bufferCommands: false,
       serverSelectionTimeoutMS: 5000,
     };
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => m);
+    console.log('[MongoDB Atlas] Connecting to database...');
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
+      console.log('[MongoDB Atlas] Connected successfully to Cluster!');
+      return m;
+    });
   }
   try {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    console.error('[MongoDB Error]', e);
+    console.error('[MongoDB Atlas Error] Connection failed:', e.message);
     return null;
   }
   return cached.conn;
@@ -80,51 +84,62 @@ function writeLocalFileDB(data) {
   } catch (err) {}
 }
 
-// Helper: Fetch full database (MongoDB Atlas -> data.json auto-migration fallback)
+// Helper: Fetch full database from MongoDB Atlas
 async function getDB() {
   const dbConn = await connectToDatabase();
   if (dbConn) {
     try {
       let doc = await ClubDoc.findOne({ key: 'main' });
       if (!doc) {
-        // Auto-seed from data.json if MongoDB collection is empty
-        const initial = readLocalFileDB();
-        doc = await ClubDoc.create({ key: 'main', ...initial, pin: process.env.ADMIN_PIN || '2026' });
-        console.log('[MongoDB Atlas] Auto-seeded initial player & club data from data.json!');
+        const count = await ClubDoc.countDocuments();
+        if (count === 0) {
+          const initial = readLocalFileDB();
+          doc = await ClubDoc.create({ key: 'main', ...initial, pin: process.env.ADMIN_PIN || '2026' });
+          console.log('[MongoDB Atlas] Collection empty. Auto-seeded initial data from data.json!');
+        } else {
+          doc = await ClubDoc.findOne({});
+        }
       }
-      return doc.toObject();
+      if (doc) return doc.toObject();
     } catch (err) {
-      console.error('[MongoDB Fetch Error]', err);
+      console.error('[MongoDB Atlas Error] Fetch failed:', err.message);
     }
   }
   return readLocalFileDB();
 }
 
-// Helper: Save full database
+// Helper: Save full database to MongoDB Atlas (returns false if MongoDB save fails)
 async function saveDB(data) {
   writeLocalFileDB(data);
-  const dbConn = await connectToDatabase();
-  if (dbConn) {
-    try {
-      await ClubDoc.findOneAndUpdate(
-        { key: 'main' },
-        {
-          team: data.team || [],
-          matches: data.matches || [],
-          news: data.news || [],
-          sponsors: data.sponsors || [],
-          testimonials: data.testimonials || [],
-          stats: data.stats || [],
-          gallery: data.gallery || []
-        },
-        { upsert: true, new: true }
-      );
-      return true;
-    } catch (err) {
-      console.error('[MongoDB Save Error]', err);
-    }
+  if (!MONGODB_URI) {
+    console.warn('[MongoDB Atlas Warning] MONGODB_URI not set. Saved to local data.json backup only.');
+    return true;
   }
-  return true;
+  const dbConn = await connectToDatabase();
+  if (!dbConn) {
+    console.error('[MongoDB Atlas Save Failed] Could not establish MongoDB connection.');
+    return false;
+  }
+  try {
+    await ClubDoc.findOneAndUpdate(
+      { key: 'main' },
+      {
+        team: data.team || [],
+        matches: data.matches || [],
+        news: data.news || [],
+        sponsors: data.sponsors || [],
+        testimonials: data.testimonials || [],
+        stats: data.stats || [],
+        gallery: data.gallery || []
+      },
+      { upsert: true, new: true }
+    );
+    console.log('[MongoDB Atlas Save Success] Saved document key "main" successfully!');
+    return true;
+  } catch (err) {
+    console.error('[MongoDB Atlas Save Failed]:', err.message);
+    return false;
+  }
 }
 
 // Helper: Unique ID generator
@@ -148,8 +163,11 @@ app.post('/api/save-all', async (req, res) => {
   if (!db || typeof db !== 'object') {
     return res.status(400).json({ success: false, message: 'Invalid payload' });
   }
-  await saveDB(db);
-  res.json({ success: true, message: 'Database saved online' });
+  const saved = await saveDB(db);
+  if (!saved) {
+    return res.status(500).json({ success: false, message: 'Failed to persist changes to MongoDB Atlas' });
+  }
+  res.json({ success: true, message: 'Database saved online to MongoDB Atlas' });
 });
 
 // 3. Get players team array
@@ -168,8 +186,14 @@ app.post('/api/team', async (req, res) => {
   player.id = player.id || generateId();
   db.team = db.team || [];
   db.team.push(player);
-  await saveDB(db);
-  console.log(`[API] Player Added to MongoDB: ${player.n} (${player.id})`);
+  
+  const saved = await saveDB(db);
+  if (!saved) {
+    console.error(`[API Player Add Failed] Could not persist player in MongoDB Atlas: ${player.n}`);
+    return res.status(500).json({ success: false, message: 'Failed to persist player addition to MongoDB Atlas' });
+  }
+  
+  console.log(`[API Player Add Success] Player added to MongoDB Atlas: ${player.n} (#${player.num}) ID: ${player.id}`);
   res.json({ success: true, player, team: db.team });
 });
 
@@ -181,12 +205,19 @@ app.put('/api/team/:id', async (req, res) => {
   db.team = db.team || [];
   const idx = db.team.findIndex(p => String(p.id) === String(id));
   if (idx === -1) {
+    console.error(`[API Player Update Failed] Player ID not found: ${id}`);
     return res.status(404).json({ success: false, message: 'Player not found' });
   }
   updatedPlayer.id = id;
   db.team[idx] = updatedPlayer;
-  await saveDB(db);
-  console.log(`[API] Player Updated in MongoDB: ${updatedPlayer.n} (${id})`);
+  
+  const saved = await saveDB(db);
+  if (!saved) {
+    console.error(`[API Player Update Failed] Could not persist player update in MongoDB Atlas: ${updatedPlayer.n} (${id})`);
+    return res.status(500).json({ success: false, message: 'Failed to persist player update to MongoDB Atlas' });
+  }
+  
+  console.log(`[API Player Update Success] Player updated in MongoDB Atlas: ${updatedPlayer.n} (Jersey #${updatedPlayer.num}) ID: ${id}`);
   res.json({ success: true, player: updatedPlayer, team: db.team });
 });
 
@@ -200,8 +231,14 @@ app.delete('/api/team/:id', async (req, res) => {
   if (db.team.length === initialLen) {
     return res.status(404).json({ success: false, message: 'Player not found' });
   }
-  await saveDB(db);
-  console.log(`[API] Player Deleted in MongoDB: ${id}`);
+  
+  const saved = await saveDB(db);
+  if (!saved) {
+    console.error(`[API Player Delete Failed] Could not persist deletion in MongoDB Atlas for ID: ${id}`);
+    return res.status(500).json({ success: false, message: 'Failed to persist deletion to MongoDB Atlas' });
+  }
+  
+  console.log(`[API Player Delete Success] Player deleted from MongoDB Atlas: ID ${id}`);
   res.json({ success: true, message: 'Player deleted', team: db.team });
 });
 
@@ -217,8 +254,14 @@ app.post('/api/team/duplicate/:id', async (req, res) => {
   const copy = Object.assign({}, orig, { id: generateId(), n: orig.n + ' (Copy)' });
   const idx = db.team.findIndex(p => String(p.id) === String(id));
   db.team.splice(idx + 1, 0, copy);
-  await saveDB(db);
-  console.log(`[API] Player Duplicated in MongoDB: ${copy.n} (${copy.id})`);
+  
+  const saved = await saveDB(db);
+  if (!saved) {
+    console.error(`[API Player Duplicate Failed] Could not persist duplication in MongoDB Atlas: ${copy.n}`);
+    return res.status(500).json({ success: false, message: 'Failed to persist player duplication to MongoDB Atlas' });
+  }
+  
+  console.log(`[API Player Duplicate Success] Player duplicated in MongoDB Atlas: ${copy.n} (${copy.id})`);
   res.json({ success: true, player: copy, team: db.team });
 });
 

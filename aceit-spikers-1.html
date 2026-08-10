@@ -1729,17 +1729,17 @@ function renderAdminTab(tab){
         fetch(API_BASE + '/team/duplicate/' + id, { method: 'POST' })
           .then(function(r){ return r.json(); })
           .then(function(res){
-            if(res && res.success){ DB.team = res.team; }
-            else { DB[tab].splice(idx+1, 0, copy); }
-            saveDB(DB);
-            renderAdminTab(tab);
-            refreshPublicFor(tab);
+            if(res && res.success){
+              DB.team = res.team;
+              try{ window.localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){}
+              renderAdminTab(tab);
+              refreshPublicFor(tab);
+            } else {
+              showAlert(res && res.message ? res.message : 'Error duplicating player in database.');
+            }
           })
           .catch(function(){
-            DB[tab].splice(idx+1, 0, copy);
-            saveDB(DB);
-            renderAdminTab(tab);
-            refreshPublicFor(tab);
+            showAlert('Network error: Could not duplicate player in database.');
           });
       } else {
         DB[tab].splice(idx+1, 0, copy);
@@ -1757,17 +1757,17 @@ function renderAdminTab(tab){
           fetch(API_BASE + '/team/' + id, { method: 'DELETE' })
             .then(function(r){ return r.json(); })
             .then(function(res){
-              if(res && res.success){ DB.team = res.team; }
-              else { DB[tab] = DB[tab].filter(function(it){ return it.id !== id; }); }
-              saveDB(DB);
-              renderAdminTab(tab);
-              refreshPublicFor(tab);
+              if(res && res.success){
+                DB.team = res.team;
+                try{ window.localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){}
+                renderAdminTab(tab);
+                refreshPublicFor(tab);
+              } else {
+                showAlert(res && res.message ? res.message : 'Error deleting player from database.');
+              }
             })
             .catch(function(){
-              DB[tab] = DB[tab].filter(function(it){ return it.id !== id; });
-              saveDB(DB);
-              renderAdminTab(tab);
-              refreshPublicFor(tab);
+              showAlert('Network error: Could not delete player from database.');
             });
         } else {
           DB[tab] = DB[tab].filter(function(it){ return it.id !== id; });
@@ -1900,23 +1900,18 @@ function openAdminForm(tab, id){
       })
       .then(function(r){ return r.json(); })
       .then(function(res){
-        if(res && res.success){ DB.team = res.team; }
-        else {
-          if(item){ var idx = DB[tab].findIndex(function(it){ return it.id===item.id; }); DB[tab][idx] = newItem; }
-          else { DB[tab].push(newItem); }
+        if(res && res.success){
+          DB.team = res.team;
+          try{ window.localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){}
+          formEl.classList.remove('open');
+          renderAdminTab(tab);
+          refreshPublicFor(tab);
+        } else {
+          showAlert(res && res.message ? res.message : 'Error saving player to database.');
         }
-        saveDB(DB);
-        formEl.classList.remove('open');
-        renderAdminTab(tab);
-        refreshPublicFor(tab);
       })
-      .catch(function(){
-        if(item){ var idx = DB[tab].findIndex(function(it){ return it.id===item.id; }); DB[tab][idx] = newItem; }
-        else { DB[tab].push(newItem); }
-        saveDB(DB);
-        formEl.classList.remove('open');
-        renderAdminTab(tab);
-        refreshPublicFor(tab);
+      .catch(function(err){
+        showAlert('Network error: Could not reach database server.');
       });
     } else {
       if(item){
