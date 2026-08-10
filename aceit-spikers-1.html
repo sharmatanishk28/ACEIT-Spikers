@@ -1152,15 +1152,30 @@ function loadDB(){
 }
 var API_BASE = window.location.origin.indexOf('http') === 0 ? '/api' : 'http://localhost:3000/api';
 
-function saveDB(db){
+function saveDB(db, cb){
   try{ window.localStorage.setItem(DB_KEY, JSON.stringify(db)); }catch(e){}
   try{
     fetch(API_BASE + '/save-all', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(db)
-    }).catch(function(err){ console.log('[API Offline] Using local save.'); });
-  }catch(e){}
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.success){
+        if(cb) cb(true);
+      } else {
+        if(res && res.message) showAlert(res.message);
+        if(cb) cb(false);
+      }
+    })
+    .catch(function(err){
+      console.log('[API Offline] Using local save.');
+      if(cb) cb(true);
+    });
+  }catch(e){
+    if(cb) cb(true);
+  }
 }
 
 var DB = loadDB();
