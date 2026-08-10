@@ -31,6 +31,20 @@ async function connectToDatabase() {
     return null;
   }
 
+  // Auto-fix unencoded special characters in username/password if present
+  try {
+    const match = uri.match(/^(mongodb(?:\+srv)?:\/\/)([^:]+):(.+)@([^@]+\.[^@]+)$/);
+    if (match) {
+      const prefix = match[1];
+      const user = match[2];
+      const pass = match[3];
+      const rest = match[4];
+      const encodedUser = encodeURIComponent(decodeURIComponent(user));
+      const encodedPass = encodeURIComponent(decodeURIComponent(pass));
+      uri = `${prefix}${encodedUser}:${encodedPass}@${rest}`;
+    }
+  } catch(e) {}
+
   // Ensure DB name 'spikers' is targeted
   if (uri.indexOf('mongodb.net/?') !== -1) {
     uri = uri.replace('mongodb.net/?', 'mongodb.net/spikers?');
