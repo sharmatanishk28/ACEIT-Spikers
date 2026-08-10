@@ -1263,8 +1263,10 @@ function renderGalleryPublic(){
     var el = document.createElement('div');
     el.className='g-item';
     var hasPhoto = !!g.photo;
-    var bgStyle = hasPhoto ? ' background-image:url("' + g.photo + '"); background-size:cover; background-position:center;' : '';
-    el.innerHTML='<div class="ph'+(hasPhoto?' has-photo':'')+'" style="height:'+(g.h||240)+'px;'+bgStyle+'"></div><span class="tag">'+esc(g.label || 'ACEIT Photo')+'</span>';
+    var phContent = hasPhoto 
+      ? '<img src="' + g.photo + '" alt="' + esc(g.label || 'Gallery Image') + '" style="width:100%;height:100%;object-fit:cover;display:block;">' 
+      : '';
+    el.innerHTML = '<div class="ph' + (hasPhoto ? ' has-photo' : '') + '" style="height:' + (g.h || 240) + 'px; overflow:hidden;">' + phContent + '</div><span class="tag">' + esc(g.label || 'ACEIT Photo') + '</span>';
     el.addEventListener('click', function(){
       document.getElementById('lightboxLabel').textContent = g.label || 'Gallery Image';
       var lbImg = document.getElementById('lightboxImg');
