@@ -1,0 +1,311 @@
+{
+  "team": [
+    {
+      "id": "idmsnbf4oy1",
+      "n": "Shubham Patidar",
+      "num": 1,
+      "pos": "Captain / Outside Hitter",
+      "h": "6'1\"",
+      "exp": "4 yrs",
+      "cap": true,
+      "insta": "",
+      "photo": ""
+    },
+    {
+      "id": "idmsnbf4oy2",
+      "n": "Arjun Verma",
+      "num": 5,
+      "pos": "Setter",
+      "h": "5'10\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": ""
+    },
+    {
+      "id": "idmsnbf4oy3",
+      "n": "Rohan Mehta",
+      "num": 9,
+      "pos": "Middle Blocker",
+      "h": "6'3\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": ""
+    },
+    {
+      "id": "idmsnbf4oy4",
+      "n": "Karan Singh",
+      "num": 11,
+      "pos": "Libero",
+      "h": "5'8\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": ""
+    },
+    {
+      "id": "idmsnbf4oy5",
+      "n": "Aditya Rao",
+      "num": 14,
+      "pos": "Opposite",
+      "h": "6'0\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": ""
+    },
+    {
+      "id": "idmsnbf4oy6",
+      "n": "Vikram Joshi",
+      "num": 7,
+      "pos": "Outside Hitter",
+      "h": "5'11\"",
+      "exp": "1 yr",
+      "cap": false,
+      "insta": "",
+      "photo": ""
+    },
+    {
+      "id": "idmsnbf4oy7",
+      "n": "Nikhil Sharma",
+      "num": 3,
+      "pos": "Middle Blocker",
+      "h": "6'2\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": ""
+    },
+    {
+      "id": "idmsnbf4oy8",
+      "n": "Devansh Rathore",
+      "num": 12,
+      "pos": "Setter",
+      "h": "5'9\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": ""
+    },
+    {
+      "id": "idmsnbhnyz43",
+      "photo": "",
+      "n": "Aman Sharma",
+      "num": 7,
+      "pos": "Setter",
+      "h": "6'0\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "aman_spiker"
+    }
+  ],
+  "gallery": [
+    {
+      "id": "idmsnbf4oy9",
+      "cat": "matches",
+      "h": 260,
+      "label": "Match Day"
+    },
+    {
+      "id": "idmsnbf4oy10",
+      "cat": "training",
+      "h": 180,
+      "label": "Training"
+    },
+    {
+      "id": "idmsnbf4oy11",
+      "cat": "team",
+      "h": 220,
+      "label": "Team"
+    },
+    {
+      "id": "idmsnbf4oy12",
+      "cat": "events",
+      "h": 200,
+      "label": "Event"
+    },
+    {
+      "id": "idmsnbf4oy13",
+      "cat": "matches",
+      "h": 200,
+      "label": "Match Day"
+    },
+    {
+      "id": "idmsnbf4oy14",
+      "cat": "training",
+      "h": 260,
+      "label": "Training"
+    },
+    {
+      "id": "idmsnbf4oy15",
+      "cat": "team",
+      "h": 180,
+      "label": "Team"
+    },
+    {
+      "id": "idmsnbf4oy16",
+      "cat": "matches",
+      "h": 220,
+      "label": "Match Day"
+    },
+    {
+      "id": "idmsnbf4oy17",
+      "cat": "events",
+      "h": 240,
+      "label": "Event"
+    },
+    {
+      "id": "idmsnbf4oy18",
+      "cat": "training",
+      "h": 200,
+      "label": "Training"
+    },
+    {
+      "id": "idmsnbf4oy19",
+      "cat": "team",
+      "h": 260,
+      "label": "Team"
+    },
+    {
+      "id": "idmsnbf4oy20",
+      "cat": "matches",
+      "h": 180,
+      "label": "Match Day"
+    }
+  ],
+  "matches": [
+    {
+      "id": "idmsnbf4oy21",
+      "opp": "Poornima University",
+      "date": "2026-08-15T14:16:59.266Z",
+      "venue": "ACEIT Indoor Court",
+      "status": "upcoming"
+    },
+    {
+      "id": "idmsnbf4oy22",
+      "opp": "JECRC Titans",
+      "date": "2026-08-22T14:16:59.266Z",
+      "venue": "JECRC Arena, Jaipur",
+      "status": "upcoming"
+    },
+    {
+      "id": "idmsnbf4oy23",
+      "opp": "Manipal Smashers",
+      "date": "2026-08-31T14:16:59.266Z",
+      "venue": "ACEIT Indoor Court",
+      "status": "upcoming"
+    },
+    {
+      "id": "idmsnbf4oy24",
+      "opp": "MNIT Warriors",
+      "date": "2026-09-09T14:16:59.266Z",
+      "venue": "MNIT Sports Complex",
+      "status": "upcoming"
+    }
+  ],
+  "news": [
+    {
+      "id": "idmsnbf4oy25",
+      "tag": "Featured",
+      "date": "20 Jul 2026",
+      "title": "Spikers clinch regional title after thrilling 5-set final",
+      "body": "ACEIT Spikers edged out a tightly contested final to bring home the regional championship trophy for the second year running.",
+      "featured": true
+    },
+    {
+      "id": "idmsnbf4oy26",
+      "tag": "Announcement",
+      "date": "14 Jul 2026",
+      "title": "New training block begins August 1",
+      "body": "An updated strength & conditioning block kicks off next month for all first-team players.",
+      "featured": false
+    },
+    {
+      "id": "idmsnbf4oy27",
+      "tag": "Tournament",
+      "date": "02 Jul 2026",
+      "title": "Spikers advance to inter-college semifinal",
+      "body": "A dominant straight-sets win books our place in the semifinal round.",
+      "featured": false
+    }
+  ],
+  "sponsors": [
+    {
+      "id": "idmsnbf4oy28",
+      "name": "Wonder Cement"
+    },
+    {
+      "id": "idmsnbf4oy29",
+      "name": "FireNodeX"
+    },
+    {
+      "id": "idmsnbf4oy30",
+      "name": "Arya College"
+    },
+    {
+      "id": "idmsnbf4oy31",
+      "name": "Sports Authority"
+    },
+    {
+      "id": "idmsnbf4oy32",
+      "name": "Nova Gear"
+    },
+    {
+      "id": "idmsnbf4oy33",
+      "name": "FireCraft Network"
+    }
+  ],
+  "testimonials": [
+    {
+      "id": "idmsnbf4oy34",
+      "q": "Joining Spikers made me a better player and a better teammate. The discipline here is real.",
+      "n": "Arjun Verma",
+      "r": "Setter"
+    },
+    {
+      "id": "idmsnbf4oy35",
+      "q": "Our coaches push us hard, but they care harder. That balance is what wins matches.",
+      "n": "Karan Singh",
+      "r": "Libero"
+    },
+    {
+      "id": "idmsnbf4oy36",
+      "q": "This club taught me more about leadership than any classroom could.",
+      "n": "Shubham Patidar",
+      "r": "Team Captain"
+    }
+  ],
+  "stats": [
+    {
+      "id": "idmsnbf4oy37",
+      "label": "Championships",
+      "target": 7
+    },
+    {
+      "id": "idmsnbf4oy38",
+      "label": "Tournament Wins",
+      "target": 24
+    },
+    {
+      "id": "idmsnbf4oy39",
+      "label": "Players",
+      "target": 38
+    },
+    {
+      "id": "idmsnbf4oy40",
+      "label": "Coaches",
+      "target": 5
+    },
+    {
+      "id": "idmsnbf4oy41",
+      "label": "Training Sessions",
+      "target": 410
+    },
+    {
+      "id": "idmsnbf4oy42",
+      "label": "Years Active",
+      "target": 6
+    }
+  ]
+}
