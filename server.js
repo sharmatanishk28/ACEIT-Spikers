@@ -318,6 +318,12 @@ function requirePermission(perm) {
   };
 }
 
+function hasClubAccess(user, clubId) {
+  if (!user) return false;
+  if (user.role === 'OWNER' || user.clubId === 'ALL') return true;
+  return String(user.clubId) === String(clubId);
+}
+
 function requireClubAccess(req, res, next) {
   if (!req.user) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
@@ -326,7 +332,7 @@ function requireClubAccess(req, res, next) {
     return next();
   }
   const reqClub = req.query.clubId || req.body.clubId || req.params.clubId;
-  if (!reqClub || reqClub === req.user.clubId) {
+  if (!reqClub || hasClubAccess(req.user, reqClub)) {
     return next();
   }
   return res.status(403).json({ success: false, message: `Access forbidden: No access to club '${reqClub}'` });
@@ -764,10 +770,17 @@ app.get('/api/clubs', authenticateUser, requireAuth, async (req, res) => {
   try {
     const dbConn = await connectToDatabase();
     if (!dbConn) {
-      return res.json({ success: true, clubs: localClubs });
+      let clubs = localClubs;
+      if (req.user && req.user.role !== 'OWNER' && req.user.clubId !== 'ALL') {
+        clubs = localClubs.filter(c => String(c._id) === String(req.user.clubId));
+      }
+      return res.json({ success: true, clubs });
     }
     await seedInitialAuthAndClubs();
-    const clubs = await Club.find({}).sort({ createdAt: -1 });
+    let clubs = await Club.find({}).sort({ createdAt: -1 });
+    if (req.user && req.user.role !== 'OWNER' && req.user.clubId !== 'ALL') {
+      clubs = clubs.filter(c => String(c._id) === String(req.user.clubId));
+    }
     res.json({ success: true, clubs });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -824,7 +837,7 @@ app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.c
 });
 
 // 6. Clubs: PUT Update
-app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('clubs.edit'), async (req, res) => {
+app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('clubs.edit'), requireClubAccess, async (req, res) => {
   try {
     const { id } = req.params;
     const { name, sport, slug, logo, description, active } = req.body;
@@ -874,7 +887,7 @@ app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('club
 });
 
 // 7. Clubs: DELETE Delete
-app.delete('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('clubs.delete'), async (req, res) => {
+app.delete('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('clubs.delete'), requireClubAccess, async (req, res) => {
   try {
     const { id } = req.params;
     const dbConn = await connectToDatabase();
@@ -912,15 +925,25 @@ app.get('/api/users', authenticateUser, requireAuth, requirePermission('users.vi
   try {
     const dbConn = await connectToDatabase();
     if (!dbConn) {
-      const safeUsers = localUsers.map(u => {
+      let safeUsers = localUsers.map(u => {
         const copy = Object.assign({}, u);
         delete copy.passwordHash;
         return copy;
       });
+      if (req.user && req.user.role !== 'OWNER' && req.user.clubId !== 'ALL') {
+        safeUsers = safeUsers.filter(function (u) {
+          return String(u.clubId) === String(req.user.clubId);
+        });
+      }
       return res.json({ success: true, users: safeUsers });
     }
     await seedInitialAuthAndClubs();
-    const users = await User.find({}).select('-passwordHash').sort({ createdAt: -1 });
+    let users = await User.find({}).select('-passwordHash').sort({ createdAt: -1 });
+    if (req.user && req.user.role !== 'OWNER' && req.user.clubId !== 'ALL') {
+      users = users.filter(function (u) {
+        return String(u.clubId) === String(req.user.clubId);
+      });
+    }
     res.json({ success: true, users });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -943,6 +966,15 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
     const isOwnerRole = role === 'OWNER';
     const userClubId = isOwnerRole ? 'ALL' : (clubId || 'ALL');
     const userPerms = isOwnerRole ? ['*'] : (Array.isArray(permissions) ? permissions : []);
+
+    if (req.user && req.user.role !== 'OWNER') {
+      if (isOwnerRole) {
+        return res.status(403).json({ success: false, message: 'Only the OWNER can create another OWNER account.' });
+      }
+      if (req.user.clubId !== 'ALL' && String(userClubId) !== String(req.user.clubId)) {
+        return res.status(403).json({ success: false, message: 'Cannot assign a user to a club outside your access scope.' });
+      }
+    }
 
     if (!dbConn) {
       const existingLocal = localUsers.find(u => u.username === cleanUsername);
@@ -1004,6 +1036,15 @@ app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('user
       if (targetUser.role === 'OWNER' && req.user.role !== 'OWNER') {
         return res.status(403).json({ success: false, message: 'Only the OWNER can modify the OWNER account.' });
       }
+      if (req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && String(targetUser.clubId) !== String(req.user.clubId) && String(targetUser._id) !== String(req.user._id)) {
+        return res.status(403).json({ success: false, message: 'Cannot modify a user outside your assigned club.' });
+      }
+      if (role && req.user.role !== 'OWNER' && role === 'OWNER') {
+        return res.status(403).json({ success: false, message: 'Only the OWNER can assign OWNER role.' });
+      }
+      if (clubId && req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && String(clubId) !== String(req.user.clubId)) {
+        return res.status(403).json({ success: false, message: 'Cannot assign a user to a club outside your access scope.' });
+      }
 
       if (name) targetUser.name = name;
       if (username) targetUser.username = String(username).toLowerCase().trim();
@@ -1043,6 +1084,15 @@ app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('user
 
     if (targetUser.role === 'OWNER' && req.user.role !== 'OWNER') {
       return res.status(403).json({ success: false, message: 'Only the OWNER can modify the OWNER account.' });
+    }
+    if (req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && String(targetUser.clubId) !== String(req.user.clubId) && String(targetUser._id) !== String(req.user._id)) {
+      return res.status(403).json({ success: false, message: 'Cannot modify a user outside your assigned club.' });
+    }
+    if (role && req.user.role !== 'OWNER' && role === 'OWNER') {
+      return res.status(403).json({ success: false, message: 'Only the OWNER can assign OWNER role.' });
+    }
+    if (clubId && req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && String(clubId) !== String(req.user.clubId)) {
+      return res.status(403).json({ success: false, message: 'Cannot assign a user to a club outside your access scope.' });
     }
 
     if (name) targetUser.name = name;
@@ -1092,8 +1142,12 @@ app.delete('/api/users/:id', authenticateUser, requireAuth, requirePermission('u
 
     if (!dbConn) {
       const targetUser = localUsers.find(u => String(u._id) === String(id));
-      if (targetUser && targetUser.role === 'OWNER') {
+      if (!targetUser) return res.status(404).json({ success: false, message: 'User not found' });
+      if (targetUser.role === 'OWNER') {
         return res.status(400).json({ success: false, message: 'Cannot delete the OWNER account.' });
+      }
+      if (req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && String(targetUser.clubId) !== String(req.user.clubId)) {
+        return res.status(403).json({ success: false, message: 'Cannot delete a user outside your assigned club.' });
       }
       localUsers = localUsers.filter(u => String(u._id) !== String(id));
       return res.json({ success: true, message: 'User deleted successfully' });
