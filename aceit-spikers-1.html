@@ -3411,9 +3411,9 @@
       var team = [];
 
       /* ============================================================
-         DATA LAYER — everything below persists in the browser's
-         localStorage so the whole site is editable from the Admin
-         Dashboard with no code changes required.
+         DATA LAYER — browser localStorage is used as an offline cache.
+         Admin edits save through the authenticated API (/api/save-all)
+         so MongoDB Atlas can remain the source of truth when available.
          ============================================================ */
       var DB_KEY = 'aceitSpikersDB_v1';
       var PIN_KEY = 'aceitSpikersPIN_v1';
@@ -3526,7 +3526,7 @@
       function saveDB(db, cb) {
         try { window.localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) { }
         try {
-          fetch(API_BASE + '/save-all', {
+          authFetch(API_BASE + '/save-all', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(db)
@@ -3541,18 +3541,18 @@
               }
             })
             .catch(function (err) {
-              console.log('[API Offline] Using local save.');
-              if (cb) cb(true);
+              console.log('[API Save Error] Using local save as fallback.', err);
+              if (cb) cb(false);
             });
         } catch (e) {
-          if (cb) cb(true);
+          if (cb) cb(false);
         }
       }
 
       var DB = loadDB();
 
       function syncDBOnline(onComplete) {
-        fetch(API_BASE + '/db')
+        authFetch(API_BASE + '/db')
           .then(function (res) { return res.json(); })
           .then(function (res) {
             if (res && res.success && res.data) {
@@ -3562,7 +3562,7 @@
             }
           })
           .catch(function (err) {
-            console.log('[API Sync] Backend offline or using standalone HTML mode.');
+            console.log('[API Sync] Backend offline or using standalone HTML mode.', err);
           });
       }
 
@@ -4093,7 +4093,7 @@
         var isOwner = currentUser.role === 'OWNER';
         var roleBadgeClass = isOwner ? 'background:#F39C12;color:#fff;' : 'background:#2980B9;color:#fff;';
         
-        fetchSystemClubs(function () {
+        fetchSystemClubs().then(function () {
           var clubOptions = '<option value="ALL">All Clubs</option>';
           systemClubs.forEach(function (c) {
             clubOptions += '<option value="' + (c._id || c.id) + '"' + (activeClubScope === (c._id || c.id) ? ' selected' : '') + '>' + esc(c.name) + ' (' + esc(c.sport || '') + ')</option>';
@@ -4158,15 +4158,19 @@
       }
 
       function fetchSystemClubs(cb) {
-        authFetch(API_BASE + '/clubs')
+        return authFetch(API_BASE + '/clubs')
           .then(function (r) { return r.json(); })
           .then(function (res) {
             if (res && res.success && Array.isArray(res.clubs)) {
               systemClubs = res.clubs;
             }
             if (cb) cb();
+            return systemClubs;
           })
-          .catch(function () { if (cb) cb(); });
+          .catch(function () {
+            if (cb) cb();
+            return systemClubs;
+          });
       }
 
       function hasPermission(perm) {
@@ -4521,7 +4525,7 @@
 
       function renderDataTab() {
         var html = '<div class="admin-panel-head"><h3>Data &amp; PIN</h3></div>';
-        html += '<div class="admin-note">All club content is stored in this browser only (localStorage) — nothing is sent to a server. Use <b>Export</b> regularly to back up your data, and <b>Import</b> to restore it on another device or browser.</div>';
+        html += '<div class="admin-note">Club content is cached locally for offline use, but changes are also persisted to the backend and MongoDB Atlas when available. Use <b>Export</b> regularly to back up your data and <b>Import</b> to restore it.</div>';
         html += '<div class="admin-data-actions">' +
           '<button class="admin-btn" id="btnExport">Export Data (.json)</button>' +
           '<button class="admin-btn" id="btnImport">Import Data</button>' +
@@ -4673,6 +4677,13 @@
       }
 
       function openUserModal(user) {
+        if (!systemClubs || !systemClubs.length) {
+          fetchSystemClubs(function () {
+            openUserModal(user);
+          });
+          return;
+        }
+
         var formArea = document.getElementById('userFormArea');
         if (!formArea) return;
 

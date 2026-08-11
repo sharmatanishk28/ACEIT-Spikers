@@ -331,7 +331,7 @@ function requireClubAccess(req, res, next) {
   if (req.user.role === 'OWNER' || req.user.clubId === 'ALL') {
     return next();
   }
-  const reqClub = req.query.clubId || req.body.clubId || req.params.clubId;
+  const reqClub = req.query.clubId || req.body.clubId || req.params.clubId || req.params.id;
   if (!reqClub || hasClubAccess(req.user, reqClub)) {
     return next();
   }
@@ -484,7 +484,7 @@ app.get('/api/db', async (req, res) => {
 });
 
 // 2. Save full database
-app.post('/api/save-all', async (req, res) => {
+app.post('/api/save-all', authenticateUser, requireAuth, requirePermission('settings.*'), async (req, res) => {
   const db = req.body;
   if (!db || typeof db !== 'object') {
     return res.status(400).json({ success: false, message: 'Invalid payload' });
@@ -506,7 +506,7 @@ app.get('/api/team', async (req, res) => {
 });
 
 // 4. Add a player
-app.post('/api/team', async (req, res) => {
+app.post('/api/team', authenticateUser, requireAuth, requirePermission('players.*'), async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) {
@@ -535,7 +535,7 @@ app.post('/api/team', async (req, res) => {
 });
 
 // 5. Update a player by ID
-app.put('/api/team/:id', async (req, res) => {
+app.put('/api/team/:id', authenticateUser, requireAuth, requirePermission('players.*'), async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) {
@@ -567,7 +567,7 @@ app.put('/api/team/:id', async (req, res) => {
 });
 
 // 6. Delete a player by ID
-app.delete('/api/team/:id', async (req, res) => {
+app.delete('/api/team/:id', authenticateUser, requireAuth, requirePermission('players.*'), async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) {
@@ -596,7 +596,7 @@ app.delete('/api/team/:id', async (req, res) => {
 });
 
 // 7. Duplicate a player by ID
-app.post('/api/team/duplicate/:id', async (req, res) => {
+app.post('/api/team/duplicate/:id', authenticateUser, requireAuth, requirePermission('players.*'), async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) {
@@ -645,7 +645,7 @@ app.post('/api/verify-pin', async (req, res) => {
   res.status(401).json({ success: false, message: 'Incorrect PIN' });
 });
 
-app.post('/api/pin', async (req, res) => {
+app.post('/api/pin', authenticateUser, requireAuth, requirePermission('settings.*'), async (req, res) => {
   const { pin } = req.body;
   if (!pin || pin.length < 4) {
     return res.status(400).json({ success: false, message: 'PIN must be at least 4 characters' });
