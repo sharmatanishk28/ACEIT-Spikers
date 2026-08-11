@@ -4,12 +4,37 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'spikers_jwt_secret_key_2026_super_secure';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
 
+// In-memory fallback stores for standalone/offline dev mode without MONGODB_URI
+let localClubs = [
+  { _id: 'c1', name: 'ACEIT Spikers', sport: 'Volleyball', slug: 'aceit-spikers', logo: '', description: 'ACEIT Official Volleyball Club', active: true, createdAt: new Date() }
+];
+
+let localUsers = [
+  {
+    _id: 'owner_local',
+    name: 'Founder / Owner',
+    username: (process.env.OWNER_USERNAME || 'founder').toLowerCase().trim(),
+    passwordHash: bcrypt.hashSync(process.env.OWNER_PASSWORD || 'OwnerSecret123!', 10),
+    role: 'OWNER',
+    clubId: 'ALL',
+    permissions: ['*'],
+    active: true,
+    createdAt: new Date()
+  }
+];
+
 app.use(cors());
+app.use(cookieParser());
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -33,7 +58,7 @@ let lastMongoError = null;
 function safeSanitizeMongoUri(rawUri) {
   if (!rawUri || typeof rawUri !== 'string') return rawUri;
   let uri = rawUri.trim();
-  
+
   if ((uri.startsWith('"') && uri.endsWith('"')) || (uri.startsWith("'") && uri.endsWith("'"))) {
     uri = uri.slice(1, -1).trim();
   }
@@ -59,11 +84,11 @@ function safeSanitizeMongoUri(rawUri) {
           const rawPass = userInfo.slice(firstColonIdx + 1);
 
           let decodedUser = rawUser;
-          try { decodedUser = decodeURIComponent(rawUser); } catch(e) {}
+          try { decodedUser = decodeURIComponent(rawUser); } catch (e) { }
           const safeUser = encodeURIComponent(decodedUser);
 
           let decodedPass = rawPass;
-          try { decodedPass = decodeURIComponent(rawPass); } catch(e) {}
+          try { decodedPass = decodeURIComponent(rawPass); } catch (e) { }
           const safePass = encodeURIComponent(decodedPass);
 
           uri = `${scheme}${safeUser}:${safePass}@${hostAndRest}`;
@@ -130,6 +155,183 @@ const clubSchema = new mongoose.Schema({
 
 const ClubDoc = mongoose.models.ClubDoc || mongoose.model('ClubDoc', clubSchema);
 
+// Dynamic Multi-Club Model
+const clubItemSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  sport: { type: String, required: true },
+  slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  logo: { type: String, default: '' },
+  description: { type: String, default: '' },
+  active: { type: Boolean, default: true }
+}, { timestamps: true });
+
+const Club = mongoose.models.Club || mongoose.model('Club', clubItemSchema);
+
+// Scalable Multi-User & Granular Permission Model
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  username: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  passwordHash: { type: String, required: true },
+  role: { type: String, enum: ['OWNER', 'ADMIN', 'CUSTOM'], default: 'ADMIN' },
+  clubId: { type: String, default: 'ALL' },
+  permissions: { type: [String], default: [] },
+  active: { type: Boolean, default: true },
+  lastLoginAt: { type: Date }
+}, { timestamps: true });
+
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+
+// Initial Seeding Helper: Auto-seeds initial Club & OWNER account if database is fresh
+async function seedInitialAuthAndClubs() {
+  const dbConn = await connectToDatabase();
+  if (!dbConn) return;
+
+  try {
+    const clubCount = await Club.countDocuments();
+    if (clubCount === 0) {
+      await Club.create({
+        name: 'ACEIT Spikers',
+        sport: 'Volleyball',
+        slug: 'aceit-spikers',
+        logo: '',
+        description: 'ACEIT Official Volleyball Club',
+        active: true
+      });
+      console.log('[MongoDB Atlas] Auto-seeded default club: ACEIT Spikers (Volleyball)');
+    }
+
+    const ownerCount = await User.countDocuments({ role: 'OWNER' });
+    if (ownerCount === 0) {
+      const ownerUsername = (process.env.OWNER_USERNAME || 'founder').toLowerCase().trim();
+      const ownerPass = process.env.OWNER_PASSWORD || 'OwnerSecret123!';
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(ownerPass, salt);
+
+      await User.create({
+        name: 'Founder / Owner',
+        username: ownerUsername,
+        passwordHash: hash,
+        role: 'OWNER',
+        clubId: 'ALL',
+        permissions: ['*'],
+        active: true
+      });
+      console.log(`[MongoDB Atlas] Auto-seeded initial OWNER account: "${ownerUsername}"`);
+    } else {
+      const ownerUsername = (process.env.OWNER_USERNAME || 'founder').toLowerCase().trim();
+      let ownerUser = await User.findOne({ username: ownerUsername }) || await User.findOne({ role: 'OWNER' });
+      if (ownerUser) {
+        let changed = false;
+        if (ownerUser.clubId !== 'ALL') { ownerUser.clubId = 'ALL'; changed = true; }
+        if (!ownerUser.permissions || !ownerUser.permissions.includes('*')) { ownerUser.permissions = ['*']; changed = true; }
+        if (!ownerUser.active) { ownerUser.active = true; changed = true; }
+        if (changed) await ownerUser.save();
+      }
+    }
+  } catch (err) {
+    console.error('[MongoDB Atlas Seeding Error]', err.message);
+  }
+}
+
+// Authentication & Authorization Middleware
+async function authenticateUser(req, res, next) {
+  req.user = null;
+  let token = null;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token && req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  }
+
+  if (!token) return next();
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (!decoded) return next();
+
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      let user = null;
+      if (mongoose.Types.ObjectId.isValid(decoded.id)) {
+        user = await User.findById(decoded.id).select('-passwordHash');
+      }
+      if (!user && decoded.username) {
+        user = await User.findOne({ username: String(decoded.username).toLowerCase().trim() }).select('-passwordHash');
+      }
+      if (user && user.active) {
+        req.user = user.toObject ? user.toObject() : user;
+      }
+    }
+
+    if (!req.user && decoded) {
+      req.user = {
+        _id: decoded.id || 'owner_local',
+        id: decoded.id || 'owner_local',
+        name: decoded.name || 'Owner',
+        username: decoded.username || 'founder',
+        role: decoded.role || 'OWNER',
+        clubId: decoded.clubId || 'ALL',
+        permissions: decoded.permissions || ['*'],
+        active: true
+      };
+    }
+
+    if (req.user && req.user.role === 'OWNER') {
+      req.user.clubId = 'ALL';
+      req.user.permissions = ['*'];
+    }
+  } catch (err) { }
+  next();
+}
+
+function requireAuth(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required. Please log in.' });
+  }
+  next();
+}
+
+function requirePermission(perm) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Authentication required. Please log in.' });
+    }
+    if (!req.user.active) {
+      return res.status(403).json({ success: false, message: 'Account is disabled. Please contact the Owner.' });
+    }
+    if (req.user.role === 'OWNER') {
+      return next();
+    }
+    const perms = Array.isArray(req.user.permissions) ? req.user.permissions : [];
+    if (perms.includes('*') || perms.includes(perm)) {
+      return next();
+    }
+    if (perm && perm.includes('.')) {
+      const moduleName = perm.split('.')[0];
+      if (perms.includes(moduleName + '.*')) {
+        return next();
+      }
+    }
+    return res.status(403).json({ success: false, message: `Access forbidden: Missing permission '${perm}'` });
+  };
+}
+
+function requireClubAccess(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required' });
+  }
+  if (req.user.role === 'OWNER' || req.user.clubId === 'ALL') {
+    return next();
+  }
+  const reqClub = req.query.clubId || req.body.clubId || req.params.clubId;
+  if (!reqClub || reqClub === req.user.clubId) {
+    return next();
+  }
+  return res.status(403).json({ success: false, message: `Access forbidden: No access to club '${reqClub}'` });
+}
+
 // Helper: Read default data.json fallback (used ONLY for initial empty collection seeding or local standalone dev)
 function readLocalFileDB() {
   try {
@@ -137,21 +339,21 @@ function readLocalFileDB() {
       const raw = fs.readFileSync(DATA_FILE, 'utf-8');
       return JSON.parse(raw);
     }
-  } catch (err) {}
+  } catch (err) { }
   return { team: [], matches: [], news: [], sponsors: [], testimonials: [], stats: [], gallery: [] };
 }
 
 function writeLocalFileDB(data) {
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (err) {}
+  } catch (err) { }
 }
 
 // Helper: Fetch full database from MongoDB Atlas (Strict Production Mode)
 async function getDB() {
   const hasUri = !!process.env.MONGODB_URI;
   const dbConn = await connectToDatabase();
-  
+
   if (dbConn) {
     try {
       let doc = await ClubDoc.findOne({ key: 'main' });
@@ -312,13 +514,13 @@ app.post('/api/team', async (req, res) => {
     player.id = player.id || generateId();
     db.team = db.team || [];
     db.team.push(player);
-    
+
     const result = await saveDB(db);
     if (!result.success) {
       console.error(`[API Player Add Failed] Could not persist player in MongoDB Atlas: ${player.n} Error: ${result.error}`);
       return res.status(500).json({ success: false, message: `Failed to persist player addition: ${result.error}`, error: result.error });
     }
-    
+
     console.log(`[API Player Add Success] Player added to MongoDB Atlas: ${player.n} (#${player.num}) ID: ${player.id}`);
     res.json({ success: true, player, team: db.team });
   } catch (err) {
@@ -344,13 +546,13 @@ app.put('/api/team/:id', async (req, res) => {
     }
     updatedPlayer.id = id;
     db.team[idx] = updatedPlayer;
-    
+
     const result = await saveDB(db);
     if (!result.success) {
       console.error(`[API Player Update Failed] Could not persist update: ${result.error}`);
       return res.status(500).json({ success: false, message: `Failed to persist player update to MongoDB Atlas: ${result.error}`, error: result.error });
     }
-    
+
     console.log(`[API Player Update Success] Player updated in MongoDB Atlas: ${updatedPlayer.n} (Jersey #${updatedPlayer.num}) ID: ${id}`);
     res.json({ success: true, player: updatedPlayer, team: db.team });
   } catch (err) {
@@ -373,13 +575,13 @@ app.delete('/api/team/:id', async (req, res) => {
     if (db.team.length === initialLen) {
       return res.status(404).json({ success: false, message: 'Player not found' });
     }
-    
+
     const result = await saveDB(db);
     if (!result.success) {
       console.error(`[API Player Delete Failed] Could not persist deletion: ${result.error}`);
       return res.status(500).json({ success: false, message: `Failed to persist deletion: ${result.error}`, error: result.error });
     }
-    
+
     console.log(`[API Player Delete Success] Player deleted from MongoDB Atlas: ID ${id}`);
     res.json({ success: true, message: 'Player deleted', team: db.team });
   } catch (err) {
@@ -404,13 +606,13 @@ app.post('/api/team/duplicate/:id', async (req, res) => {
     const copy = Object.assign({}, orig, { id: generateId(), n: orig.n + ' (Copy)' });
     const idx = db.team.findIndex(p => String(p.id) === String(id));
     db.team.splice(idx + 1, 0, copy);
-    
+
     const result = await saveDB(db);
     if (!result.success) {
       console.error(`[API Player Duplicate Failed] Could not persist duplication: ${result.error}`);
       return res.status(500).json({ success: false, message: `Failed to persist duplication: ${result.error}`, error: result.error });
     }
-    
+
     console.log(`[API Player Duplicate Success] Player duplicated in MongoDB Atlas: ${copy.n} (${copy.id})`);
     res.json({ success: true, player: copy, team: db.team });
   } catch (err) {
@@ -450,6 +652,471 @@ app.post('/api/pin', async (req, res) => {
   db.pin = pin;
   await saveDB(db);
   res.json({ success: true, message: 'PIN updated' });
+});
+
+// ==========================================
+// PHASE 1: AUTHENTICATION & MULTI-CLUB ROUTES
+// ==========================================
+
+// 1. Auth: Login
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: 'Username and password are required' });
+    }
+
+    const cleanUsername = String(username).toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+
+    let user = null;
+    if (dbConn) {
+      user = await User.findOne({ username: cleanUsername });
+      if (!user) {
+        await seedInitialAuthAndClubs();
+        user = await User.findOne({ username: cleanUsername });
+      }
+    } else {
+      user = localUsers.find(u => u.username === cleanUsername);
+    }
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
+
+    if (!user.active) {
+      return res.status(403).json({ success: false, message: 'Account is disabled. Please contact the Owner.' });
+    }
+
+    const match = bcrypt.compareSync(String(password), user.passwordHash);
+    if (!match) {
+      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
+
+    const userId = user._id || user.id || 'owner_local';
+    if (user.save) {
+      user.lastLoginAt = new Date();
+      await user.save();
+    }
+
+    const token = jwt.sign(
+      { id: String(userId), username: user.username, role: user.role, clubId: user.clubId, permissions: user.permissions },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 86400000 });
+
+    res.json({
+      success: true,
+      token: token,
+      user: {
+        id: String(userId),
+        name: user.name,
+        username: user.username,
+        role: user.role,
+        clubId: user.role === 'OWNER' ? 'ALL' : (user.clubId || 'ALL'),
+        permissions: user.role === 'OWNER' ? ['*'] : (user.permissions || [])
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 2. Auth: Logout
+app.post('/api/auth/logout', (req, res) => {
+  res.clearCookie('token');
+  res.json({ success: true, message: 'Logged out' });
+});
+
+// 3. Auth: Current User Info
+app.get('/api/auth/me', authenticateUser, async (req, res) => {
+  if (!req.user) {
+    return res.json({ success: true, authenticated: false });
+  }
+
+  let clubs = [];
+  const dbConn = await connectToDatabase();
+  if (dbConn) {
+    await seedInitialAuthAndClubs();
+    clubs = await Club.find({ active: true }).sort({ name: 1 });
+  } else {
+    clubs = localClubs.filter(c => c.active !== false);
+  }
+
+  res.json({
+    success: true,
+    authenticated: true,
+    user: {
+      id: String(req.user._id || req.user.id),
+      name: req.user.name,
+      username: req.user.username,
+      role: req.user.role,
+      clubId: req.user.role === 'OWNER' ? 'ALL' : (req.user.clubId || 'ALL'),
+      permissions: req.user.role === 'OWNER' ? ['*'] : (req.user.permissions || [])
+    },
+    clubs
+  });
+});
+
+// 4. Clubs: GET List
+app.get('/api/clubs', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const dbConn = await connectToDatabase();
+    if (!dbConn) {
+      return res.json({ success: true, clubs: localClubs });
+    }
+    await seedInitialAuthAndClubs();
+    const clubs = await Club.find({}).sort({ createdAt: -1 });
+    res.json({ success: true, clubs });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 5. Clubs: POST Create
+app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.create'), async (req, res) => {
+  try {
+    const { name, sport, slug, logo, description, active } = req.body;
+    if (!name || !sport) {
+      return res.status(400).json({ success: false, message: 'Club Name and Sport are required' });
+    }
+    const cleanSlug = (slug || (name + '-' + sport)).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || ('club-' + Date.now());
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const existingLocal = localClubs.find(c => c.slug === cleanSlug);
+      if (existingLocal) {
+        return res.status(400).json({ success: false, message: `A club with slug '${cleanSlug}' already exists.` });
+      }
+      const newClub = {
+        _id: 'c_' + Date.now(),
+        name,
+        sport,
+        slug: cleanSlug,
+        logo: logo || '',
+        description: description || '',
+        active: active !== undefined ? active : true,
+        createdAt: new Date()
+      };
+      localClubs.unshift(newClub);
+      return res.json({ success: true, club: newClub, message: 'Club created successfully' });
+    }
+
+    const existing = await Club.findOne({ slug: cleanSlug });
+    if (existing) {
+      return res.status(400).json({ success: false, message: `A club with slug '${cleanSlug}' already exists.` });
+    }
+
+    const club = await Club.create({
+      name,
+      sport,
+      slug: cleanSlug,
+      logo: logo || '',
+      description: description || '',
+      active: active !== undefined ? active : true
+    });
+
+    res.json({ success: true, club, message: 'Club created successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 6. Clubs: PUT Update
+app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('clubs.edit'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, sport, slug, logo, description, active } = req.body;
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const club = localClubs.find(c => String(c._id) === String(id));
+      if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
+      if (name) club.name = name;
+      if (sport) club.sport = sport;
+      if (slug) club.slug = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      if (logo !== undefined) club.logo = logo;
+      if (description !== undefined) club.description = description;
+      if (active !== undefined) club.active = active;
+      return res.json({ success: true, club, message: 'Club updated successfully' });
+    }
+
+    let club = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      club = await Club.findById(id);
+    }
+    if (!club) {
+      club = await Club.findOne({ slug: id }) || await Club.findOne({ _id: id });
+    }
+    if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
+
+    if (slug) {
+      const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const duplicate = await Club.findOne({ slug: cleanSlug, _id: { $ne: club._id } });
+      if (duplicate) {
+        return res.status(400).json({ success: false, message: `Slug '${cleanSlug}' is already in use by another club.` });
+      }
+      club.slug = cleanSlug;
+    }
+
+    if (name) club.name = name;
+    if (sport) club.sport = sport;
+    if (logo !== undefined) club.logo = logo;
+    if (description !== undefined) club.description = description;
+    if (active !== undefined) club.active = active;
+
+    await club.save();
+    res.json({ success: true, club, message: 'Club updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 7. Clubs: DELETE Delete
+app.delete('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('clubs.delete'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      localClubs = localClubs.filter(c => String(c._id) !== String(id));
+      return res.json({ success: true, message: 'Club deleted successfully' });
+    }
+
+    let club = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      club = await Club.findById(id);
+    }
+    if (!club) {
+      club = await Club.findOne({ slug: id }) || await Club.findOne({ _id: id });
+    }
+    if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
+
+    if (club.slug === 'aceit-spikers') {
+      const total = await Club.countDocuments();
+      if (total <= 1) {
+        return res.status(400).json({ success: false, message: 'Cannot delete primary club when it is the only club.' });
+      }
+    }
+
+    await Club.findByIdAndDelete(club._id);
+    res.json({ success: true, message: 'Club deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 8. Users: GET List
+app.get('/api/users', authenticateUser, requireAuth, requirePermission('users.view'), async (req, res) => {
+  try {
+    const dbConn = await connectToDatabase();
+    if (!dbConn) {
+      const safeUsers = localUsers.map(u => {
+        const copy = Object.assign({}, u);
+        delete copy.passwordHash;
+        return copy;
+      });
+      return res.json({ success: true, users: safeUsers });
+    }
+    await seedInitialAuthAndClubs();
+    const users = await User.find({}).select('-passwordHash').sort({ createdAt: -1 });
+    res.json({ success: true, users });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 9. Users: POST Create
+app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.create'), async (req, res) => {
+  try {
+    const { name, username, password, role, clubId, permissions, active } = req.body;
+    if (!name || !username || !password) {
+      return res.status(400).json({ success: false, message: 'Name, username, and password are required' });
+    }
+
+    const cleanUsername = String(username).toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(String(password), salt);
+
+    const isOwnerRole = role === 'OWNER';
+    const userClubId = isOwnerRole ? 'ALL' : (clubId || 'ALL');
+    const userPerms = isOwnerRole ? ['*'] : (Array.isArray(permissions) ? permissions : []);
+
+    if (!dbConn) {
+      const existingLocal = localUsers.find(u => u.username === cleanUsername);
+      if (existingLocal) {
+        return res.status(400).json({ success: false, message: `Username '${cleanUsername}' is already taken.` });
+      }
+      const newUser = {
+        _id: 'u_' + Date.now(),
+        name,
+        username: cleanUsername,
+        passwordHash: hash,
+        role: role || 'ADMIN',
+        clubId: userClubId,
+        permissions: userPerms,
+        active: active !== undefined ? active : true,
+        createdAt: new Date()
+      };
+      localUsers.unshift(newUser);
+      const userObj = Object.assign({}, newUser);
+      delete userObj.passwordHash;
+      return res.json({ success: true, user: userObj, message: 'User created successfully' });
+    }
+
+    const existing = await User.findOne({ username: cleanUsername });
+    if (existing) {
+      return res.status(400).json({ success: false, message: `Username '${cleanUsername}' is already taken.` });
+    }
+
+    const newUser = await User.create({
+      name,
+      username: cleanUsername,
+      passwordHash: hash,
+      role: role || 'ADMIN',
+      clubId: userClubId,
+      permissions: userPerms,
+      active: active !== undefined ? active : true
+    });
+
+    const userObj = newUser.toObject();
+    delete userObj.passwordHash;
+
+    res.json({ success: true, user: userObj, message: 'User created successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 10. Users: PUT Update
+app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('users.edit'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, username, password, role, clubId, permissions, active } = req.body;
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const targetUser = localUsers.find(u => String(u._id) === String(id));
+      if (!targetUser) return res.status(404).json({ success: false, message: 'User not found' });
+
+      if (targetUser.role === 'OWNER' && req.user.role !== 'OWNER') {
+        return res.status(403).json({ success: false, message: 'Only the OWNER can modify the OWNER account.' });
+      }
+
+      if (name) targetUser.name = name;
+      if (username) targetUser.username = String(username).toLowerCase().trim();
+      if (role && req.user.role === 'OWNER') {
+        targetUser.role = role;
+        if (role === 'OWNER') {
+          targetUser.clubId = 'ALL';
+          targetUser.permissions = ['*'];
+        }
+      }
+      if (clubId && targetUser.role !== 'OWNER') targetUser.clubId = clubId;
+      if (Array.isArray(permissions) && targetUser.role !== 'OWNER') targetUser.permissions = permissions;
+      if (active !== undefined) {
+        if (targetUser.role === 'OWNER' && !active) {
+          return res.status(400).json({ success: false, message: 'Cannot disable the OWNER account.' });
+        }
+        targetUser.active = active;
+      }
+      if (password && String(password).trim().length > 0) {
+        const salt = bcrypt.genSaltSync(10);
+        targetUser.passwordHash = bcrypt.hashSync(String(password), salt);
+      }
+
+      const userObj = Object.assign({}, targetUser);
+      delete userObj.passwordHash;
+      return res.json({ success: true, user: userObj, message: 'User updated successfully' });
+    }
+
+    let targetUser = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      targetUser = await User.findById(id);
+    }
+    if (!targetUser) {
+      targetUser = await User.findOne({ username: id.toLowerCase() }) || await User.findOne({ _id: id });
+    }
+    if (!targetUser) return res.status(404).json({ success: false, message: 'User not found' });
+
+    if (targetUser.role === 'OWNER' && req.user.role !== 'OWNER') {
+      return res.status(403).json({ success: false, message: 'Only the OWNER can modify the OWNER account.' });
+    }
+
+    if (name) targetUser.name = name;
+    if (username) {
+      const cleanUsername = String(username).toLowerCase().trim();
+      const existing = await User.findOne({ username: cleanUsername, _id: { $ne: targetUser._id } });
+      if (existing) {
+        return res.status(400).json({ success: false, message: `Username '${cleanUsername}' is already taken.` });
+      }
+      targetUser.username = cleanUsername;
+    }
+    if (role && req.user.role === 'OWNER') {
+      targetUser.role = role;
+      if (role === 'OWNER') {
+        targetUser.clubId = 'ALL';
+        targetUser.permissions = ['*'];
+      }
+    }
+    if (clubId && targetUser.role !== 'OWNER') targetUser.clubId = clubId;
+    if (Array.isArray(permissions) && targetUser.role !== 'OWNER') targetUser.permissions = permissions;
+    if (active !== undefined) {
+      if (targetUser.role === 'OWNER' && !active) {
+        return res.status(400).json({ success: false, message: 'Cannot disable the OWNER account.' });
+      }
+      targetUser.active = active;
+    }
+    if (password && String(password).trim().length > 0) {
+      const salt = bcrypt.genSaltSync(10);
+      targetUser.passwordHash = bcrypt.hashSync(String(password), salt);
+    }
+
+    await targetUser.save();
+    const userObj = targetUser.toObject();
+    delete userObj.passwordHash;
+
+    res.json({ success: true, user: userObj, message: 'User updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 11. Users: DELETE Delete
+app.delete('/api/users/:id', authenticateUser, requireAuth, requirePermission('users.delete'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const targetUser = localUsers.find(u => String(u._id) === String(id));
+      if (targetUser && targetUser.role === 'OWNER') {
+        return res.status(400).json({ success: false, message: 'Cannot delete the OWNER account.' });
+      }
+      localUsers = localUsers.filter(u => String(u._id) !== String(id));
+      return res.json({ success: true, message: 'User deleted successfully' });
+    }
+
+    let targetUser = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      targetUser = await User.findById(id);
+    }
+    if (!targetUser) {
+      targetUser = await User.findOne({ username: id.toLowerCase() }) || await User.findOne({ _id: id });
+    }
+    if (!targetUser) return res.status(404).json({ success: false, message: 'User not found' });
+
+    if (targetUser.role === 'OWNER') {
+      return res.status(403).json({ success: false, message: 'The OWNER account cannot be deleted.' });
+    }
+
+    await User.findByIdAndDelete(targetUser._id);
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // Fallback route serving the HTML app
