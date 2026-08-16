@@ -2907,20 +2907,20 @@
   <section id="about">
     <div class="container">
       <div class="reveal">
-        <span class="eyebrow">Who we are</span>
-        <h2 class="section-title">Built on the court,<br>defined by <span class="gradient-text">character</span>.</h2>
-        <p class="section-sub">ACEIT Spikers brings together players who train hard, compete fair, and show up for one
+        <span class="eyebrow" id="aboutEyebrow">Who we are</span>
+        <h2 class="section-title" id="aboutTitle">Built on the court,<br>defined by <span class="gradient-text">character</span>.</h2>
+        <p class="section-sub" id="aboutSub">ACEIT Spikers brings together players who train hard, compete fair, and show up for one
           another — on and off the court.</p>
       </div>
       <div class="mission-vision reveal">
         <div class="mv-card">
           <h3>Our Mission</h3>
-          <p>To build a competitive volleyball program that develops skilled, disciplined athletes while creating a home
+          <p id="aboutMission">To build a competitive volleyball program that develops skilled, disciplined athletes while creating a home
             for anyone who wants to play, grow, and belong.</p>
         </div>
         <div class="mv-card">
           <h3>Our Vision</h3>
-          <p>To be recognised as the standard-bearer for collegiate volleyball at ACEIT — a club that wins with class
+          <p id="aboutVision">To be recognised as the standard-bearer for collegiate volleyball at ACEIT — a club that wins with class
             and trains the next generation of captains.</p>
         </div>
       </div>
@@ -3182,26 +3182,26 @@
           <ul class="contact-list">
             <li>
               <div class="ic">📍</div>
-              <div><strong>Address</strong>Arya College of Engineering &amp; IT, Jaipur, Rajasthan</div>
+              <div><strong>Address</strong><span id="contactAddress">Arya College of Engineering &amp; IT, Jaipur, Rajasthan</span></div>
             </li>
             <li>
               <div class="ic">✉️</div>
-              <div><strong>Email</strong>spikers@aceit.edu.in</div>
+              <div><strong>Email</strong><span id="contactEmail">spikers@aceit.edu.in</span></div>
             </li>
             <li>
               <div class="ic">📞</div>
-              <div><strong>Phone</strong>+91 98765 43210</div>
+              <div><strong>Phone</strong><span id="contactPhone">+91 98765 43210</span></div>
             </li>
             <li>
               <div class="ic">🕒</div>
-              <div><strong>Working Hours</strong>Mon–Sat, 6:00 AM – 8:00 PM</div>
+              <div><strong>Working Hours</strong><span id="contactHours">Mon–Sat, 6:00 AM – 8:00 PM</span></div>
             </li>
           </ul>
           <div class="social-row">
-            <a href="#" aria-label="Instagram">📷</a>
-            <a href="#" aria-label="Facebook">📘</a>
-            <a href="#" aria-label="YouTube">▶️</a>
-            <a href="#" aria-label="WhatsApp">💬</a>
+            <a href="#" id="socialInsta" aria-label="Instagram">📷</a>
+            <a href="#" id="socialFb" aria-label="Facebook">📘</a>
+            <a href="#" id="socialYt" aria-label="YouTube">▶️</a>
+            <a href="#" id="socialWa" aria-label="WhatsApp">💬</a>
           </div>
         </div>
       </div>
@@ -3310,6 +3310,8 @@
         <button class="admin-tab" data-tab="testimonials">Testimonials</button>
         <button class="admin-tab" data-tab="sponsors">Sponsors</button>
         <button class="admin-tab" data-tab="stats">Stats</button>
+        <button class="admin-tab" data-tab="about">About</button>
+        <button class="admin-tab" data-tab="contact">Contact</button>
         <button class="admin-tab" data-tab="users" id="tabBtnUsers">Users</button>
         <button class="admin-tab" data-tab="clubs" id="tabBtnClubs">Clubs</button>
         <button class="admin-tab" data-tab="data">Data &amp; PIN</button>
@@ -3471,7 +3473,24 @@
             { id: uid(), label: 'Coaches', target: 5 },
             { id: uid(), label: 'Training Sessions', target: 410 },
             { id: uid(), label: 'Years Active', target: 6 }
-          ]
+          ],
+          about: {
+            eyebrow: 'Who we are',
+            title: 'Built on the court,\ndefined by character.',
+            sub: 'ACEIT Spikers brings together players who train hard, compete fair, and show up for one another — on and off the court.',
+            mission: 'To build a competitive volleyball program that develops skilled, disciplined athletes while creating a home for anyone who wants to play, grow, and belong.',
+            vision: 'To be recognised as the standard-bearer for collegiate volleyball at ACEIT — a club that wins with class and trains the next generation of captains.'
+          },
+          contact: {
+            address: 'Arya College of Engineering & IT, Jaipur, Rajasthan',
+            email: 'spikers@aceit.edu.in',
+            phone: '+91 98765 43210',
+            hours: 'Mon–Sat, 6:00 AM – 8:00 PM',
+            insta: '#',
+            fb: '#',
+            yt: '#',
+            wa: '#'
+          }
         };
       }
 
@@ -3487,17 +3506,15 @@
               keys.forEach(function (k) {
                 if (Array.isArray(parsed[k]) && parsed[k].length) { anyData = true; }
               });
-              if (!anyData) {
-                /* Every section is missing or empty — this is almost certainly a
-                   corrupted/blocked-storage state rather than an intentional full
-                   wipe, so recover with the original defaults instead of showing
-                   a blank dashboard. */
+              if (!anyData && !parsed.about && !parsed.contact) {
                 saveDB(fresh);
                 return fresh;
               }
               keys.forEach(function (k) {
                 if (!Array.isArray(parsed[k])) { parsed[k] = fresh[k]; }
               });
+              if (!parsed.about || typeof parsed.about !== 'object') { parsed.about = fresh.about; }
+              if (!parsed.contact || typeof parsed.contact !== 'object') { parsed.contact = fresh.contact; }
               return parsed;
             }
           }
@@ -3825,7 +3842,51 @@
         return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       }
 
+      function renderAboutPublic() {
+        if (!DB || !DB.about) return;
+        var ab = DB.about;
+        var eyebrowEl = document.getElementById('aboutEyebrow');
+        var titleEl = document.getElementById('aboutTitle');
+        var subEl = document.getElementById('aboutSub');
+        var missionEl = document.getElementById('aboutMission');
+        var visionEl = document.getElementById('aboutVision');
+
+        if (eyebrowEl && ab.eyebrow !== undefined) eyebrowEl.textContent = ab.eyebrow;
+        if (titleEl && ab.title !== undefined) {
+          titleEl.innerHTML = esc(ab.title).replace(/\\n|\n/g, '<br>');
+        }
+        if (subEl && ab.sub !== undefined) subEl.textContent = ab.sub;
+        if (missionEl && ab.mission !== undefined) missionEl.textContent = ab.mission;
+        if (visionEl && ab.vision !== undefined) visionEl.textContent = ab.vision;
+      }
+
+      function renderContactPublic() {
+        if (!DB || !DB.contact) return;
+        var ct = DB.contact;
+        var addressEl = document.getElementById('contactAddress');
+        var emailEl = document.getElementById('contactEmail');
+        var phoneEl = document.getElementById('contactPhone');
+        var hoursEl = document.getElementById('contactHours');
+
+        var instaEl = document.getElementById('socialInsta');
+        var fbEl = document.getElementById('socialFb');
+        var ytEl = document.getElementById('socialYt');
+        var waEl = document.getElementById('socialWa');
+
+        if (addressEl && ct.address !== undefined) addressEl.textContent = ct.address;
+        if (emailEl && ct.email !== undefined) emailEl.textContent = ct.email;
+        if (phoneEl && ct.phone !== undefined) phoneEl.textContent = ct.phone;
+        if (hoursEl && ct.hours !== undefined) hoursEl.textContent = ct.hours;
+
+        if (instaEl && ct.insta !== undefined) instaEl.setAttribute('href', ct.insta || '#');
+        if (fbEl && ct.fb !== undefined) fbEl.setAttribute('href', ct.fb || '#');
+        if (ytEl && ct.yt !== undefined) ytEl.setAttribute('href', ct.yt || '#');
+        if (waEl && ct.wa !== undefined) waEl.setAttribute('href', ct.wa || '#');
+      }
+
       function renderAllPublic() {
+        renderAboutPublic();
+        renderContactPublic();
         renderTeamPublic();
         renderGalleryPublic();
         renderMatchesPublic();
@@ -4267,6 +4328,8 @@
       };
 
       function renderAdminTab(tab) {
+        if (tab === 'about') { renderAboutTab(); return; }
+        if (tab === 'contact') { renderContactTab(); return; }
         if (tab === 'users') { renderUsersTab(); return; }
         if (tab === 'clubs') { renderClubsTab(); return; }
         if (tab === 'data') { renderDataTab(); return; }
@@ -4594,6 +4657,126 @@
           setPIN(val);
           showAlert('Admin PIN updated.');
           document.getElementById('newPinInput').value = '';
+        });
+      }
+
+      /* ============ ABOUT TAB MANAGEMENT ============ */
+      function renderAboutTab() {
+        var about = DB.about || {
+          eyebrow: 'Who we are',
+          title: 'Built on the court,\ndefined by character.',
+          sub: 'ACEIT Spikers brings together players who train hard, compete fair, and show up for one another — on and off the court.',
+          mission: 'To build a competitive volleyball program that develops skilled, disciplined athletes while creating a home for anyone who wants to play, grow, and belong.',
+          vision: 'To be recognised as the standard-bearer for collegiate volleyball at ACEIT — a club that wins with class and trains the next generation of captains.'
+        };
+
+        var html = '<div class="admin-panel-head"><h3>About Section Management</h3></div>' +
+          '<div class="admin-note">Edit the headline, sub-heading, mission, and vision content displayed in the About section of the public website.</div>' +
+          '<div class="admin-form open" style="margin-top:16px;">' +
+            '<div class="admin-form-grid">' +
+              '<div class="admin-field"><label>Eyebrow Tagline</label><input type="text" id="abEyebrow" value="' + esc(about.eyebrow || '') + '"></div>' +
+              '<div class="admin-field"><label>Headline Title</label><input type="text" id="abTitle" value="' + esc(about.title || '') + '"></div>' +
+              '<div class="admin-field full"><label>Sub-heading Description</label><textarea id="abSub" rows="3">' + esc(about.sub || '') + '</textarea></div>' +
+              '<div class="admin-field full"><label>Our Mission</label><textarea id="abMission" rows="3">' + esc(about.mission || '') + '</textarea></div>' +
+              '<div class="admin-field full"><label>Our Vision</label><textarea id="abVision" rows="3">' + esc(about.vision || '') + '</textarea></div>' +
+            '</div>' +
+            '<div style="margin-top:16px;display:flex;gap:12px;">' +
+              '<button class="btn btn-primary" id="saveAboutBtn">Save About Section</button>' +
+            '</div>' +
+          '</div>';
+
+        adminContent.innerHTML = html;
+        adminContent.scrollTop = 0;
+
+        document.getElementById('saveAboutBtn').addEventListener('click', function () {
+          var eyebrow = (document.getElementById('abEyebrow').value || '').trim();
+          var title = (document.getElementById('abTitle').value || '').trim();
+          var sub = (document.getElementById('abSub').value || '').trim();
+          var mission = (document.getElementById('abMission').value || '').trim();
+          var vision = (document.getElementById('abVision').value || '').trim();
+
+          DB.about = {
+            eyebrow: eyebrow,
+            title: title,
+            sub: sub,
+            mission: mission,
+            vision: vision
+          };
+
+          saveDB(DB, function (success) {
+            if (success) {
+              renderAboutPublic();
+              showAlert('About section updated successfully.');
+            } else {
+              showAlert('Failed to save About section.');
+            }
+          });
+        });
+      }
+
+      /* ============ CONTACT TAB MANAGEMENT ============ */
+      function renderContactTab() {
+        var contact = DB.contact || {
+          address: 'Arya College of Engineering & IT, Jaipur, Rajasthan',
+          email: 'spikers@aceit.edu.in',
+          phone: '+91 98765 43210',
+          hours: 'Mon–Sat, 6:00 AM – 8:00 PM',
+          insta: '#',
+          fb: '#',
+          yt: '#',
+          wa: '#'
+        };
+
+        var html = '<div class="admin-panel-head"><h3>Contact Section Management</h3></div>' +
+          '<div class="admin-note">Edit the address, email, phone, working hours, and social links displayed in the Contact section of the public website.</div>' +
+          '<div class="admin-form open" style="margin-top:16px;">' +
+            '<div class="admin-form-grid">' +
+              '<div class="admin-field full"><label>Address</label><input type="text" id="ctAddress" value="' + esc(contact.address || '') + '"></div>' +
+              '<div class="admin-field"><label>Email Address</label><input type="text" id="ctEmail" value="' + esc(contact.email || '') + '"></div>' +
+              '<div class="admin-field"><label>Phone Number</label><input type="text" id="ctPhone" value="' + esc(contact.phone || '') + '"></div>' +
+              '<div class="admin-field full"><label>Working Hours</label><input type="text" id="ctHours" value="' + esc(contact.hours || '') + '"></div>' +
+              '<div class="admin-field"><label>Instagram Link / Handle</label><input type="text" id="ctInsta" value="' + esc(contact.insta || '#') + '"></div>' +
+              '<div class="admin-field"><label>Facebook Link</label><input type="text" id="ctFb" value="' + esc(contact.fb || '#') + '"></div>' +
+              '<div class="admin-field"><label>YouTube Link</label><input type="text" id="ctYt" value="' + esc(contact.yt || '#') + '"></div>' +
+              '<div class="admin-field"><label>WhatsApp Link / Number</label><input type="text" id="ctWa" value="' + esc(contact.wa || '#') + '"></div>' +
+            '</div>' +
+            '<div style="margin-top:16px;display:flex;gap:12px;">' +
+              '<button class="btn btn-primary" id="saveContactBtn">Save Contact Section</button>' +
+            '</div>' +
+          '</div>';
+
+        adminContent.innerHTML = html;
+        adminContent.scrollTop = 0;
+
+        document.getElementById('saveContactBtn').addEventListener('click', function () {
+          var address = (document.getElementById('ctAddress').value || '').trim();
+          var email = (document.getElementById('ctEmail').value || '').trim();
+          var phone = (document.getElementById('ctPhone').value || '').trim();
+          var hours = (document.getElementById('ctHours').value || '').trim();
+          var insta = (document.getElementById('ctInsta').value || '').trim();
+          var fb = (document.getElementById('ctFb').value || '').trim();
+          var yt = (document.getElementById('ctYt').value || '').trim();
+          var wa = (document.getElementById('ctWa').value || '').trim();
+
+          DB.contact = {
+            address: address,
+            email: email,
+            phone: phone,
+            hours: hours,
+            insta: insta,
+            fb: fb,
+            yt: yt,
+            wa: wa
+          };
+
+          saveDB(DB, function (success) {
+            if (success) {
+              renderContactPublic();
+              showAlert('Contact section updated successfully.');
+            } else {
+              showAlert('Failed to save Contact section.');
+            }
+          });
         });
       }
 

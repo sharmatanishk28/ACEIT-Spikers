@@ -296,5 +296,22 @@
       "label": "Years Active",
       "target": 6
     }
-  ]
+  ],
+  "about": {
+    "eyebrow": "WHO WE ARE - TEST",
+    "title": "BUILT ON THE COURT,\\nDEFINED BY EXCELLENCE.",
+    "sub": "ACEIT Spikers builds elite volleyball players with passion and discipline.",
+    "mission": "To build the top collegiate volleyball program in India.",
+    "vision": "To be the #1 collegiate sports program in India."
+  },
+  "contact": {
+    "address": "Arya Campus 1, Kukas, Jaipur, Rajasthan 302028",
+    "email": "spikers-official@aceit.edu.in",
+    "phone": "+91 98765 00000",
+    "hours": "Mon–Sun, 5:00 AM – 9:00 PM",
+    "insta": "https://instagram.com/aceit_spikers",
+    "fb": "https://facebook.com/aceitspikers",
+    "yt": "https://youtube.com/@aceitspikers",
+    "wa": "https://wa.me/919999988888"
+  }
 }

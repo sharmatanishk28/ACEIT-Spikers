@@ -150,8 +150,10 @@ const clubSchema = new mongoose.Schema({
   testimonials: { type: Array, default: [] },
   stats: { type: Array, default: [] },
   gallery: { type: Array, default: [] },
+  about: { type: Object, default: {} },
+  contact: { type: Object, default: {} },
   pin: { type: String, default: '2026' }
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 const ClubDoc = mongoose.models.ClubDoc || mongoose.model('ClubDoc', clubSchema);
 
@@ -343,7 +345,26 @@ function readLocalFileDB() {
       return JSON.parse(raw);
     }
   } catch (err) { }
-  return { team: [], matches: [], news: [], sponsors: [], testimonials: [], stats: [], gallery: [] };
+  return {
+    team: [], matches: [], news: [], sponsors: [], testimonials: [], stats: [], gallery: [],
+    about: {
+      eyebrow: 'Who we are',
+      title: 'Built on the court,\ndefined by character.',
+      sub: 'ACEIT Spikers brings together players who train hard, compete fair, and show up for one another — on and off the court.',
+      mission: 'To build a competitive volleyball program that develops skilled, disciplined athletes while creating a home for anyone who wants to play, grow, and belong.',
+      vision: 'To be recognised as the standard-bearer for collegiate volleyball at ACEIT — a club that wins with class and trains the next generation of captains.'
+    },
+    contact: {
+      address: 'Arya College of Engineering & IT, Jaipur, Rajasthan',
+      email: 'spikers@aceit.edu.in',
+      phone: '+91 98765 43210',
+      hours: 'Mon–Sat, 6:00 AM – 8:00 PM',
+      insta: '#',
+      fb: '#',
+      yt: '#',
+      wa: '#'
+    }
+  };
 }
 
 function writeLocalFileDB(data) {
@@ -412,7 +433,9 @@ async function saveDB(data) {
         sponsors: data.sponsors || [],
         testimonials: data.testimonials || [],
         stats: data.stats || [],
-        gallery: data.gallery || []
+        gallery: data.gallery || [],
+        about: data.about || {},
+        contact: data.contact || {}
       },
       { upsert: true, new: true }
     );
