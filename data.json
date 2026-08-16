@@ -307,11 +307,28 @@
   "contact": {
     "address": "Arya Campus 1, Kukas, Jaipur, Rajasthan 302028",
     "email": "spikers-official@aceit.edu.in",
-    "phone": "+91 98765 00000",
+    "phone": "+91 7067787571",
     "hours": "Mon–Sun, 5:00 AM – 9:00 PM",
     "insta": "https://instagram.com/aceit_spikers",
     "fb": "https://facebook.com/aceitspikers",
     "yt": "https://youtube.com/@aceitspikers",
     "wa": "https://wa.me/919999988888"
-  }
+  },
+  "applications": [
+    {
+      "_id": "app_17868615591291vd2",
+      "name": "Rohit Sharma",
+      "email": "rohit.spikers@example.com",
+      "phone": "+91 98888 77777",
+      "position": "Outside Hitter",
+      "experience": "4 years",
+      "message": "Ready to play in upcoming regional tournament!",
+      "status": "Accepted",
+      "source": "Tally Webhook",
+      "tallyEventId": "evt_tally_test_1001",
+      "tallyResponseId": "resp_tally_test_1001",
+      "createdAt": "2026-08-16T06:25:59.129Z",
+      "date": "2026-08-16T06:25:59.129Z"
+    }
+  ]
 }

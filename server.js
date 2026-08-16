@@ -183,6 +183,22 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
+// Join Club Application Model for Tally Webhook & Website Submissions
+const applicationSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: { type: String, default: '' },
+  position: { type: String, default: '' },
+  experience: { type: String, default: '' },
+  message: { type: String, default: '' },
+  status: { type: String, default: 'Pending' }, // 'Pending', 'Reviewed', 'Accepted', 'Rejected'
+  source: { type: String, default: 'Tally Webhook' },
+  tallyEventId: { type: String, default: null },
+  tallyResponseId: { type: String, default: null }
+}, { timestamps: true });
+
+const ApplicationDoc = mongoose.models.ApplicationDoc || mongoose.model('ApplicationDoc', applicationSchema);
+
 // Initial Seeding Helper: Auto-seeds initial Club & OWNER account if database is fresh
 async function seedInitialAuthAndClubs() {
   const dbConn = await connectToDatabase();
@@ -1188,6 +1204,230 @@ app.delete('/api/users/:id', authenticateUser, requireAuth, requirePermission('u
 
     await User.findByIdAndDelete(targetUser._id);
     res.json({ success: true, message: 'User deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/* ============================================================
+   TALLY WEBHOOK & JOIN CLUB APPLICATIONS MANAGEMENT
+   ============================================================ */
+
+function parseTallyPayload(body) {
+  let name = '', email = '', phone = '', position = '', experience = '', message = '';
+  let eventId = body?.eventId || body?.eventId || null;
+  let responseId = body?.data?.responseId || null;
+
+  const fields = body?.data?.fields || body?.fields || [];
+  if (Array.isArray(fields)) {
+    fields.forEach(f => {
+      const label = String(f.label || f.key || f.type || '').toLowerCase();
+      let val = f.value;
+      if (Array.isArray(val)) val = val.join(', ');
+      else if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
+      else val = String(val || '');
+
+      if (!val) return;
+
+      if (label.includes('name')) name = name || val;
+      else if (label.includes('email')) email = email || val;
+      else if (label.includes('phone') || label.includes('mobile') || label.includes('contact')) phone = phone || val;
+      else if (label.includes('position') || label.includes('role')) position = position || val;
+      else if (label.includes('experience') || label.includes('exp')) experience = experience || val;
+      else if (label.includes('message') || label.includes('know') || label.includes('note')) message = message || val;
+    });
+  }
+
+  // Fallback to direct body properties or Tally field GUIDs
+  name = name || body?.name || body?.data?.name || body?.['3b554c5c-578e-4045-ba2c-73c3ffe892d2'] || '';
+  email = email || body?.email || body?.data?.email || body?.['b8a3a47f-71de-4c17-9905-e9fd4b4174a0'] || '';
+  phone = phone || body?.phone || body?.data?.phone || body?.['4c092297-7954-4940-8965-9e85c84d5cdd'] || '';
+  position = position || body?.position || body?.data?.position || body?.['cc5dd8f8-5bdd-4e42-bfe3-8b71f2b5caa0'] || '';
+  experience = experience || body?.experience || body?.data?.experience || body?.['547086c9-1007-46fa-a1eb-2aad1c897cc3'] || '';
+  message = message || body?.message || body?.data?.message || body?.['ecf78403-245e-4832-b8b9-7231b7561d94'] || '';
+
+  return { name, email, phone, position, experience, message, eventId, responseId };
+}
+
+async function createApplication(appData) {
+  const dbConn = await connectToDatabase();
+  const newApp = {
+    name: appData.name || 'Anonymous Applicant',
+    email: appData.email || 'No email provided',
+    phone: appData.phone || '',
+    position: appData.position || '',
+    experience: appData.experience || '',
+    message: appData.message || '',
+    status: appData.status || 'Pending',
+    source: appData.source || 'Tally Webhook',
+    tallyEventId: appData.eventId || null,
+    tallyResponseId: appData.responseId || null
+  };
+
+  if (dbConn) {
+    if (appData.eventId) {
+      const existing = await ApplicationDoc.findOne({ tallyEventId: appData.eventId });
+      if (existing) return existing;
+    }
+    const doc = await ApplicationDoc.create(newApp);
+
+    // Sync to ClubDoc database applications list for backup
+    const dbRes = await getDB();
+    if (dbRes.success) {
+      const dbData = dbRes.data;
+      if (!Array.isArray(dbData.applications)) dbData.applications = [];
+      dbData.applications.unshift({
+        id: doc._id.toString(),
+        name: doc.name,
+        email: doc.email,
+        phone: doc.phone,
+        position: doc.position,
+        experience: doc.experience,
+        message: doc.message,
+        status: doc.status,
+        date: doc.createdAt.toISOString()
+      });
+      await saveDB(dbData);
+    }
+    return doc;
+  } else {
+    // Standalone dev mode fallback
+    const dbRes = await getDB();
+    const dbData = dbRes.data;
+    if (!Array.isArray(dbData.applications)) dbData.applications = [];
+    const localDoc = {
+      _id: 'app_' + Date.now() + Math.random().toString(36).substring(2, 6),
+      ...newApp,
+      createdAt: new Date(),
+      date: new Date().toISOString()
+    };
+    dbData.applications.unshift(localDoc);
+    await saveDB(dbData);
+    return localDoc;
+  }
+}
+
+// Secure Tally Webhook receiver endpoints
+const handleTallyWebhook = async (req, res) => {
+  try {
+    const parsed = parseTallyPayload(req.body);
+    const doc = await createApplication({ ...parsed, source: 'Tally Webhook' });
+    console.log('[Tally Webhook] Successfully processed submission from:', parsed.email || parsed.name);
+    res.json({ success: true, message: 'Tally submission processed successfully', application: doc });
+  } catch (err) {
+    console.error('[Tally Webhook Error]:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+app.post('/api/webhooks/tally', handleTallyWebhook);
+app.post('/api/tally-webhook', handleTallyWebhook);
+
+// Applications: Submit Endpoint (Website Form)
+app.post('/api/applications', async (req, res) => {
+  try {
+    const { name, email, phone, position, experience, message } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: 'Name and email are required.' });
+    }
+    const doc = await createApplication({
+      name, email, phone, position, experience, message,
+      source: 'Website Form'
+    });
+    res.json({ success: true, application: doc, message: 'Application submitted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Applications: GET List (OWNER / ADMIN)
+app.get('/api/applications', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      const apps = await ApplicationDoc.find({}).sort({ createdAt: -1 });
+      res.json({ success: true, applications: apps });
+    } else {
+      const dbRes = await getDB();
+      const apps = dbRes.data.applications || [];
+      res.json({ success: true, applications: apps });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Applications: PUT Update Status
+app.put('/api/applications/:id/status', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    if (!status) return res.status(400).json({ success: false, message: 'Status is required' });
+
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      let doc = null;
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        doc = await ApplicationDoc.findByIdAndUpdate(id, { status }, { new: true });
+      }
+      if (!doc) {
+        doc = await ApplicationDoc.findOneAndUpdate({ _id: id }, { status }, { new: true });
+      }
+
+      // Also update ClubDoc fallback applications array if present
+      const dbRes = await getDB();
+      if (dbRes.success && Array.isArray(dbRes.data.applications)) {
+        const item = dbRes.data.applications.find(a => String(a.id || a._id) === String(id));
+        if (item) {
+          item.status = status;
+          await saveDB(dbRes.data);
+        }
+      }
+
+      return res.json({ success: true, application: doc, message: 'Status updated successfully' });
+    } else {
+      const dbRes = await getDB();
+      const dbData = dbRes.data;
+      if (!Array.isArray(dbData.applications)) dbData.applications = [];
+      const item = dbData.applications.find(a => String(a.id || a._id) === String(id));
+      if (!item) return res.status(404).json({ success: false, message: 'Application not found' });
+      item.status = status;
+      await saveDB(dbData);
+      return res.json({ success: true, application: item, message: 'Status updated successfully' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Applications: DELETE
+app.delete('/api/applications/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const dbConn = await connectToDatabase();
+
+    if (dbConn) {
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        await ApplicationDoc.findByIdAndDelete(id);
+      } else {
+        await ApplicationDoc.deleteOne({ _id: id });
+      }
+
+      const dbRes = await getDB();
+      if (dbRes.success && Array.isArray(dbRes.data.applications)) {
+        dbRes.data.applications = dbRes.data.applications.filter(a => String(a.id || a._id) !== String(id));
+        await saveDB(dbRes.data);
+      }
+      return res.json({ success: true, message: 'Application deleted successfully' });
+    } else {
+      const dbRes = await getDB();
+      const dbData = dbRes.data;
+      if (Array.isArray(dbData.applications)) {
+        dbData.applications = dbData.applications.filter(a => String(a.id || a._id) !== String(id));
+        await saveDB(dbData);
+      }
+      return res.json({ success: true, message: 'Application deleted successfully' });
+    }
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

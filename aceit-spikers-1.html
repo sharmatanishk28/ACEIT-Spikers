@@ -3312,6 +3312,7 @@
         <button class="admin-tab" data-tab="stats">Stats</button>
         <button class="admin-tab" data-tab="about">About</button>
         <button class="admin-tab" data-tab="contact">Contact</button>
+        <button class="admin-tab" data-tab="applications" id="tabBtnApplications">Applications</button>
         <button class="admin-tab" data-tab="users" id="tabBtnUsers">Users</button>
         <button class="admin-tab" data-tab="clubs" id="tabBtnClubs">Clubs</button>
         <button class="admin-tab" data-tab="data">Data &amp; PIN</button>
@@ -4009,6 +4010,23 @@
             console.warn('Tally iframe error:', err);
           }
 
+          // 2.5 Submit directly to backend API (/api/applications)
+          try {
+            fetch(API_BASE + '/applications', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: nameVal,
+                email: emailVal,
+                phone: phoneVal,
+                position: posVal,
+                experience: expVal,
+                message: msgVal,
+                source: 'Website Form'
+              })
+            }).catch(function (e) { console.warn('Backend API app save error:', e); });
+          } catch (e) { console.warn('Backend API app exception:', e); }
+
           // 3. Save submission locally in localStorage database
           try {
             if (!DB.applications) DB.applications = [];
@@ -4188,6 +4206,9 @@
             testimonials: 'testimonials',
             sponsors: 'sponsors',
             stats: 'stats',
+            about: 'about',
+            contact: 'contact',
+            applications: 'applications',
             users: 'users',
             clubs: 'clubs'
           };
@@ -4215,6 +4236,8 @@
               currentAdminTab = firstVisible.getAttribute('data-tab');
             }
           }
+          
+          renderAdminTab(currentAdminTab);
         });
       }
 
@@ -4330,6 +4353,7 @@
       function renderAdminTab(tab) {
         if (tab === 'about') { renderAboutTab(); return; }
         if (tab === 'contact') { renderContactTab(); return; }
+        if (tab === 'applications') { renderApplicationsTab(); return; }
         if (tab === 'users') { renderUsersTab(); return; }
         if (tab === 'clubs') { renderClubsTab(); return; }
         if (tab === 'data') { renderDataTab(); return; }
@@ -4776,6 +4800,182 @@
             } else {
               showAlert('Failed to save Contact section.');
             }
+          });
+        });
+      }
+
+      /* ============ APPLICATIONS TAB MANAGEMENT ============ */
+      function renderApplicationsTab() {
+        authFetch(API_BASE + '/applications')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (!res || !res.success) {
+              adminContent.innerHTML = '<div class="admin-panel-head"><h3>Applications</h3></div><p style="color:#C0392B;padding:16px;">' + (res && res.message ? res.message : 'Error loading applications list.') + '</p>';
+              return;
+            }
+            var apps = res.applications || [];
+
+            var html = '<div class="admin-panel-head"><h3>Club Applications <span class="admin-count mono">' + apps.length + '</span></h3></div>' +
+              '<div class="admin-note">View, manage, and process player applications submitted via Tally or the website join form. MongoDB is the source of truth.</div>';
+
+            if (apps.length === 0) {
+              html += '<p style="color:var(--charcoal-soft);font-size:14px;margin-top:20px;">No applications received yet. Submissions to Tally or the Join Club form will appear here in real-time.</p>';
+              adminContent.innerHTML = html;
+              return;
+            }
+
+            html += '<div style="margin-top:16px;overflow-x:auto;">' +
+              '<table class="admin-table" style="width:100%;border-collapse:collapse;font-size:13px;text-align:left;">' +
+              '<thead><tr style="border-bottom:2px solid var(--border);color:var(--charcoal);background:var(--bg-card);">' +
+              '<th style="padding:10px 12px;">Applicant Name</th>' +
+              '<th style="padding:10px 12px;">Email &amp; Phone</th>' +
+              '<th style="padding:10px 12px;">Position &amp; Exp</th>' +
+              '<th style="padding:10px 12px;">Date</th>' +
+              '<th style="padding:10px 12px;">Status</th>' +
+              '<th style="padding:10px 12px;text-align:right;">Actions</th>' +
+              '</tr></thead><tbody>';
+
+            apps.forEach(function (app) {
+              var appId = app._id || app.id;
+              var dateStr = app.createdAt || app.date || new Date().toISOString();
+              var formattedDate = '';
+              try {
+                var d = new Date(dateStr);
+                formattedDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+              } catch(e) { formattedDate = dateStr; }
+
+              var statusColors = {
+                Pending: 'background:#F39C12;color:#fff;',
+                Reviewed: 'background:#2980B9;color:#fff;',
+                Accepted: 'background:#27AE60;color:#fff;',
+                Rejected: 'background:#C0392B;color:#fff;'
+              };
+              var statusStyle = statusColors[app.status] || statusColors.Pending;
+
+              html += '<tr style="border-bottom:1px solid var(--border);">' +
+                '<td style="padding:10px 12px;"><b>' + esc(app.name) + '</b><br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.source || 'Tally Webhook') + '</span></td>' +
+                '<td style="padding:10px 12px;">' + esc(app.email) + '<br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.phone || 'N/A') + '</span></td>' +
+                '<td style="padding:10px 12px;"><b>' + esc(app.position || 'N/A') + '</b><br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.experience || 'N/A') + '</span></td>' +
+                '<td style="padding:10px 12px;font-size:12px;">' + esc(formattedDate) + '</td>' +
+                '<td style="padding:10px 12px;">' +
+                  '<select data-app-status="' + esc(appId) + '" style="padding:3px 6px;border-radius:4px;font-size:11px;font-weight:700;' + statusStyle + 'border:none;cursor:pointer;">' +
+                    '<option value="Pending"' + (app.status === 'Pending' ? ' selected' : '') + ' style="background:#fff;color:#000;">Pending</option>' +
+                    '<option value="Reviewed"' + (app.status === 'Reviewed' ? ' selected' : '') + ' style="background:#fff;color:#000;">Reviewed</option>' +
+                    '<option value="Accepted"' + (app.status === 'Accepted' ? ' selected' : '') + ' style="background:#fff;color:#000;">Accepted</option>' +
+                    '<option value="Rejected"' + (app.status === 'Rejected' ? ' selected' : '') + ' style="background:#fff;color:#000;">Rejected</option>' +
+                  '</select>' +
+                '</td>' +
+                '<td style="padding:10px 12px;text-align:right;">' +
+                  '<button class="admin-btn" data-app-view="' + esc(appId) + '" style="margin-right:6px;">View</button>' +
+                  '<button class="admin-btn danger" data-app-del="' + esc(appId) + '">Delete</button>' +
+                '</td>' +
+                '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+            adminContent.innerHTML = html;
+            adminContent.scrollTop = 0;
+
+            // Status change listeners
+            adminContent.querySelectorAll('select[data-app-status]').forEach(function (sel) {
+              sel.addEventListener('change', function () {
+                var id = sel.getAttribute('data-app-status');
+                var newStatus = sel.value;
+                authFetch(API_BASE + '/applications/' + id + '/status', {
+                  method: 'PUT',
+                  body: JSON.stringify({ status: newStatus })
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                  if (data.success) {
+                    showAlert('Application status updated to ' + newStatus);
+                    renderApplicationsTab();
+                  } else {
+                    showAlert('Failed to update status: ' + (data.message || 'Error'));
+                  }
+                });
+              });
+            });
+
+            // View details modal listener
+            adminContent.querySelectorAll('button[data-app-view]').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var id = btn.getAttribute('data-app-view');
+                var targetApp = apps.find(function (a) { return String(a._id || a.id) === String(id); });
+                if (targetApp) openApplicationViewModal(targetApp);
+              });
+            });
+
+            // Delete listener
+            adminContent.querySelectorAll('button[data-app-del]').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var id = btn.getAttribute('data-app-del');
+                showConfirm('Delete this application permanently from MongoDB?', function () {
+                  authFetch(API_BASE + '/applications/' + id, { method: 'DELETE' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                      if (data.success) {
+                        showAlert('Application deleted.');
+                        renderApplicationsTab();
+                      } else {
+                        showAlert('Failed to delete application: ' + (data.message || 'Error'));
+                      }
+                    });
+                });
+              });
+            });
+          })
+          .catch(function (err) {
+            adminContent.innerHTML = '<div class="admin-panel-head"><h3>Applications</h3></div><p style="color:#C0392B;padding:16px;">Network error loading applications.</p>';
+          });
+      }
+
+      function openApplicationViewModal(app) {
+        var dateStr = app.createdAt || app.date || new Date().toISOString();
+        var formattedDate = '';
+        try {
+          var d = new Date(dateStr);
+          formattedDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        } catch(e) { formattedDate = dateStr; }
+
+        var modalHtml = '<div class="modal-overlay open" id="appDetailOverlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:99999;">' +
+          '<div class="modal-card" style="background:var(--cream,#FDFBF7);border-radius:12px;padding:24px;max-width:550px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.3);color:var(--charcoal,#1A1A1A);">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border,#E5DCD0);padding-bottom:12px;margin-bottom:16px;">' +
+              '<h3 style="margin:0;font-size:18px;">Application Details</h3>' +
+              '<button id="closeAppModalBtn" style="background:none;border:none;font-size:20px;cursor:pointer;">&times;</button>' +
+            '</div>' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;margin-bottom:16px;">' +
+              '<div><strong>Full Name:</strong><br>' + esc(app.name) + '</div>' +
+              '<div><strong>Email:</strong><br>' + esc(app.email) + '</div>' +
+              '<div><strong>Phone:</strong><br>' + esc(app.phone || 'N/A') + '</div>' +
+              '<div><strong>Position:</strong><br>' + esc(app.position || 'N/A') + '</div>' +
+              '<div><strong>Experience:</strong><br>' + esc(app.experience || 'N/A') + '</div>' +
+              '<div><strong>Status:</strong><br><span style="font-weight:700;">' + esc(app.status || 'Pending') + '</span></div>' +
+              '<div><strong>Date Submitted:</strong><br>' + esc(formattedDate) + '</div>' +
+              '<div><strong>Source:</strong><br>' + esc(app.source || 'Tally Webhook') + '</div>' +
+            '</div>' +
+            '<div style="font-size:13px;margin-bottom:20px;">' +
+              '<strong>Message / Bio:</strong>' +
+              '<div style="background:var(--cream-2,#F7F3EC);padding:12px;border-radius:8px;margin-top:6px;min-height:60px;white-space:pre-wrap;">' + esc(app.message || 'No additional message provided.') + '</div>' +
+            '</div>' +
+            '<div style="text-align:right;">' +
+              '<button class="btn btn-primary" id="closeAppModalBtn2">Close</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+        var existing = document.getElementById('appDetailOverlay');
+        if (existing) existing.parentNode.removeChild(existing);
+
+        var div = document.createElement('div');
+        div.innerHTML = modalHtml;
+        document.body.appendChild(div.firstElementChild);
+
+        var overlay = document.getElementById('appDetailOverlay');
+        var closeBtns = [document.getElementById('closeAppModalBtn'), document.getElementById('closeAppModalBtn2')];
+        closeBtns.forEach(function (b) {
+          if (b) b.addEventListener('click', function () {
+            if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
           });
         });
       }
