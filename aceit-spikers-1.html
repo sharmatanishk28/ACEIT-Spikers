@@ -3986,7 +3986,7 @@
       var adminContent = document.getElementById('adminContent');
       var currentAdminTab = 'team';
       var currentUser = null;
-      var systemClubs = [];
+      var systemClubs = null;
       var activeClubScope = 'ALL';
 
       function checkAuthAndOpenAdmin() {
@@ -4311,7 +4311,7 @@
             var copy = Object.assign({}, orig, { id: uid() });
             var idx = DB[tab].findIndex(function (it) { return it.id === id; });
             if (tab === 'team') {
-              fetch(API_BASE + '/team/duplicate/' + id, { method: 'POST' })
+              authFetch(API_BASE + '/team/duplicate/' + id, { method: 'POST' })
                 .then(function (r) { return r.json(); })
                 .then(function (res) {
                   if (res && res.success) {
@@ -4339,7 +4339,7 @@
             var id = b.getAttribute('data-del');
             showConfirm('Delete this ' + schema.label.toLowerCase() + '? This cannot be undone.', function () {
               if (tab === 'team') {
-                fetch(API_BASE + '/team/' + id, { method: 'DELETE' })
+                authFetch(API_BASE + '/team/' + id, { method: 'DELETE' })
                   .then(function (r) { return r.json(); })
                   .then(function (res) {
                     if (res && res.success) {
@@ -4478,7 +4478,7 @@
           if (tab === 'team') {
             var method = item ? 'PUT' : 'POST';
             var url = API_BASE + '/team' + (item ? '/' + item.id : '');
-            fetch(url, {
+            authFetch(url, {
               method: method,
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(newItem)
@@ -4677,7 +4677,7 @@
       }
 
       function openUserModal(user) {
-        if (!systemClubs || !systemClubs.length) {
+        if (systemClubs === null) {
           fetchSystemClubs(function () {
             openUserModal(user);
           });
@@ -4703,17 +4703,23 @@
         var userPerms = (user && Array.isArray(user.permissions)) ? user.permissions : [];
 
         var clubOptions = '<option value="ALL">All Clubs (Global)</option>';
-        systemClubs.forEach(function (c) {
-          var cid = String(c._id || c.id);
-          var selected = (user && String(user.clubId) === cid) ? ' selected' : '';
-          clubOptions += '<option value="' + esc(cid) + '"' + selected + '>' + esc(c.name) + ' (' + esc(c.sport || '') + ')</option>';
-        });
+        if (Array.isArray(systemClubs)) {
+          systemClubs.forEach(function (c) {
+            var cid = String(c._id || c.id);
+            var selected = (user && String(user.clubId) === cid) ? ' selected' : '';
+            clubOptions += '<option value="' + esc(cid) + '"' + selected + '>' + esc(c.name) + ' (' + esc(c.sport || '') + ')</option>';
+          });
+        }
+
+        var isOwner = user && user.role === 'OWNER';
+        var isNewUser = !user;
 
         var permGrid = '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:8px;margin-top:8px;">';
         allPerms.forEach(function (p) {
-          var checked = (user && user.role === 'OWNER') || userPerms.includes('*') || userPerms.includes(p.key) ? ' checked' : '';
+          var checked = isOwner || isNewUser || userPerms.includes('*') || userPerms.includes(p.key) ? ' checked' : '';
+          var disabled = isOwner ? ' disabled' : '';
           permGrid += '<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:normal;cursor:pointer;">' +
-            '<input type="checkbox" class="user-perm-cb" value="' + p.key + '"' + checked + '> ' + p.label +
+            '<input type="checkbox" class="user-perm-cb" value="' + p.key + '"' + checked + disabled + '> ' + p.label +
           '</label>';
         });
         permGrid += '</div>';
@@ -4725,11 +4731,11 @@
             '<div class="admin-field"><label>Username</label><input type="text" id="uModalUsername" value="' + esc(user ? user.username : '') + '"' + (user ? ' readonly style="background:#eee;"' : '') + '></div>' +
             '<div class="admin-field"><label>Password ' + (user ? '(leave blank to keep unchanged)' : '') + '</label><input type="password" id="uModalPassword" placeholder="' + (user ? '••••••••' : 'Password') + '"></div>' +
             '<div class="admin-field"><label>Role</label><select id="uModalRole">' +
-              '<option value="ADMIN"' + (user && user.role === 'ADMIN' ? ' selected' : '') + '>ADMIN</option>' +
+              '<option value="ADMIN"' + (user && user.role === 'ADMIN' ? ' selected' : (!user ? ' selected' : '')) + '>ADMIN</option>' +
               '<option value="CUSTOM"' + (user && user.role === 'CUSTOM' ? ' selected' : '') + '>CUSTOM</option>' +
               '<option value="OWNER"' + (user && user.role === 'OWNER' ? ' selected' : '') + '>OWNER</option>' +
             '</select></div>' +
-            '<div class="admin-field"><label>Assigned Club</label><select id="uModalClub">' + clubOptions + '</select></div>' +
+            '<div class="admin-field"><label>Assigned Club</label><select id="uModalClub" ' + (isOwner ? 'disabled' : '') + '>' + clubOptions + '</select></div>' +
             '<div class="admin-field" style="display:flex;align-items:center;gap:8px;padding-top:24px;">' +
               '<input type="checkbox" id="uModalActive"' + (user && user.active === false ? '' : ' checked') + '>' +
               '<label for="uModalActive" style="margin:0;cursor:pointer;">Account Active</label>' +
@@ -4743,9 +4749,38 @@
         '</div>';
 
         formArea.innerHTML = html;
+        formArea.classList.add('open');
         formArea.scrollIntoView({ behavior: 'smooth' });
 
-        document.getElementById('cancelUserBtn').addEventListener('click', function () { formArea.innerHTML = ''; });
+        var roleSelect = document.getElementById('uModalRole');
+        var clubSelect = document.getElementById('uModalClub');
+        if (roleSelect) {
+          roleSelect.addEventListener('change', function () {
+            var selectedRole = roleSelect.value;
+            var isNowOwner = selectedRole === 'OWNER';
+            if (clubSelect) {
+              if (isNowOwner) {
+                clubSelect.value = 'ALL';
+                clubSelect.disabled = true;
+              } else {
+                clubSelect.disabled = false;
+              }
+            }
+            formArea.querySelectorAll('.user-perm-cb').forEach(function (cb) {
+              if (isNowOwner) {
+                cb.checked = true;
+                cb.disabled = true;
+              } else {
+                cb.disabled = false;
+              }
+            });
+          });
+        }
+
+        document.getElementById('cancelUserBtn').addEventListener('click', function () {
+          formArea.classList.remove('open');
+          formArea.innerHTML = '';
+        });
         document.getElementById('saveUserBtn').addEventListener('click', function () {
           var name = (document.getElementById('uModalName').value || '').trim();
           var username = (document.getElementById('uModalUsername').value || '').trim();
@@ -4796,6 +4831,7 @@
             .then(function (res) {
               if (res && res.success) {
                 showAlert(user ? 'User updated successfully.' : 'User created successfully.');
+                formArea.classList.remove('open');
                 renderUsersTab();
               } else {
                 showAlert(res && res.message ? res.message : 'Error saving user.');
@@ -4906,6 +4942,7 @@
         '</div>';
 
         formArea.innerHTML = html;
+        formArea.classList.add('open');
         formArea.scrollIntoView({ behavior: 'smooth' });
 
         var nameInput = document.getElementById('cModalName');
@@ -4916,7 +4953,10 @@
           }
         });
 
-        document.getElementById('cancelClubBtn').addEventListener('click', function () { formArea.innerHTML = ''; });
+        document.getElementById('cancelClubBtn').addEventListener('click', function () {
+          formArea.classList.remove('open');
+          formArea.innerHTML = '';
+        });
         document.getElementById('saveClubBtn').addEventListener('click', function () {
           var name = (document.getElementById('cModalName').value || '').trim();
           var sport = (document.getElementById('cModalSport').value || '').trim();
@@ -4952,6 +4992,7 @@
             .then(function (res) {
               if (res && res.success) {
                 showAlert(club ? 'Club updated successfully.' : 'Club created successfully.');
+                formArea.classList.remove('open');
                 renderClubsTab();
                 updateAdminUserBadge();
               } else {

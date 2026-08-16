@@ -260,22 +260,19 @@ async function authenticateUser(req, res, next) {
       if (!user && decoded.username) {
         user = await User.findOne({ username: String(decoded.username).toLowerCase().trim() }).select('-passwordHash');
       }
-      if (user && user.active) {
-        req.user = user.toObject ? user.toObject() : user;
+      if (user) {
+        if (user.active) {
+          req.user = user.toObject ? user.toObject() : user;
+        }
       }
-    }
-
-    if (!req.user && decoded) {
-      req.user = {
-        _id: decoded.id || 'owner_local',
-        id: decoded.id || 'owner_local',
-        name: decoded.name || 'Owner',
-        username: decoded.username || 'founder',
-        role: decoded.role || 'OWNER',
-        clubId: decoded.clubId || 'ALL',
-        permissions: decoded.permissions || ['*'],
-        active: true
-      };
+    } else {
+      let user = localUsers.find(u => String(u._id) === String(decoded.id) || u.username === String(decoded.username).toLowerCase().trim());
+      if (user) {
+        if (user.active) {
+          req.user = Object.assign({}, user);
+          delete req.user.passwordHash;
+        }
+      }
     }
 
     if (req.user && req.user.role === 'OWNER') {
