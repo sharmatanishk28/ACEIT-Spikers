@@ -1702,7 +1702,128 @@
       position: relative;
     }
 
-    .footer-grid {
+    
+      .events-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: var(--space-4);
+        margin-top: var(--space-4);
+      }
+
+      .event-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      }
+
+      .event-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+      }
+
+      .event-poster-wrap {
+        width: 100%;
+        height: 200px;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--orange), #FF8C00);
+      }
+
+      .event-poster {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform var(--transition-normal);
+      }
+
+      .event-card:hover .event-poster {
+        transform: scale(1.05);
+      }
+
+      .event-poster-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 18px;
+        padding: 16px;
+        text-align: center;
+        background: linear-gradient(135deg, #FF6B00 0%, #FF8C00 100%);
+      }
+
+      .event-poster-placeholder span:first-child {
+        font-size: 36px;
+        margin-bottom: 8px;
+      }
+
+      .event-card-body {
+        padding: var(--space-4);
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+      }
+
+      .event-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .event-tag {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        background: var(--cream-2);
+        color: var(--charcoal);
+        border: 1px solid var(--border);
+      }
+
+      .event-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--charcoal);
+        line-height: 1.3;
+      }
+
+      .event-venue {
+        font-size: 12px;
+        color: var(--orange);
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+
+      .event-desc {
+        font-size: 13px;
+        color: var(--charcoal-soft);
+        line-height: 1.5;
+        margin-bottom: 20px;
+        flex-grow: 1;
+      }
+
+      .event-footer {
+        margin-top: auto;
+      }
+
+      .event-reg-btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        padding: 10px 16px;
+      }
+
+      .footer-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: var(--space-4);
@@ -2864,6 +2985,7 @@
         <li><a href="#matches">Matches</a></li>
         <li><a href="#training">Training</a></li>
         <li><a href="#news">News</a></li>
+        <li><a href="#events">Events</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
       <div class="nav-actions">
@@ -3312,6 +3434,7 @@
         <button class="admin-tab" data-tab="stats">Stats</button>
         <button class="admin-tab" data-tab="about">About</button>
         <button class="admin-tab" data-tab="contact">Contact</button>
+        <button class="admin-tab" data-tab="events" id="tabBtnEvents">Events</button>
         <button class="admin-tab" data-tab="applications" id="tabBtnApplications">Applications</button>
         <button class="admin-tab" data-tab="users" id="tabBtnUsers">Users</button>
         <button class="admin-tab" data-tab="clubs" id="tabBtnClubs">Clubs</button>
@@ -3466,6 +3589,20 @@
             { id: uid(), q: 'Joining Spikers made me a better player and a better teammate. The discipline here is real.', n: 'Arjun Verma', r: 'Setter' },
             { id: uid(), q: 'Our coaches push us hard, but they care harder. That balance is what wins matches.', n: 'Karan Singh', r: 'Libero' },
             { id: uid(), q: 'This club taught me more about leadership than any classroom could.', n: 'Shubham Patidar', r: 'Team Captain' }
+          ],
+          events: [
+            {
+              id: uid(),
+              title: 'ACEIT Inter-College Volleyball Cup 2026',
+              description: 'Annual inter-college championship featuring top collegiate teams across Rajasthan.',
+              date: '25 Sep 2026',
+              time: '09:00 AM - 06:00 PM',
+              venue: 'ACEIT Sports Complex - Main Indoor Court',
+              poster: '',
+              regBtnText: 'Register Now',
+              regUrl: 'https://tally.so/r/RGeGvd',
+              regEnabled: true
+            }
           ],
           stats: [
             { id: uid(), label: 'Championships', target: 7 },
@@ -3885,7 +4022,53 @@
         if (waEl && ct.wa !== undefined) waEl.setAttribute('href', ct.wa || '#');
       }
 
+      function renderEventsPublic() {
+        var grid = document.getElementById('eventsGrid');
+        if (!grid || !DB) return;
+        var events = DB.events || [];
+        if (!events.length) {
+          grid.innerHTML = '<p style="color:var(--charcoal-soft);grid-column:1/-1;text-align:center;padding:30px;">No upcoming events scheduled at this moment. Check back soon!</p>';
+          return;
+        }
+
+        var html = '';
+        events.forEach(function (evt) {
+          var posterHtml = '';
+          if (evt.poster) {
+            posterHtml = '<div class="event-poster-wrap"><img src="' + esc(evt.poster) + '" alt="' + esc(evt.title) + '" class="event-poster"></div>';
+          } else {
+            posterHtml = '<div class="event-poster-wrap placeholder"><div class="event-poster-placeholder"><span>🏆</span><span>' + esc(evt.title) + '</span></div></div>';
+          }
+
+          var regBtn = '';
+          if (evt.regEnabled) {
+            var url = evt.regUrl || '#';
+            var btnText = evt.regBtnText || 'Register Now';
+            regBtn = '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" class="btn btn-primary event-reg-btn">' + esc(btnText) + ' &rarr;</a>';
+          } else {
+            regBtn = '<button class="btn btn-outline event-reg-btn-disabled" disabled style="opacity:0.6;cursor:not-allowed;">Registration Closed</button>';
+          }
+
+          html += '<div class="event-card reveal">' +
+            posterHtml +
+            '<div class="event-card-body">' +
+              '<div class="event-meta">' +
+                (evt.date ? '<span class="event-tag badge">📅 ' + esc(evt.date) + '</span>' : '') +
+                (evt.time ? '<span class="event-tag badge">⏰ ' + esc(evt.time) + '</span>' : '') +
+              '</div>' +
+              '<h3 class="event-title">' + esc(evt.title) + '</h3>' +
+              (evt.venue ? '<div class="event-venue">📍 ' + esc(evt.venue) + '</div>' : '') +
+              '<p class="event-desc">' + esc(evt.description || '') + '</p>' +
+              '<div class="event-footer">' + regBtn + '</div>' +
+            '</div>' +
+          '</div>';
+        });
+
+        grid.innerHTML = html;
+      }
+
       function renderAllPublic() {
+        renderEventsPublic();
         renderAboutPublic();
         renderContactPublic();
         renderTeamPublic();
@@ -4208,6 +4391,7 @@
             stats: 'stats',
             about: 'about',
             contact: 'contact',
+            events: 'events',
             applications: 'applications',
             users: 'users',
             clubs: 'clubs'
@@ -4339,6 +4523,27 @@
             { key: 'name', label: 'Sponsor Name', type: 'text', full: true }
           ],
           summary: function (it) { return { title: it.name, sub: '' }; }
+        },
+        events: {
+          title: 'Events', label: 'Event',
+          fields: [
+            { key: 'poster', label: 'Event Poster / Image', type: 'image', full: true },
+            { key: 'title', label: 'Event Title', type: 'text', full: true },
+            { key: 'date', label: 'Date (e.g. 25 Aug 2026)', type: 'text' },
+            { key: 'time', label: 'Time (e.g. 5:00 PM - 8:00 PM)', type: 'text' },
+            { key: 'venue', label: 'Venue (e.g. Indoor Sports Complex)', type: 'text', full: true },
+            { key: 'description', label: 'Description', type: 'textarea', full: true },
+            { key: 'regBtnText', label: 'Registration Button Text (e.g. Register Now)', type: 'text' },
+            { key: 'regUrl', label: 'Registration Link / Form URL', type: 'text', full: true },
+            { key: 'regEnabled', label: 'Enable Registration Button', type: 'checkbox' }
+          ],
+          summary: function (it) {
+            return {
+              title: it.title,
+              sub: (it.date || '') + ' &middot; ' + (it.venue || '') + (it.regEnabled ? ' &middot; Reg Open' : ' &middot; Reg Closed'),
+              photo: it.poster
+            };
+          }
         },
         stats: {
           title: 'Stats', label: 'Stat',

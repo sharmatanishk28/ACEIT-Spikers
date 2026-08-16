@@ -150,6 +150,7 @@ const clubSchema = new mongoose.Schema({
   testimonials: { type: Array, default: [] },
   stats: { type: Array, default: [] },
   gallery: { type: Array, default: [] },
+  events: { type: Array, default: [] },
   about: { type: Object, default: {} },
   contact: { type: Object, default: {} },
   pin: { type: String, default: '2026' }
@@ -362,7 +363,7 @@ function readLocalFileDB() {
     }
   } catch (err) { }
   return {
-    team: [], matches: [], news: [], sponsors: [], testimonials: [], stats: [], gallery: [],
+    team: [], matches: [], news: [], sponsors: [], testimonials: [], stats: [], gallery: [], events: [],
     about: {
       eyebrow: 'Who we are',
       title: 'Built on the court,\ndefined by character.',
@@ -450,6 +451,7 @@ async function saveDB(data) {
         testimonials: data.testimonials || [],
         stats: data.stats || [],
         gallery: data.gallery || [],
+        events: data.events || [],
         about: data.about || {},
         contact: data.contact || {}
       },
@@ -1428,6 +1430,95 @@ app.delete('/api/applications/:id', authenticateUser, requireAuth, async (req, r
       }
       return res.json({ success: true, message: 'Application deleted successfully' });
     }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==========================================
+// EVENTS API ENDPOINTS
+// ==========================================
+
+// GET /api/events
+app.get('/api/events', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) {
+    return res.status(500).json({ success: false, message: `MongoDB Error: ${result.error}` });
+  }
+  res.json({ success: true, events: result.data.events || [] });
+});
+
+// POST /api/events (Create event)
+app.post('/api/events', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const dbData = dbRes.data;
+    const events = dbData.events || [];
+
+    const newEvt = {
+      id: req.body.id || generateId(),
+      title: req.body.title || 'Untitled Event',
+      description: req.body.description || '',
+      date: req.body.date || '',
+      time: req.body.time || '',
+      venue: req.body.venue || '',
+      poster: req.body.poster || '',
+      regBtnText: req.body.regBtnText || 'Register Now',
+      regUrl: req.body.regUrl || '',
+      regEnabled: req.body.regEnabled !== false,
+      createdAt: new Date().toISOString()
+    };
+
+    events.unshift(newEvt);
+    dbData.events = events;
+    await saveDB(dbData);
+    res.json({ success: true, event: newEvt, message: 'Event created successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/events/:id (Update event)
+app.put('/api/events/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const dbData = dbRes.data;
+    const events = dbData.events || [];
+    const idx = events.findIndex(e => String(e.id || e._id) === String(req.params.id));
+    if (idx === -1) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+
+    events[idx] = {
+      ...events[idx],
+      ...req.body,
+      id: events[idx].id || req.params.id,
+      updatedAt: new Date().toISOString()
+    };
+    dbData.events = events;
+    await saveDB(dbData);
+    res.json({ success: true, event: events[idx], message: 'Event updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/events/:id (Delete event)
+app.delete('/api/events/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const dbData = dbRes.data;
+    const events = dbData.events || [];
+    const filtered = events.filter(e => String(e.id || e._id) !== String(req.params.id));
+    if (filtered.length === events.length) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+    dbData.events = filtered;
+    await saveDB(dbData);
+    res.json({ success: true, message: 'Event deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
