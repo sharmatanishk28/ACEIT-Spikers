@@ -161,6 +161,12 @@
       "cat": "matches",
       "h": 180,
       "label": "Match Day"
+    },
+    {
+      "id": "idmsozmogl25",
+      "cat": "tournaments",
+      "h": 240,
+      "label": "Tournament Champions"
     }
   ],
   "matches": [

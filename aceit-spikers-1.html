@@ -3224,6 +3224,7 @@
         <button class="filter-btn" data-filter="training">Training</button>
         <button class="filter-btn" data-filter="team">Team</button>
         <button class="filter-btn" data-filter="events">Events</button>
+        <button class="filter-btn" data-filter="tournaments">Tournaments</button>
       </div>
       <div class="masonry reveal" id="masonryGrid"></div>
     </div>
@@ -3655,10 +3656,11 @@
           gallery: [
             { id: uid(), cat: 'matches', h: 260, label: 'Match Day' }, { id: uid(), cat: 'training', h: 180, label: 'Training' },
             { id: uid(), cat: 'team', h: 220, label: 'Team' }, { id: uid(), cat: 'events', h: 200, label: 'Event' },
-            { id: uid(), cat: 'matches', h: 200, label: 'Match Day' }, { id: uid(), cat: 'training', h: 260, label: 'Training' },
-            { id: uid(), cat: 'team', h: 180, label: 'Team' }, { id: uid(), cat: 'matches', h: 220, label: 'Match Day' },
-            { id: uid(), cat: 'events', h: 240, label: 'Event' }, { id: uid(), cat: 'training', h: 200, label: 'Training' },
-            { id: uid(), cat: 'team', h: 260, label: 'Team' }, { id: uid(), cat: 'matches', h: 180, label: 'Match Day' }
+            { id: uid(), cat: 'tournaments', h: 240, label: 'Tournament' }, { id: uid(), cat: 'matches', h: 200, label: 'Match Day' },
+            { id: uid(), cat: 'training', h: 260, label: 'Training' }, { id: uid(), cat: 'team', h: 180, label: 'Team' },
+            { id: uid(), cat: 'matches', h: 220, label: 'Match Day' }, { id: uid(), cat: 'events', h: 240, label: 'Event' },
+            { id: uid(), cat: 'training', h: 200, label: 'Training' }, { id: uid(), cat: 'team', h: 260, label: 'Team' },
+            { id: uid(), cat: 'matches', h: 180, label: 'Match Day' }
           ],
           matches: (function () {
             var now = new Date();
@@ -4644,7 +4646,13 @@
           fields: [
             { key: 'photo', label: 'Gallery Image', type: 'image', full: true },
             { key: 'label', label: 'Caption', type: 'text', full: true },
-            { key: 'cat', label: 'Category', type: 'select', options: ['matches', 'training', 'team', 'events'] },
+            { key: 'cat', label: 'Category', type: 'select', options: [
+              { value: 'matches', label: 'Matches' },
+              { value: 'training', label: 'Training' },
+              { value: 'team', label: 'Team' },
+              { value: 'events', label: 'Events' },
+              { value: 'tournaments', label: 'Tournaments' }
+            ] },
             { key: 'h', label: 'Card Height (px)', type: 'number' }
           ],
           summary: function (it) { return { title: it.label || 'Photo', sub: (it.cat || 'all') + ' &middot; ' + ((!it.h || it.h < 100) ? 240 : it.h) + 'px', photo: it.photo }; }
