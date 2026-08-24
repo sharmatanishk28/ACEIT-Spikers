@@ -664,6 +664,146 @@ app.post('/api/team/duplicate/:id', authenticateUser, requireAuth, requirePermis
   }
 });
 
+// ==========================================
+// MATCHES API ENDPOINTS (MongoDB Persistence)
+// ==========================================
+
+// GET /api/matches
+app.get('/api/matches', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) {
+    return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${result.error}`, error: result.error });
+  }
+  res.json({ success: true, matches: result.data.matches || [] });
+});
+
+// POST /api/matches (Add Match)
+app.post('/api/matches', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) {
+      return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${dbRes.error}`, error: dbRes.error });
+    }
+    const db = dbRes.data;
+    const match = req.body || {};
+    match.id = match.id || generateId();
+    if (!match.team1) match.team1 = 'ACEIT Spikers';
+    if (!match.opp && match.team2) match.opp = match.team2;
+    if (!match.team2 && match.opp) match.team2 = match.opp;
+    if (!match.winner) match.winner = 'none';
+
+    db.matches = db.matches || [];
+    db.matches.push(match);
+
+    const result = await saveDB(db);
+    if (!result.success) {
+      console.error(`[API Match Add Failed] Could not persist match: ${match.id} Error: ${result.error}`);
+      return res.status(500).json({ success: false, message: `Failed to persist match addition: ${result.error}`, error: result.error });
+    }
+
+    console.log(`[API Match Add Success] Match added to MongoDB Atlas: ID ${match.id}`);
+    res.json({ success: true, match, matches: db.matches });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, error: err.message });
+  }
+});
+
+// PUT /api/matches/:id (Update Match)
+app.put('/api/matches/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) {
+      return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${dbRes.error}`, error: dbRes.error });
+    }
+    const db = dbRes.data;
+    const { id } = req.params;
+    const updatedMatch = req.body || {};
+    db.matches = db.matches || [];
+    const idx = db.matches.findIndex(m => String(m.id) === String(id));
+    if (idx === -1) {
+      return res.status(404).json({ success: false, message: 'Match not found' });
+    }
+    updatedMatch.id = id;
+    if (!updatedMatch.team1) updatedMatch.team1 = 'ACEIT Spikers';
+    if (!updatedMatch.opp && updatedMatch.team2) updatedMatch.opp = updatedMatch.team2;
+    if (!updatedMatch.team2 && updatedMatch.opp) updatedMatch.team2 = updatedMatch.opp;
+    if (!updatedMatch.winner) updatedMatch.winner = 'none';
+
+    db.matches[idx] = updatedMatch;
+
+    const result = await saveDB(db);
+    if (!result.success) {
+      console.error(`[API Match Update Failed] Could not persist update: ${result.error}`);
+      return res.status(500).json({ success: false, message: `Failed to persist match update: ${result.error}`, error: result.error });
+    }
+
+    console.log(`[API Match Update Success] Match updated in MongoDB Atlas: ID ${id}`);
+    res.json({ success: true, match: updatedMatch, matches: db.matches });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, error: err.message });
+  }
+});
+
+// DELETE /api/matches/:id (Delete Match)
+app.delete('/api/matches/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) {
+      return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${dbRes.error}`, error: dbRes.error });
+    }
+    const db = dbRes.data;
+    const { id } = req.params;
+    db.matches = db.matches || [];
+    const initialLen = db.matches.length;
+    db.matches = db.matches.filter(m => String(m.id) !== String(id));
+    if (db.matches.length === initialLen) {
+      return res.status(404).json({ success: false, message: 'Match not found' });
+    }
+
+    const result = await saveDB(db);
+    if (!result.success) {
+      console.error(`[API Match Delete Failed] Could not persist deletion: ${result.error}`);
+      return res.status(500).json({ success: false, message: `Failed to persist match deletion: ${result.error}`, error: result.error });
+    }
+
+    console.log(`[API Match Delete Success] Match deleted from MongoDB Atlas: ID ${id}`);
+    res.json({ success: true, message: 'Match deleted', matches: db.matches });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, error: err.message });
+  }
+});
+
+// POST /api/matches/duplicate/:id (Duplicate Match)
+app.post('/api/matches/duplicate/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) {
+      return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${dbRes.error}`, error: dbRes.error });
+    }
+    const db = dbRes.data;
+    const { id } = req.params;
+    db.matches = db.matches || [];
+    const orig = db.matches.find(m => String(m.id) === String(id));
+    if (!orig) {
+      return res.status(404).json({ success: false, message: 'Original match not found' });
+    }
+    const copy = Object.assign({}, orig, { id: generateId() });
+    const idx = db.matches.findIndex(m => String(m.id) === String(id));
+    db.matches.splice(idx + 1, 0, copy);
+
+    const result = await saveDB(db);
+    if (!result.success) {
+      console.error(`[API Match Duplicate Failed] Could not persist duplication: ${result.error}`);
+      return res.status(500).json({ success: false, message: `Failed to persist duplication: ${result.error}`, error: result.error });
+    }
+
+    console.log(`[API Match Duplicate Success] Match duplicated in MongoDB Atlas: ID ${copy.id}`);
+    res.json({ success: true, match: copy, matches: db.matches });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message, error: err.message });
+  }
+});
+
 // 8. Admin PIN endpoints & verification
 app.get('/api/pin', async (req, res) => {
   const dbRes = await getDB();

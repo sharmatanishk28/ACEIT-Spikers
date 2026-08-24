@@ -761,6 +761,100 @@
       }
     }
 
+    .match-team {
+      text-align: center;
+      flex: 1;
+      position: relative;
+      transition: transform 0.3s ease;
+    }
+
+    .match-team .crest {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(160deg, var(--navy), var(--navy-2));
+      margin: 0 auto 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      overflow: hidden;
+      position: relative;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .match-team .crest.has-img {
+      background: var(--cream-2);
+    }
+
+    .match-team .crest .crest-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+    }
+
+    .match-team.winner strong {
+      color: #D97706;
+    }
+    [data-theme="dark"] .match-team.winner strong {
+      color: #F59E0B;
+    }
+
+    .match-team .crest.crest-winner {
+      border-color: #F59E0B;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35), 0 4px 15px rgba(245, 158, 11, 0.4);
+      transform: scale(1.06);
+    }
+
+    .winner-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-top: 6px;
+      letter-spacing: 0.04em;
+      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35);
+      animation: pulseWinner 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseWinner {
+      0%, 100% { transform: scale(1); box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35); }
+      50% { transform: scale(1.04); box-shadow: 0 4px 14px rgba(245, 158, 11, 0.55); }
+    }
+
+    .draw-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--cream-2);
+      color: var(--charcoal-soft);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+    }
+
+    .match-vs {
+      font-family: var(--font-mono);
+      color: var(--charcoal-soft);
+      font-size: 13px;
+    }
+
     .mv-card {
       padding: var(--space-4);
       background: linear-gradient(160deg, var(--navy), var(--navy-2));
@@ -3570,10 +3664,10 @@
             var now = new Date();
             function addDays(n) { var r = new Date(now); r.setDate(r.getDate() + n); return r.toISOString(); }
             return [
-              { id: uid(), opp: 'Poornima University', date: addDays(5), venue: 'ACEIT Indoor Court', status: 'upcoming' },
-              { id: uid(), opp: 'JECRC Titans', date: addDays(12), venue: 'JECRC Arena, Jaipur', status: 'upcoming' },
-              { id: uid(), opp: 'Manipal Smashers', date: addDays(21), venue: 'ACEIT Indoor Court', status: 'upcoming' },
-              { id: uid(), opp: 'MNIT Warriors', date: addDays(30), venue: 'MNIT Sports Complex', status: 'upcoming' }
+              { id: uid(), team1: 'ACEIT Spikers', team1Logo: '', opp: 'Poornima University', team2: 'Poornima University', team2Logo: '', date: addDays(5), venue: 'ACEIT Indoor Court', status: 'upcoming', winner: 'none' },
+              { id: uid(), team1: 'ACEIT Spikers', team1Logo: '', opp: 'JECRC Titans', team2: 'JECRC Titans', team2Logo: '', date: addDays(12), venue: 'JECRC Arena, Jaipur', status: 'upcoming', winner: 'none' },
+              { id: uid(), team1: 'ACEIT Spikers', team1Logo: '', opp: 'Manipal Smashers', team2: 'Manipal Smashers', team2Logo: '', date: addDays(21), venue: 'ACEIT Indoor Court', status: 'upcoming', winner: 'none' },
+              { id: uid(), team1: 'ACEIT Spikers', team1Logo: '', opp: 'MNIT Warriors', team2: 'MNIT Warriors', team2Logo: '', date: addDays(30), venue: 'MNIT Sports Complex', status: 'upcoming', winner: 'none' }
             ];
           })(),
           news: [
@@ -3832,13 +3926,44 @@
           var dateStr = isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
           var statusClass = m.status === 'live' ? 'status-live' : (m.status === 'completed' ? 'status-completed' : 'status-upcoming');
           var statusLabel = m.status === 'live' ? 'Live' : (m.status === 'completed' ? 'Completed' : 'Upcoming');
+
+          var team1Name = m.team1 || 'ACEIT Spikers';
+          var team2Name = m.opp || m.team2 || 'Opponent';
+
+          var t1Initials = team1Name.split(' ').map(function (w) { return w[0] || ''; }).join('').slice(0, 3).toUpperCase() || 'SPK';
+          var t2Initials = team2Name.split(' ').map(function (w) { return w[0] || ''; }).join('').slice(0, 3).toUpperCase() || 'OPP';
+
+          var isWinner1 = (m.winner === 'team1');
+          var isWinner2 = (m.winner === 'team2');
+          var isDraw = (m.winner === 'draw');
+
+          var t1CrestContent = m.team1Logo
+            ? '<img src="' + esc(m.team1Logo) + '" alt="' + esc(team1Name) + '" class="crest-img">'
+            : esc(t1Initials);
+
+          var t2CrestContent = m.team2Logo
+            ? '<img src="' + esc(m.team2Logo) + '" alt="' + esc(team2Name) + '" class="crest-img">'
+            : esc(t2Initials);
+
           el.innerHTML =
-            '<div class="match-top"><span class="status-badge ' + statusClass + '">' + statusLabel + '</span><span class="mono" style="font-size:12px;color:var(--charcoal-soft);">Fixture 0' + (i + 1) + '</span></div>' +
-            '<div class="match-teams">' +
-            '<div class="match-team"><div class="crest">SPK</div><strong>ACEIT Spikers</strong></div>' +
-            '<div class="match-vs">VS</div>' +
-            '<div class="match-team"><div class="crest">' + esc(m.opp.split(' ').map(function (w) { return w[0] || ''; }).join('').slice(0, 3).toUpperCase()) + '</div><strong>' + esc(m.opp) + '</strong></div>' +
+            '<div class="match-top">' +
+              '<span class="status-badge ' + statusClass + '">' + statusLabel + '</span>' +
+              '<span class="mono" style="font-size:12px;color:var(--charcoal-soft);">Fixture 0' + (i + 1) + '</span>' +
             '</div>' +
+            '<div class="match-teams">' +
+              '<div class="match-team' + (isWinner1 ? ' winner' : '') + '">' +
+                '<div class="crest' + (m.team1Logo ? ' has-img' : '') + (isWinner1 ? ' crest-winner' : '') + '">' + t1CrestContent + '</div>' +
+                '<strong>' + esc(team1Name) + '</strong>' +
+                (isWinner1 ? '<div class="winner-badge">🏆 WINNER</div>' : '') +
+              '</div>' +
+              '<div class="match-vs">VS</div>' +
+              '<div class="match-team' + (isWinner2 ? ' winner' : '') + '">' +
+                '<div class="crest' + (m.team2Logo ? ' has-img' : '') + (isWinner2 ? ' crest-winner' : '') + '">' + t2CrestContent + '</div>' +
+                '<strong>' + esc(team2Name) + '</strong>' +
+                (isWinner2 ? '<div class="winner-badge">🏆 WINNER</div>' : '') +
+              '</div>' +
+            '</div>' +
+            (isDraw ? '<div style="text-align:center;margin:-4px 0 8px;"><span class="draw-badge">🤝 MATCH DRAW</span></div>' : '') +
             (m.status === 'upcoming' ? (
               '<div class="countdown" data-date="' + d.getTime() + '">' +
               '<div><div class="cd-num cd-d">00</div><div class="cd-label">Days</div></div>' +
@@ -4480,12 +4605,28 @@
         matches: {
           title: 'Matches', label: 'Match',
           fields: [
-            { key: 'opp', label: 'Opponent', type: 'text', full: true },
+            { key: 'team1', label: 'Team 1 Name', type: 'text' },
+            { key: 'team1Logo', label: 'Team 1 Logo / Captain Image', type: 'image' },
+            { key: 'opp', label: 'Team 2 Name (Opponent)', type: 'text' },
+            { key: 'team2Logo', label: 'Team 2 Logo / Captain Image', type: 'image' },
             { key: 'date', label: 'Date & Time', type: 'datetime-local' },
             { key: 'venue', label: 'Venue', type: 'text', full: true },
-            { key: 'status', label: 'Status', type: 'select', options: ['upcoming', 'live', 'completed'] }
+            { key: 'status', label: 'Status', type: 'select', options: ['upcoming', 'live', 'completed'] },
+            { key: 'winner', label: 'Winner Selection', type: 'select', options: [
+              { value: 'none', label: 'None / TBD' },
+              { value: 'team1', label: 'Team 1' },
+              { value: 'team2', label: 'Team 2' },
+              { value: 'draw', label: 'Draw' }
+            ] }
           ],
-          summary: function (it) { var d = new Date(it.date); var ds = isNaN(d.getTime()) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); return { title: 'ACEIT Spikers vs ' + it.opp, sub: ds + ' &middot; ' + it.venue + ' &middot; ' + it.status }; }
+          summary: function (it) {
+            var t1 = it.team1 || 'ACEIT Spikers';
+            var t2 = it.opp || it.team2 || 'Opponent';
+            var d = new Date(it.date);
+            var ds = isNaN(d.getTime()) ? '' : d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            var winStr = (it.winner === 'team1') ? ' &middot; Winner: ' + t1 : ((it.winner === 'team2') ? ' &middot; Winner: ' + t2 : ((it.winner === 'draw') ? ' &middot; Draw' : ''));
+            return { title: t1 + ' vs ' + t2, sub: ds + ' &middot; ' + it.venue + ' &middot; ' + (it.status || 'upcoming') + winStr };
+          }
         },
         news: {
           title: 'News', label: 'Article',
@@ -4602,21 +4743,21 @@
             if (!orig) return;
             var copy = Object.assign({}, orig, { id: uid() });
             var idx = DB[tab].findIndex(function (it) { return it.id === id; });
-            if (tab === 'team') {
-              authFetch(API_BASE + '/team/duplicate/' + id, { method: 'POST' })
+            if (tab === 'team' || tab === 'matches') {
+              authFetch(API_BASE + '/' + tab + '/duplicate/' + id, { method: 'POST' })
                 .then(function (r) { return r.json(); })
                 .then(function (res) {
                   if (res && res.success) {
-                    DB.team = res.team;
+                    DB[tab] = res[tab] || DB[tab];
                     try { window.localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch (e) { }
                     renderAdminTab(tab);
                     refreshPublicFor(tab);
                   } else {
-                    showAlert(res && res.message ? res.message : 'Error duplicating player in database.');
+                    showAlert(res && res.message ? res.message : 'Error duplicating item in database.');
                   }
                 })
                 .catch(function () {
-                  showAlert('Network error: Could not duplicate player in database.');
+                  showAlert('Network error: Could not duplicate item in database.');
                 });
             } else {
               DB[tab].splice(idx + 1, 0, copy);
@@ -4630,21 +4771,21 @@
           b.addEventListener('click', function () {
             var id = b.getAttribute('data-del');
             showConfirm('Delete this ' + schema.label.toLowerCase() + '? This cannot be undone.', function () {
-              if (tab === 'team') {
-                authFetch(API_BASE + '/team/' + id, { method: 'DELETE' })
+              if (tab === 'team' || tab === 'matches') {
+                authFetch(API_BASE + '/' + tab + '/' + id, { method: 'DELETE' })
                   .then(function (r) { return r.json(); })
                   .then(function (res) {
                     if (res && res.success) {
-                      DB.team = res.team;
+                      DB[tab] = res[tab] || DB[tab];
                       try { window.localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch (e) { }
                       renderAdminTab(tab);
                       refreshPublicFor(tab);
                     } else {
-                      showAlert(res && res.message ? res.message : 'Error deleting player from database.');
+                      showAlert(res && res.message ? res.message : 'Error deleting item from database.');
                     }
                   })
                   .catch(function () {
-                    showAlert('Network error: Could not delete player from database.');
+                    showAlert('Network error: Could not delete item from database.');
                   });
               } else {
                 DB[tab] = DB[tab].filter(function (it) { return it.id !== id; });
@@ -4700,8 +4841,21 @@
           var cls = f.full ? 'admin-field full' : 'admin-field';
           if (f.type === 'select') {
             gridHtml += '<div class="' + cls + '"><label>' + f.label + '</label><select data-field="' + f.key + '">';
-            f.options.forEach(function (o) {
-              gridHtml += '<option value="' + o + '"' + (val === o ? ' selected' : '') + '>' + o + '</option>';
+            var optList = f.options;
+            if (f.key === 'winner') {
+              var t1Name = (item && item.team1) ? item.team1 : 'Team 1';
+              var t2Name = (item && (item.opp || item.team2)) ? (item.opp || item.team2) : 'Team 2';
+              optList = [
+                { value: 'none', label: 'None / TBD' },
+                { value: 'team1', label: 'Team 1 (' + t1Name + ')' },
+                { value: 'team2', label: 'Team 2 (' + t2Name + ')' },
+                { value: 'draw', label: 'Draw' }
+              ];
+            }
+            optList.forEach(function (o) {
+              var optVal = (typeof o === 'object' && o !== null) ? o.value : o;
+              var optLabel = (typeof o === 'object' && o !== null) ? o.label : o;
+              gridHtml += '<option value="' + optVal + '"' + (val === optVal ? ' selected' : '') + '>' + optLabel + '</option>';
             });
             gridHtml += '</select></div>';
           } else if (f.type === 'textarea') {
@@ -4767,9 +4921,15 @@
             else if (f.type === 'datetime-local') { newItem[f.key] = el.value ? new Date(el.value).toISOString() : new Date().toISOString(); }
             else { newItem[f.key] = el.value; }
           });
-          if (tab === 'team') {
+          if (tab === 'matches') {
+            if (!newItem.team1) newItem.team1 = 'ACEIT Spikers';
+            if (!newItem.opp && newItem.team2) newItem.opp = newItem.team2;
+            if (!newItem.team2 && newItem.opp) newItem.team2 = newItem.opp;
+            if (!newItem.winner) newItem.winner = 'none';
+          }
+          if (tab === 'team' || tab === 'matches') {
             var method = item ? 'PUT' : 'POST';
-            var url = API_BASE + '/team' + (item ? '/' + item.id : '');
+            var url = API_BASE + '/' + tab + (item ? '/' + item.id : '');
             authFetch(url, {
               method: method,
               headers: { 'Content-Type': 'application/json' },
@@ -4778,13 +4938,13 @@
               .then(function (r) { return r.json(); })
               .then(function (res) {
                 if (res && res.success) {
-                  DB.team = res.team;
+                  DB[tab] = res[tab] || DB[tab];
                   try { window.localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch (e) { }
                   formEl.classList.remove('open');
                   renderAdminTab(tab);
                   refreshPublicFor(tab);
                 } else {
-                  showAlert(res && res.message ? res.message : 'Error saving player to database.');
+                  showAlert(res && res.message ? res.message : 'Error saving to database.');
                 }
               })
               .catch(function (err) {

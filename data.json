@@ -166,31 +166,63 @@
   "matches": [
     {
       "id": "idmsozmogl21",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
       "opp": "Poornima University",
+      "team2": "Poornima University",
+      "team2Logo": "",
       "date": "2026-08-16T18:22:28.437Z",
       "venue": "ACEIT Indoor Court",
-      "status": "upcoming"
+      "status": "completed",
+      "winner": "team1"
     },
     {
       "id": "idmsozmogm22",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
       "opp": "JECRC Titans",
+      "team2": "JECRC Titans",
+      "team2Logo": "",
       "date": "2026-08-23T18:22:28.437Z",
       "venue": "JECRC Arena, Jaipur",
-      "status": "upcoming"
+      "status": "upcoming",
+      "winner": "none"
     },
     {
       "id": "idmsozmogm23",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
       "opp": "Manipal Smashers",
+      "team2": "Manipal Smashers",
+      "team2Logo": "",
       "date": "2026-09-01T18:22:28.437Z",
       "venue": "ACEIT Indoor Court",
-      "status": "upcoming"
+      "status": "upcoming",
+      "winner": "none"
     },
     {
       "id": "idmsozmogm24",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
       "opp": "MNIT Warriors",
+      "team2": "MNIT Warriors",
+      "team2Logo": "",
       "date": "2026-09-10T18:22:28.437Z",
       "venue": "MNIT Sports Complex",
-      "status": "upcoming"
+      "status": "upcoming",
+      "winner": "none"
+    },
+    {
+      "id": "idmt77sm8544",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "LPU Strikers",
+      "team2Logo": "",
+      "date": "2026-08-25T12:30:00.000Z",
+      "venue": "LPU Ground",
+      "status": "completed",
+      "winner": "team1",
+      "team2": "LPU Strikers"
     }
   ],
   "news": [
