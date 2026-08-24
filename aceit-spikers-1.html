@@ -3291,6 +3291,17 @@
     </div>
   </section>
 
+  <!-- ============ EVENTS ============ -->
+  <section id="events" style="background:var(--cream-2);">
+    <div class="container">
+      <div class="reveal">
+        <span class="eyebrow">Upcoming Schedule &amp; Tournaments</span>
+        <h2 class="section-title">Club <span class="gradient-text">Events</span></h2>
+      </div>
+      <div class="events-grid grid-3" id="eventsGrid" style="margin-top:var(--space-4);"></div>
+    </div>
+  </section>
+
   <!-- ============ NEWS ============ -->
   <section id="news">
     <div class="container">
@@ -4326,7 +4337,7 @@
           }
 
           var regBtn = '';
-          if (evt.regEnabled) {
+          if (evt.regEnabled !== false) {
             var url = evt.regUrl || '#';
             var btnText = evt.regBtnText || 'Register Now';
             regBtn = '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" class="btn btn-primary event-reg-btn">' + esc(btnText) + ' &rarr;</a>';
@@ -5217,7 +5228,8 @@
           } else if (f.type === 'textarea') {
             gridHtml += '<div class="' + cls + '"><label>' + f.label + '</label><textarea rows="3" data-field="' + f.key + '">' + esc(val) + '</textarea></div>';
           } else if (f.type === 'checkbox') {
-            gridHtml += '<div class="' + cls + ' admin-checkbox"><input type="checkbox" id="chk-' + f.key + '" data-field="' + f.key + '"' + (val ? ' checked' : '') + '><label for="chk-' + f.key + '" style="margin:0;">' + f.label + '</label></div>';
+            var chkState = item ? !!val : (f.key === 'regEnabled' ? true : false);
+            gridHtml += '<div class="' + cls + ' admin-checkbox"><input type="checkbox" id="chk-' + f.key + '" data-field="' + f.key + '"' + (chkState ? ' checked' : '') + '><label for="chk-' + f.key + '" style="margin:0;">' + f.label + '</label></div>';
           } else if (f.type === 'datetime-local') {
             var dv = '';
             if (val) { var d = new Date(val); if (!isNaN(d.getTime())) { dv = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); } }
@@ -5394,6 +5406,10 @@
         else if (tab === 'testimonials') renderTestimonialsPublic();
         else if (tab === 'sponsors') renderSponsorsPublic();
         else if (tab === 'stats') renderStatsPublic();
+        else if (tab === 'events') renderEventsPublic();
+        else if (tab === 'about') renderAboutPublic();
+        else if (tab === 'contact') renderContactPublic();
+        else renderAllPublic();
       }
 
       function renderDataTab() {
