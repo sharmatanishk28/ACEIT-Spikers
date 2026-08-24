@@ -3908,6 +3908,32 @@
         }).join(', ');
       }
 
+      function sortCategories(catList) {
+        var orderWeight = {
+          'boys team': 1,
+          'girls team': 2,
+          'alumni': 3,
+          'matches': 4,
+          'training': 5,
+          'team': 6,
+          'events': 7,
+          'tournaments': 8,
+          '1st year': 10,
+          '2nd year': 11,
+          '3rd year': 12,
+          '4th year': 13,
+          'final year': 14
+        };
+        return catList.slice().sort(function (a, b) {
+          var aNorm = String(a).trim().toLowerCase();
+          var bNorm = String(b).trim().toLowerCase();
+          var wA = orderWeight[aNorm] !== undefined ? orderWeight[aNorm] : 50;
+          var wB = orderWeight[bNorm] !== undefined ? orderWeight[bNorm] : 50;
+          if (wA !== wB) return wA - wB;
+          return aNorm.localeCompare(bNorm);
+        });
+      }
+
       var teamGrid = document.getElementById('teamGrid');
       function instaUrl(v) {
         if (!v) return '';
@@ -3933,7 +3959,7 @@
           });
         });
 
-        var allCats = ['all'].concat(defaultCats).concat(customCats);
+        var allCats = ['all'].concat(sortCategories(defaultCats.concat(customCats)));
         container.innerHTML = '';
 
         allCats.forEach(function (catKey) {
@@ -4007,7 +4033,7 @@
           });
         });
 
-        var allCats = ['all'].concat(defaultCats).concat(customCats);
+        var allCats = ['all'].concat(sortCategories(defaultCats.concat(customCats)));
         container.innerHTML = '';
 
         allCats.forEach(function (catKey) {
@@ -5018,7 +5044,7 @@
           });
         });
 
-        var existingCats = activeDefaults.concat(customCats);
+        var existingCats = sortCategories(activeDefaults.concat(customCats));
 
         var listHtml = '<div style="margin-top:16px;text-align:left;max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;">' +
           '<b style="display:block;margin-bottom:8px;font-size:13px;color:var(--charcoal);">Existing Categories:</b>';
@@ -5083,6 +5109,7 @@
                   itemCats.splice(idx, 1);
                   if (itemCats.length === 0) itemCats.push(fallbackCat);
                   it.cat = itemCats.join(', ');
+                  it.cats = itemCats;
                 }
               });
 
@@ -5096,14 +5123,16 @@
               // 3. Save & refresh
               saveDB(DB);
               if (tab === 'team') {
-                if (currentTeamFilter.toLowerCase() === targetCat) currentTeamFilter = 'all';
+                if ((currentTeamFilter || 'all').toLowerCase() === targetCat) currentTeamFilter = 'all';
+                renderTeamFilters();
                 renderTeamPublic();
               } else {
-                if (currentGalleryFilter.toLowerCase() === targetCat) currentGalleryFilter = 'all';
+                if ((currentGalleryFilter || 'all').toLowerCase() === targetCat) currentGalleryFilter = 'all';
+                renderGalleryFilters();
                 renderGalleryPublic();
               }
               renderAdminTab(tab);
-              closeCustomModal();
+              openAddCategoryModal();
               showAlert('Category "' + label + '" deleted successfully!');
             });
           });
@@ -5141,7 +5170,7 @@
               }
             }
 
-            var allCategoryOptions = activeDefaults.concat(customOptions);
+            var allCategoryOptions = sortCategories(activeDefaults.concat(customOptions));
             var itemCats = getCategories(item);
             if (itemCats.length === 0 && initialCategory && initialCategory.trim()) {
               itemCats = [initialCategory.trim().toLowerCase()];
