@@ -3218,14 +3218,7 @@
         <span class="eyebrow">Moments</span>
         <h2 class="section-title">Club <span class="gradient-text">Gallery</span></h2>
       </div>
-      <div class="gallery-filters reveal">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="matches">Matches</button>
-        <button class="filter-btn" data-filter="training">Training</button>
-        <button class="filter-btn" data-filter="team">Team</button>
-        <button class="filter-btn" data-filter="events">Events</button>
-        <button class="filter-btn" data-filter="tournaments">Tournaments</button>
-      </div>
+      <div class="gallery-filters reveal" id="galleryFilters"></div>
       <div class="masonry reveal" id="masonryGrid"></div>
     </div>
   </section>
@@ -3879,9 +3872,55 @@
 
       var masonry = document.getElementById('masonryGrid');
       var currentGalleryFilter = 'all';
+
+      function renderGalleryFilters() {
+        var container = document.getElementById('galleryFilters');
+        if (!container) return;
+
+        var defaultCats = ['matches', 'training', 'team', 'events', 'tournaments'];
+        var customCats = [];
+        (DB.gallery || []).forEach(function (g) {
+          if (g.cat && g.cat.trim()) {
+            var norm = g.cat.trim().toLowerCase();
+            if (defaultCats.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
+              customCats.push(norm);
+            }
+          }
+        });
+
+        var allCats = ['all'].concat(defaultCats).concat(customCats);
+        container.innerHTML = '';
+
+        allCats.forEach(function (catKey) {
+          var btn = document.createElement('button');
+          var isActive = (currentGalleryFilter || 'all').toLowerCase() === catKey.toLowerCase();
+          btn.className = 'filter-btn' + (isActive ? ' active' : '');
+          btn.setAttribute('data-filter', catKey);
+
+          var labelStr = catKey === 'all'
+            ? 'All'
+            : catKey.split(/[\s-_]+/).map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+          btn.textContent = labelStr;
+
+          btn.addEventListener('click', function () {
+            container.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            currentGalleryFilter = catKey;
+            renderGalleryPublic();
+          });
+          container.appendChild(btn);
+        });
+      }
+
       function renderGalleryPublic() {
+        renderGalleryFilters();
+        if (!masonry) return;
         masonry.innerHTML = '';
-        DB.gallery.filter(function (g) { return currentGalleryFilter === 'all' || g.cat === currentGalleryFilter; }).forEach(function (g) {
+        (DB.gallery || []).filter(function (g) {
+          var cat = (g.cat || '').trim().toLowerCase();
+          var filter = (currentGalleryFilter || 'all').trim().toLowerCase();
+          return filter === 'all' || cat === filter;
+        }).forEach(function (g) {
           var el = document.createElement('div');
           el.className = 'g-item';
           var hasPhoto = !!g.photo;
@@ -3906,14 +3945,6 @@
           masonry.appendChild(el);
         });
       }
-      document.querySelectorAll('.filter-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
-          btn.classList.add('active');
-          currentGalleryFilter = btn.getAttribute('data-filter');
-          renderGalleryPublic();
-        });
-      });
       document.getElementById('lightboxClose').addEventListener('click', function () { document.getElementById('lightbox').classList.remove('open'); });
       document.getElementById('lightbox').addEventListener('click', function (e) { if (e.target === this) { this.classList.remove('open'); } });
 
@@ -4713,7 +4744,9 @@
         if (tab === 'data') { renderDataTab(); return; }
         var schema = SCHEMAS[tab];
         var items = DB[tab];
-        var html = '<div class="admin-panel-head"><h3>' + schema.title + ' <span class="admin-count mono">' + items.length + '</span></h3><button class="admin-btn" id="adminAddBtn">+ Add ' + schema.label + '</button></div>';
+        var html = '<div class="admin-panel-head"><h3>' + schema.title + ' <span class="admin-count mono">' + items.length + '</span></h3><div>' +
+          (tab === 'gallery' ? '<button class="admin-btn" id="adminAddCategoryBtn" style="margin-right:8px;background:var(--cream-2);color:var(--charcoal);border:1px solid var(--border);">+ Add Category</button>' : '') +
+          '<button class="admin-btn" id="adminAddBtn">+ Add ' + schema.label + '</button></div></div>';
         if (tab === 'team') { html += '<div class="admin-note">Photos are compressed and stored in this browser. Keep them under a few dozen for best performance — export a backup from Data &amp; PIN after adding photos.</div>'; }
         if (items.length > 4) { html += '<input type="text" id="adminSearch" class="admin-search" placeholder="Search ' + schema.title.toLowerCase() + '...">'; }
         html += '<div class="admin-list" id="adminList">';
@@ -4741,6 +4774,12 @@
           });
         }
         document.getElementById('adminAddBtn').addEventListener('click', function () { openAdminForm(tab, null); });
+        var addCatBtn = document.getElementById('adminAddCategoryBtn');
+        if (addCatBtn) {
+          addCatBtn.addEventListener('click', function () {
+            openAddCategoryModal();
+          });
+        }
         adminContent.querySelectorAll('[data-edit]').forEach(function (b) {
           b.addEventListener('click', function () { openAdminForm(tab, b.getAttribute('data-edit')); });
         });
@@ -4839,7 +4878,40 @@
           btn.remove();
         });
       }
-      function openAdminForm(tab, id) {
+      function openAddCategoryModal() {
+        if (!customModal || !customModalMsg || !customModalActions) return;
+        customModalMsg.innerHTML =
+          '<h4 style="margin-bottom:8px;font-size:18px;">+ Add Gallery Category</h4>' +
+          '<p style="font-size:13px;color:var(--charcoal-soft);margin-bottom:12px;">Type a category name (e.g. Tournaments, Championship 2026, Beach Volleyball). Saving a photo in this category will add a filter button on the public site.</p>' +
+          '<input type="text" id="modalNewCatInput" class="admin-search" style="width:100%;margin-bottom:8px;" placeholder="Category Name (e.g. Tournaments)">';
+
+        customModalActions.innerHTML =
+          '<button class="btn btn-outline" id="cmCatCancel">Cancel</button>' +
+          '<button class="btn btn-primary" id="cmCatCreate">+ Create &amp; Add Photo</button>';
+
+        customModal.classList.add('open');
+
+        var cancelBtn = document.getElementById('cmCatCancel');
+        var createBtn = document.getElementById('cmCatCreate');
+        var inputEl = document.getElementById('modalNewCatInput');
+
+        if (inputEl) setTimeout(function () { inputEl.focus(); }, 100);
+
+        if (cancelBtn) cancelBtn.addEventListener('click', closeCustomModal);
+        if (createBtn) {
+          createBtn.addEventListener('click', function () {
+            var catName = inputEl ? inputEl.value.trim() : '';
+            if (!catName) {
+              showAlert('Please enter a category name.');
+              return;
+            }
+            closeCustomModal();
+            openAdminForm('gallery', null, catName);
+          });
+        }
+      }
+
+      function openAdminForm(tab, id, initialCategory) {
         var schema = SCHEMAS[tab];
         var item = id ? DB[tab].find(function (it) { return it.id === id; }) : null;
         var formEl = document.getElementById('adminForm');
@@ -4847,7 +4919,43 @@
         schema.fields.forEach(function (f) {
           var val = item ? item[f.key] : '';
           var cls = f.full ? 'admin-field full' : 'admin-field';
-          if (f.type === 'select') {
+          if (f.key === 'cat' && tab === 'gallery') {
+            var defaultOptions = ['matches', 'training', 'team', 'events', 'tournaments'];
+            var customOptions = [];
+            (DB.gallery || []).forEach(function (g) {
+              if (g.cat && g.cat.trim()) {
+                var norm = g.cat.trim().toLowerCase();
+                if (defaultOptions.indexOf(norm) === -1 && customOptions.indexOf(norm) === -1) {
+                  customOptions.push(norm);
+                }
+              }
+            });
+            if (initialCategory && initialCategory.trim()) {
+              var normInit = initialCategory.trim().toLowerCase();
+              if (defaultOptions.indexOf(normInit) === -1 && customOptions.indexOf(normInit) === -1) {
+                customOptions.push(normInit);
+              }
+            }
+
+            var allCategoryOptions = defaultOptions.concat(customOptions);
+            var activeCategoryVal = (item ? item.cat : (initialCategory || 'matches')).trim().toLowerCase();
+            var isCustomVal = activeCategoryVal && allCategoryOptions.indexOf(activeCategoryVal) === -1;
+            var currentSelected = isCustomVal ? 'custom_new' : activeCategoryVal;
+
+            gridHtml += '<div class="' + cls + '"><label>' + f.label + '</label>' +
+              '<select data-field="cat_select" class="admin-cat-select">' +
+              allCategoryOptions.map(function(c) {
+                var label = c.split(/[\s-_]+/).map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+                return '<option value="' + c + '"' + (currentSelected === c ? ' selected' : '') + '>' + label + '</option>';
+              }).join('') +
+              '<option value="custom_new"' + (currentSelected === 'custom_new' ? ' selected' : '') + '>+ Type Custom Category Name...</option>' +
+              '</select>' +
+              '<div class="admin-custom-cat-wrap" style="margin-top:8px;' + (currentSelected === 'custom_new' ? 'display:block;' : 'display:none;') + '">' +
+              '<input type="text" data-field="cat_custom" placeholder="Type category name (e.g. Tournaments)" value="' + esc(isCustomVal ? activeCategoryVal : '') + '">' +
+              '</div>' +
+              '<input type="hidden" data-field="cat" value="' + esc(activeCategoryVal) + '">' +
+              '</div>';
+          } else if (f.type === 'select') {
             gridHtml += '<div class="' + cls + '"><label>' + f.label + '</label><select data-field="' + f.key + '">';
             var optList = f.options;
             if (f.key === 'winner') {
@@ -4890,6 +4998,33 @@
         formEl.innerHTML = gridHtml;
         formEl.classList.add('open');
         formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        var catSelectEl = formEl.querySelector('.admin-cat-select');
+        if (catSelectEl) {
+          catSelectEl.addEventListener('change', function () {
+            var wrap = formEl.querySelector('.admin-custom-cat-wrap');
+            var hidden = formEl.querySelector('input[data-field="cat"]');
+            var customInput = formEl.querySelector('input[data-field="cat_custom"]');
+            if (catSelectEl.value === 'custom_new') {
+              if (wrap) wrap.style.display = 'block';
+              if (customInput) customInput.focus();
+              if (hidden) hidden.value = customInput ? customInput.value.trim().toLowerCase() : '';
+            } else {
+              if (wrap) wrap.style.display = 'none';
+              if (hidden) hidden.value = catSelectEl.value;
+            }
+          });
+        }
+        var customInputEl = formEl.querySelector('input[data-field="cat_custom"]');
+        if (customInputEl) {
+          customInputEl.addEventListener('input', function () {
+            var hidden = formEl.querySelector('input[data-field="cat"]');
+            var catSelectEl = formEl.querySelector('.admin-cat-select');
+            if (hidden && catSelectEl && catSelectEl.value === 'custom_new') {
+              hidden.value = customInputEl.value.trim().toLowerCase();
+            }
+          });
+        }
 
         formEl.querySelectorAll('.admin-photo-file').forEach(function (fileInput) {
           fileInput.addEventListener('change', function (e) {
@@ -4934,6 +5069,20 @@
             if (!newItem.opp && newItem.team2) newItem.opp = newItem.team2;
             if (!newItem.team2 && newItem.opp) newItem.team2 = newItem.opp;
             if (!newItem.winner) newItem.winner = 'none';
+          }
+          if (tab === 'gallery') {
+            var hiddenCat = formEl.querySelector('input[data-field="cat"]');
+            var catSelect = formEl.querySelector('.admin-cat-select');
+            var customInput = formEl.querySelector('input[data-field="cat_custom"]');
+            if (catSelect && catSelect.value === 'custom_new' && customInput && customInput.value.trim()) {
+              newItem.cat = customInput.value.trim().toLowerCase();
+            } else if (catSelect && catSelect.value !== 'custom_new') {
+              newItem.cat = catSelect.value;
+            } else if (hiddenCat && hiddenCat.value) {
+              newItem.cat = hiddenCat.value.trim().toLowerCase();
+            } else {
+              newItem.cat = 'matches';
+            }
           }
           if (tab === 'team' || tab === 'matches') {
             var method = item ? 'PUT' : 'POST';
