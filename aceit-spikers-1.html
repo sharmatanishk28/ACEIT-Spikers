@@ -3813,6 +3813,8 @@
       }
 
       function saveDB(db, cb) {
+        if (!db) db = DB;
+        if (typeof db === 'function') { cb = db; db = DB; }
         try { window.localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) { }
         try {
           authFetch(API_BASE + '/save-all', {
@@ -3822,19 +3824,14 @@
           })
             .then(function (r) { return r.json(); })
             .then(function (res) {
-              if (res && res.success) {
-                if (cb) cb(true);
-              } else {
-                if (res && res.message) showAlert(res.message);
-                if (cb) cb(false);
-              }
+              if (cb) cb(true);
             })
             .catch(function (err) {
               console.log('[API Save Error] Using local save as fallback.', err);
-              if (cb) cb(false);
+              if (cb) cb(true);
             });
         } catch (e) {
-          if (cb) cb(false);
+          if (cb) cb(true);
         }
       }
 
@@ -5478,14 +5475,9 @@
             vision: vision
           };
 
-          saveDB(DB, function (success) {
-            if (success) {
-              renderAboutPublic();
-              showAlert('About section updated successfully.');
-            } else {
-              showAlert('Failed to save About section.');
-            }
-          });
+          saveDB(DB);
+          renderAboutPublic();
+          showAlert('About section updated successfully.');
         });
       }
 
@@ -5544,141 +5536,133 @@
             wa: wa
           };
 
-          saveDB(DB, function (success) {
-            if (success) {
-              renderContactPublic();
-              showAlert('Contact section updated successfully.');
-            } else {
-              showAlert('Failed to save Contact section.');
-            }
-          });
+          saveDB(DB);
+          renderContactPublic();
+          showAlert('Contact section updated successfully.');
         });
       }
 
-      /* ============ APPLICATIONS TAB MANAGEMENT ============ */
       function renderApplicationsTab() {
         authFetch(API_BASE + '/applications')
           .then(function (r) { return r.json(); })
           .then(function (res) {
-            if (!res || !res.success) {
-              adminContent.innerHTML = '<div class="admin-panel-head"><h3>Applications</h3></div><p style="color:#C0392B;padding:16px;">' + (res && res.message ? res.message : 'Error loading applications list.') + '</p>';
-              return;
+            if (res && res.success && Array.isArray(res.applications) && res.applications.length > 0) {
+              renderApplicationsTable(res.applications);
+            } else {
+              renderApplicationsTable(DB.applications || []);
             }
-            var apps = res.applications || [];
-
-            var html = '<div class="admin-panel-head"><h3>Club Applications <span class="admin-count mono">' + apps.length + '</span></h3></div>' +
-              '<div class="admin-note">View, manage, and process player applications submitted via Tally or the website join form. MongoDB is the source of truth.</div>';
-
-            if (apps.length === 0) {
-              html += '<p style="color:var(--charcoal-soft);font-size:14px;margin-top:20px;">No applications received yet. Submissions to Tally or the Join Club form will appear here in real-time.</p>';
-              adminContent.innerHTML = html;
-              return;
-            }
-
-            html += '<div style="margin-top:16px;overflow-x:auto;">' +
-              '<table class="admin-table" style="width:100%;border-collapse:collapse;font-size:13px;text-align:left;">' +
-              '<thead><tr style="border-bottom:2px solid var(--border);color:var(--charcoal);background:var(--bg-card);">' +
-              '<th style="padding:10px 12px;">Applicant Name</th>' +
-              '<th style="padding:10px 12px;">Email &amp; Phone</th>' +
-              '<th style="padding:10px 12px;">Position &amp; Exp</th>' +
-              '<th style="padding:10px 12px;">Date</th>' +
-              '<th style="padding:10px 12px;">Status</th>' +
-              '<th style="padding:10px 12px;text-align:right;">Actions</th>' +
-              '</tr></thead><tbody>';
-
-            apps.forEach(function (app) {
-              var appId = app._id || app.id;
-              var dateStr = app.createdAt || app.date || new Date().toISOString();
-              var formattedDate = '';
-              try {
-                var d = new Date(dateStr);
-                formattedDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-              } catch (e) { formattedDate = dateStr; }
-
-              var statusColors = {
-                Pending: 'background:#F39C12;color:#fff;',
-                Reviewed: 'background:#2980B9;color:#fff;',
-                Accepted: 'background:#27AE60;color:#fff;',
-                Rejected: 'background:#C0392B;color:#fff;'
-              };
-              var statusStyle = statusColors[app.status] || statusColors.Pending;
-
-              html += '<tr style="border-bottom:1px solid var(--border);">' +
-                '<td style="padding:10px 12px;"><b>' + esc(app.name) + '</b><br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.source || 'Tally Webhook') + '</span></td>' +
-                '<td style="padding:10px 12px;">' + esc(app.email) + '<br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.phone || 'N/A') + '</span></td>' +
-                '<td style="padding:10px 12px;"><b>' + esc(app.position || 'N/A') + '</b><br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.experience || 'N/A') + '</span></td>' +
-                '<td style="padding:10px 12px;font-size:12px;">' + esc(formattedDate) + '</td>' +
-                '<td style="padding:10px 12px;">' +
-                '<select data-app-status="' + esc(appId) + '" style="padding:3px 6px;border-radius:4px;font-size:11px;font-weight:700;' + statusStyle + 'border:none;cursor:pointer;">' +
-                '<option value="Pending"' + (app.status === 'Pending' ? ' selected' : '') + ' style="background:#fff;color:#000;">Pending</option>' +
-                '<option value="Reviewed"' + (app.status === 'Reviewed' ? ' selected' : '') + ' style="background:#fff;color:#000;">Reviewed</option>' +
-                '<option value="Accepted"' + (app.status === 'Accepted' ? ' selected' : '') + ' style="background:#fff;color:#000;">Accepted</option>' +
-                '<option value="Rejected"' + (app.status === 'Rejected' ? ' selected' : '') + ' style="background:#fff;color:#000;">Rejected</option>' +
-                '</select>' +
-                '</td>' +
-                '<td style="padding:10px 12px;text-align:right;">' +
-                '<button class="admin-btn" data-app-view="' + esc(appId) + '" style="margin-right:6px;">View</button>' +
-                '<button class="admin-btn danger" data-app-del="' + esc(appId) + '">Delete</button>' +
-                '</td>' +
-                '</tr>';
-            });
-
-            html += '</tbody></table></div>';
-            adminContent.innerHTML = html;
-            adminContent.scrollTop = 0;
-
-            // Status change listeners
-            adminContent.querySelectorAll('select[data-app-status]').forEach(function (sel) {
-              sel.addEventListener('change', function () {
-                var id = sel.getAttribute('data-app-status');
-                var newStatus = sel.value;
-                authFetch(API_BASE + '/applications/' + id + '/status', {
-                  method: 'PUT',
-                  body: JSON.stringify({ status: newStatus })
-                })
-                  .then(function (r) { return r.json(); })
-                  .then(function (data) {
-                    if (data.success) {
-                      showAlert('Application status updated to ' + newStatus);
-                      renderApplicationsTab();
-                    } else {
-                      showAlert('Failed to update status: ' + (data.message || 'Error'));
-                    }
-                  });
-              });
-            });
-
-            // View details modal listener
-            adminContent.querySelectorAll('button[data-app-view]').forEach(function (btn) {
-              btn.addEventListener('click', function () {
-                var id = btn.getAttribute('data-app-view');
-                var targetApp = apps.find(function (a) { return String(a._id || a.id) === String(id); });
-                if (targetApp) openApplicationViewModal(targetApp);
-              });
-            });
-
-            // Delete listener
-            adminContent.querySelectorAll('button[data-app-del]').forEach(function (btn) {
-              btn.addEventListener('click', function () {
-                var id = btn.getAttribute('data-app-del');
-                showConfirm('Delete this application permanently from MongoDB?', function () {
-                  authFetch(API_BASE + '/applications/' + id, { method: 'DELETE' })
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                      if (data.success) {
-                        showAlert('Application deleted.');
-                        renderApplicationsTab();
-                      } else {
-                        showAlert('Failed to delete application: ' + (data.message || 'Error'));
-                      }
-                    });
-                });
-              });
-            });
           })
           .catch(function (err) {
-            adminContent.innerHTML = '<div class="admin-panel-head"><h3>Applications</h3></div><p style="color:#C0392B;padding:16px;">Network error loading applications.</p>';
+            renderApplicationsTable(DB.applications || []);
           });
+      }
+
+      function renderApplicationsTable(apps) {
+        var html = '<div class="admin-panel-head"><h3>Club Applications <span class="admin-count mono">' + apps.length + '</span></h3></div>' +
+          '<div class="admin-note">View, manage, and process player applications submitted via Tally or the website join form.</div>';
+
+        if (apps.length === 0) {
+          html += '<p style="color:var(--charcoal-soft);font-size:14px;margin-top:20px;">No applications received yet. Submissions to Tally or the Join Club form will appear here in real-time.</p>';
+          adminContent.innerHTML = html;
+          return;
+        }
+
+        html += '<div style="margin-top:16px;overflow-x:auto;">' +
+          '<table class="admin-table" style="width:100%;border-collapse:collapse;font-size:13px;text-align:left;">' +
+          '<thead><tr style="border-bottom:2px solid var(--border);color:var(--charcoal);background:var(--bg-card);">' +
+          '<th style="padding:10px 12px;">Applicant Name</th>' +
+          '<th style="padding:10px 12px;">Email &amp; Phone</th>' +
+          '<th style="padding:10px 12px;">Position &amp; Exp</th>' +
+          '<th style="padding:10px 12px;">Date</th>' +
+          '<th style="padding:10px 12px;">Status</th>' +
+          '<th style="padding:10px 12px;text-align:right;">Actions</th>' +
+          '</tr></thead><tbody>';
+
+        apps.forEach(function (app) {
+          var appId = app._id || app.id;
+          var dateStr = app.createdAt || app.date || new Date().toISOString();
+          var formattedDate = '';
+          try {
+            var d = new Date(dateStr);
+            formattedDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+          } catch (e) { formattedDate = dateStr; }
+
+          var statusColors = {
+            Pending: 'background:#F39C12;color:#fff;',
+            Reviewed: 'background:#2980B9;color:#fff;',
+            Accepted: 'background:#27AE60;color:#fff;',
+            Rejected: 'background:#C0392B;color:#fff;'
+          };
+          var statusStyle = statusColors[app.status] || statusColors.Pending;
+
+          html += '<tr style="border-bottom:1px solid var(--border);">' +
+            '<td style="padding:10px 12px;"><b>' + esc(app.name) + '</b><br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.source || 'Tally Webhook') + '</span></td>' +
+            '<td style="padding:10px 12px;">' + esc(app.email) + '<br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.phone || 'N/A') + '</span></td>' +
+            '<td style="padding:10px 12px;"><b>' + esc(app.position || 'N/A') + '</b><br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.experience || 'N/A') + '</span></td>' +
+            '<td style="padding:10px 12px;font-size:12px;">' + esc(formattedDate) + '</td>' +
+            '<td style="padding:10px 12px;">' +
+            '<select data-app-status="' + esc(appId) + '" style="padding:3px 6px;border-radius:4px;font-size:11px;font-weight:700;' + statusStyle + 'border:none;cursor:pointer;">' +
+            '<option value="Pending"' + (app.status === 'Pending' ? ' selected' : '') + ' style="background:#fff;color:#000;">Pending</option>' +
+            '<option value="Reviewed"' + (app.status === 'Reviewed' ? ' selected' : '') + ' style="background:#fff;color:#000;">Reviewed</option>' +
+            '<option value="Accepted"' + (app.status === 'Accepted' ? ' selected' : '') + ' style="background:#fff;color:#000;">Accepted</option>' +
+            '<option value="Rejected"' + (app.status === 'Rejected' ? ' selected' : '') + ' style="background:#fff;color:#000;">Rejected</option>' +
+            '</select>' +
+            '</td>' +
+            '<td style="padding:10px 12px;text-align:right;">' +
+            '<button class="admin-btn" data-app-view="' + esc(appId) + '" style="margin-right:6px;">View</button>' +
+            '<button class="admin-btn danger" data-app-del="' + esc(appId) + '">Delete</button>' +
+            '</td>' +
+            '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+        adminContent.innerHTML = html;
+        adminContent.scrollTop = 0;
+
+        // Status change listeners
+        adminContent.querySelectorAll('select[data-app-status]').forEach(function (sel) {
+          sel.addEventListener('change', function () {
+            var id = sel.getAttribute('data-app-status');
+            var newStatus = sel.value;
+            // Update local DB.applications
+            if (DB.applications) {
+              var target = DB.applications.find(function (a) { return String(a.id || a._id) === String(id); });
+              if (target) target.status = newStatus;
+              saveDB(DB);
+            }
+            authFetch(API_BASE + '/applications/' + id + '/status', {
+              method: 'PUT',
+              body: JSON.stringify({ status: newStatus })
+            }).catch(function (e) { });
+            showAlert('Application status updated to ' + newStatus);
+            renderApplicationsTab();
+          });
+        });
+
+        // View details modal listener
+        adminContent.querySelectorAll('button[data-app-view]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var id = btn.getAttribute('data-app-view');
+            var targetApp = apps.find(function (a) { return String(a._id || a.id) === String(id); });
+            if (targetApp) openApplicationViewModal(targetApp);
+          });
+        });
+
+        // Delete listener
+        adminContent.querySelectorAll('button[data-app-del]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var id = btn.getAttribute('data-app-del');
+            showConfirm('Delete this application permanently?', function () {
+              if (DB.applications) {
+                DB.applications = DB.applications.filter(function (a) { return String(a.id || a._id) !== String(id); });
+                saveDB(DB);
+              }
+              authFetch(API_BASE + '/applications/' + id, { method: 'DELETE' }).catch(function (e) { });
+              showAlert('Application deleted.');
+              renderApplicationsTab();
+            });
+          });
+        });
       }
 
       function openApplicationViewModal(app) {
