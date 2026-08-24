@@ -2443,6 +2443,36 @@
       width: auto;
     }
 
+    .cat-pill-checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: var(--cream-2);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .cat-pill-checkbox:hover {
+      border-color: var(--ember);
+      background: #fff;
+    }
+    .cat-pill-checkbox input[type="checkbox"] {
+      accent-color: var(--ember);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+    .cat-pill-checkbox.checked {
+      border-color: var(--ember);
+      background: rgba(255, 107, 0, 0.08);
+      color: var(--ember);
+    }
+
     .admin-form-actions {
       display: flex;
       gap: 10px;
@@ -3847,6 +3877,29 @@
          visitors see. Called once on load, and again whenever the
          admin dashboard saves a change.
          ============================================================ */
+      function getCategories(it) {
+        if (!it) return [];
+        var raw = '';
+        if (Array.isArray(it.cats)) {
+          return it.cats.map(function (c) { return String(c).trim().toLowerCase(); }).filter(Boolean);
+        } else if (Array.isArray(it.cat)) {
+          return it.cat.map(function (c) { return String(c).trim().toLowerCase(); }).filter(Boolean);
+        } else if (typeof it.cat === 'string') {
+          raw = it.cat;
+        } else if (typeof it.cats === 'string') {
+          raw = it.cats;
+        }
+        if (!raw || !raw.trim()) return [];
+        return raw.split(',').map(function (c) { return c.trim().toLowerCase(); }).filter(Boolean);
+      }
+
+      function formatCategories(cats) {
+        if (!cats || !cats.length) return '';
+        return cats.map(function (c) {
+          return c.split(/[\s-_]+/).map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+        }).join(', ');
+      }
+
       var teamGrid = document.getElementById('teamGrid');
       function instaUrl(v) {
         if (!v) return '';
@@ -3864,12 +3917,12 @@
         var defaultCats = ['boys team', 'girls team', 'alumni', '2nd year'].filter(function (c) { return deleted.indexOf(c) === -1; });
         var customCats = [];
         (DB.team || []).forEach(function (p) {
-          if (p.cat && p.cat.trim()) {
-            var norm = p.cat.trim().toLowerCase();
+          var pCats = getCategories(p);
+          pCats.forEach(function (norm) {
             if (deleted.indexOf(norm) === -1 && defaultCats.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
               customCats.push(norm);
             }
-          }
+          });
         });
 
         var allCats = ['all'].concat(defaultCats).concat(customCats);
@@ -3902,15 +3955,17 @@
         if (!teamGrid) return;
         teamGrid.innerHTML = '';
         (DB.team || []).filter(function (p) {
-          var cat = (p.cat || 'boys team').trim().toLowerCase();
+          var pCats = getCategories(p);
+          if (!pCats.length) pCats = ['boys team'];
           var filter = (currentTeamFilter || 'all').trim().toLowerCase();
-          return filter === 'all' || cat === filter;
+          return filter === 'all' || pCats.indexOf(filter) !== -1;
         }).forEach(function (p) {
           var el = document.createElement('div');
           el.className = 'player-card card reveal visible tilt';
           var instaLink = instaUrl(p.insta);
           var hasPhoto = !!p.photo;
-          var catBadge = p.cat ? ' &middot; ' + esc(p.cat) : '';
+          var pCats = getCategories(p);
+          var catBadge = pCats.length ? ' &middot; ' + esc(formatCategories(pCats)) : '';
           el.innerHTML =
             '<div class="player-photo' + (hasPhoto ? ' has-photo' : '') + '"' + (hasPhoto ? ' style="background-image:url(\'' + p.photo + '\')"' : '') + '>' +
             '<span class="jersey-num mono">#' + p.num + '</span><div class="silhouette"></div>' +
@@ -3936,12 +3991,12 @@
         var defaultCats = ['matches', 'training', 'team', 'events', 'tournaments'].filter(function (c) { return deleted.indexOf(c) === -1; });
         var customCats = [];
         (DB.gallery || []).forEach(function (g) {
-          if (g.cat && g.cat.trim()) {
-            var norm = g.cat.trim().toLowerCase();
+          var gCats = getCategories(g);
+          gCats.forEach(function (norm) {
             if (deleted.indexOf(norm) === -1 && defaultCats.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
               customCats.push(norm);
             }
-          }
+          });
         });
 
         var allCats = ['all'].concat(defaultCats).concat(customCats);
@@ -3973,9 +4028,9 @@
         if (!masonry) return;
         masonry.innerHTML = '';
         (DB.gallery || []).filter(function (g) {
-          var cat = (g.cat || '').trim().toLowerCase();
+          var gCats = getCategories(g);
           var filter = (currentGalleryFilter || 'all').trim().toLowerCase();
-          return filter === 'all' || cat === filter;
+          return filter === 'all' || gCats.indexOf(filter) !== -1;
         }).forEach(function (g) {
           var el = document.createElement('div');
           el.className = 'g-item';
@@ -4708,7 +4763,10 @@
             { key: 'cap', label: 'Team Captain', type: 'checkbox' },
             { key: 'insta', label: 'Instagram (handle or full URL)', type: 'text', full: true }
           ],
-          summary: function (it) { return { title: it.n + ' (#' + it.num + ')', sub: it.pos + (it.cat ? ' &middot; ' + it.cat : '') + ' &middot; ' + it.h + ' &middot; ' + it.exp + (it.cap ? ' &middot; Captain' : '') }; }
+          summary: function (it) {
+            var cStr = formatCategories(getCategories(it));
+            return { title: it.n + ' (#' + it.num + ')', sub: it.pos + (cStr ? ' &middot; ' + cStr : '') + ' &middot; ' + it.h + ' &middot; ' + it.exp + (it.cap ? ' &middot; Captain' : '') };
+          }
         },
         training: {
           title: 'Training Timetable', label: 'Session',
@@ -4775,7 +4833,10 @@
             },
             { key: 'h', label: 'Card Height (px)', type: 'number' }
           ],
-          summary: function (it) { return { title: it.label || 'Photo', sub: (it.cat || 'all') + ' &middot; ' + ((!it.h || it.h < 100) ? 240 : it.h) + 'px', photo: it.photo }; }
+          summary: function (it) {
+            var cStr = formatCategories(getCategories(it));
+            return { title: it.label || 'Photo', sub: (cStr || 'all') + ' &middot; ' + ((!it.h || it.h < 100) ? 240 : it.h) + 'px', photo: it.photo };
+          }
         },
         testimonials: {
           title: 'Testimonials', label: 'Testimonial',
@@ -4977,12 +5038,12 @@
 
         var customCats = [];
         (DB[tab] || []).forEach(function (it) {
-          if (it.cat && it.cat.trim()) {
-            var norm = it.cat.trim().toLowerCase();
+          var itemCats = getCategories(it);
+          itemCats.forEach(function (norm) {
             if (deleted.indexOf(norm) === -1 && activeDefaults.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
               customCats.push(norm);
             }
-          }
+          });
         });
 
         var existingCats = activeDefaults.concat(customCats);
@@ -4994,7 +5055,7 @@
           listHtml += '<p style="font-size:12px;color:var(--charcoal-soft);margin:0;">No active categories.</p>';
         } else {
           existingCats.forEach(function (catKey) {
-            var count = (DB[tab] || []).filter(function (it) { return (it.cat || '').trim().toLowerCase() === catKey; }).length;
+            var count = (DB[tab] || []).filter(function (it) { return getCategories(it).indexOf(catKey) !== -1; }).length;
             var label = catKey.split(/[\s-_]+/).map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
             listHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05);font-size:13px;">' +
               '<span><b>' + esc(label) + '</b> <span style="color:var(--charcoal-soft);font-size:11px;">(' + count + ' ' + (tab === 'team' ? 'player' : 'photo') + (count === 1 ? '' : 's') + ')</span></span>' +
@@ -5044,8 +5105,12 @@
             showConfirm('Delete category "' + label + '"? Items in this category will be reassigned to "' + (fallbackCat === 'boys team' ? 'Boys Team' : 'Matches') + '".', function () {
               // 1. Reassign items in DB[tab]
               (DB[tab] || []).forEach(function (it) {
-                if ((it.cat || '').trim().toLowerCase() === targetCat) {
-                  it.cat = fallbackCat;
+                var itemCats = getCategories(it);
+                var idx = itemCats.indexOf(targetCat);
+                if (idx !== -1) {
+                  itemCats.splice(idx, 1);
+                  if (itemCats.length === 0) itemCats.push(fallbackCat);
+                  it.cat = itemCats.join(', ');
                 }
               });
 
@@ -5085,39 +5150,50 @@
             var defaultOptions = tab === 'team'
               ? ['boys team', 'girls team', 'alumni', '2nd year']
               : ['matches', 'training', 'team', 'events', 'tournaments'];
+            var deleted = (DB.deletedCategories && DB.deletedCategories[tab]) || [];
+            var activeDefaults = defaultOptions.filter(function (c) { return deleted.indexOf(c) === -1; });
+
             var customOptions = [];
             (DB[tab] || []).forEach(function (it) {
-              if (it.cat && it.cat.trim()) {
-                var norm = it.cat.trim().toLowerCase();
-                if (defaultOptions.indexOf(norm) === -1 && customOptions.indexOf(norm) === -1) {
+              var itemCats = getCategories(it);
+              itemCats.forEach(function (norm) {
+                if (deleted.indexOf(norm) === -1 && activeDefaults.indexOf(norm) === -1 && customOptions.indexOf(norm) === -1) {
                   customOptions.push(norm);
                 }
-              }
+              });
             });
             if (initialCategory && initialCategory.trim()) {
               var normInit = initialCategory.trim().toLowerCase();
-              if (defaultOptions.indexOf(normInit) === -1 && customOptions.indexOf(normInit) === -1) {
+              if (deleted.indexOf(normInit) === -1 && activeDefaults.indexOf(normInit) === -1 && customOptions.indexOf(normInit) === -1) {
                 customOptions.push(normInit);
               }
             }
 
-            var allCategoryOptions = defaultOptions.concat(customOptions);
-            var activeCategoryVal = (item && item.cat ? item.cat : (initialCategory || (tab === 'team' ? 'boys team' : 'matches'))).trim().toLowerCase();
-            var isCustomVal = activeCategoryVal && allCategoryOptions.indexOf(activeCategoryVal) === -1;
-            var currentSelected = isCustomVal ? 'custom_new' : activeCategoryVal;
+            var allCategoryOptions = activeDefaults.concat(customOptions);
+            var itemCats = getCategories(item);
+            if (itemCats.length === 0 && initialCategory && initialCategory.trim()) {
+              itemCats = [initialCategory.trim().toLowerCase()];
+            }
+            if (itemCats.length === 0) {
+              itemCats = [tab === 'team' ? 'boys team' : 'matches'];
+            }
 
-            gridHtml += '<div class="' + cls + '"><label>' + f.label + '</label>' +
-              '<select data-field="cat_select" class="admin-cat-select">' +
-              allCategoryOptions.map(function (c) {
-                var label = c.split(/[\s-_]+/).map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
-                return '<option value="' + c + '"' + (currentSelected === c ? ' selected' : '') + '>' + label + '</option>';
-              }).join('') +
-              '<option value="custom_new"' + (currentSelected === 'custom_new' ? ' selected' : '') + '>+ Type Custom Category Name...</option>' +
-              '</select>' +
-              '<div class="admin-custom-cat-wrap" style="margin-top:8px;' + (currentSelected === 'custom_new' ? 'display:block;' : 'display:none;') + '">' +
-              '<input type="text" data-field="cat_custom" placeholder="Type category name (e.g. Girls Team, Alumni, Tournaments)" value="' + esc(isCustomVal ? activeCategoryVal : '') + '">' +
+            gridHtml += '<div class="' + cls + '"><label>' + f.label + ' (Select Multiple Categories)</label>' +
+              '<div class="admin-cat-multiselect" style="display:flex;flex-wrap:wrap;gap:8px;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg-card);margin-top:4px;">';
+
+            allCategoryOptions.forEach(function (c) {
+              var isChecked = itemCats.indexOf(c.toLowerCase()) !== -1;
+              var label = c.split(/[\s-_]+/).map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+              gridHtml += '<label class="cat-pill-checkbox' + (isChecked ? ' checked' : '') + '">' +
+                '<input type="checkbox" data-cat-check="' + esc(c.toLowerCase()) + '"' + (isChecked ? ' checked' : '') + '> ' + esc(label) +
+                '</label>';
+            });
+
+            gridHtml += '</div>' +
+              '<div style="display:flex;gap:8px;margin-top:10px;">' +
+              '<input type="text" id="adminAddCustomCatInput" class="admin-search" style="flex:1;font-size:13px;padding:8px 12px;" placeholder="+ Add new category (e.g. Final Year, 1st Year)">' +
+              '<button type="button" class="btn btn-outline" id="adminAddCustomCatBtn" style="font-size:13px;padding:6px 14px;">+ Add Category</button>' +
               '</div>' +
-              '<input type="hidden" data-field="cat" value="' + esc(activeCategoryVal) + '">' +
               '</div>';
           } else if (f.type === 'select') {
             gridHtml += '<div class="' + cls + '"><label>' + f.label + '</label><select data-field="' + f.key + '">';
@@ -5163,29 +5239,51 @@
         formEl.classList.add('open');
         formEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-        var catSelectEl = formEl.querySelector('.admin-cat-select');
-        if (catSelectEl) {
-          catSelectEl.addEventListener('change', function () {
-            var wrap = formEl.querySelector('.admin-custom-cat-wrap');
-            var hidden = formEl.querySelector('input[data-field="cat"]');
-            var customInput = formEl.querySelector('input[data-field="cat_custom"]');
-            if (catSelectEl.value === 'custom_new') {
-              if (wrap) wrap.style.display = 'block';
-              if (customInput) customInput.focus();
-              if (hidden) hidden.value = customInput ? customInput.value.trim().toLowerCase() : '';
-            } else {
-              if (wrap) wrap.style.display = 'none';
-              if (hidden) hidden.value = catSelectEl.value;
+        formEl.querySelectorAll('.cat-pill-checkbox input[type="checkbox"]').forEach(function (chk) {
+          chk.addEventListener('change', function () {
+            var pill = chk.closest('.cat-pill-checkbox');
+            if (pill) {
+              if (chk.checked) pill.classList.add('checked');
+              else pill.classList.remove('checked');
             }
           });
+        });
+
+        var addCatBtn = formEl.querySelector('#adminAddCustomCatBtn');
+        var addCatInput = formEl.querySelector('#adminAddCustomCatInput');
+        function doAddCustomCat() {
+          if (!addCatInput) return;
+          var val = addCatInput.value.trim();
+          if (!val) return;
+          var norm = val.toLowerCase();
+          var container = formEl.querySelector('.admin-cat-multiselect');
+          if (!container) return;
+
+          var existingChk = container.querySelector('input[data-cat-check="' + norm + '"]');
+          if (existingChk) {
+            existingChk.checked = true;
+            var p = existingChk.closest('.cat-pill-checkbox');
+            if (p) p.classList.add('checked');
+          } else {
+            var label = val.split(/[\s-_]+/).map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+            var lbl = document.createElement('label');
+            lbl.className = 'cat-pill-checkbox checked';
+            lbl.innerHTML = '<input type="checkbox" data-cat-check="' + esc(norm) + '" checked> ' + esc(label);
+            lbl.querySelector('input').addEventListener('change', function (e) {
+              if (e.target.checked) lbl.classList.add('checked');
+              else lbl.classList.remove('checked');
+            });
+            container.appendChild(lbl);
+          }
+          addCatInput.value = '';
         }
-        var customInputEl = formEl.querySelector('input[data-field="cat_custom"]');
-        if (customInputEl) {
-          customInputEl.addEventListener('input', function () {
-            var hidden = formEl.querySelector('input[data-field="cat"]');
-            var catSelectEl = formEl.querySelector('.admin-cat-select');
-            if (hidden && catSelectEl && catSelectEl.value === 'custom_new') {
-              hidden.value = customInputEl.value.trim().toLowerCase();
+
+        if (addCatBtn) addCatBtn.addEventListener('click', doAddCustomCat);
+        if (addCatInput) {
+          addCatInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              doAddCustomCat();
             }
           });
         }
@@ -5222,7 +5320,9 @@
         document.getElementById('adminSaveBtn').addEventListener('click', function () {
           var newItem = item ? Object.assign({}, item) : { id: uid() };
           schema.fields.forEach(function (f) {
+            if (f.key === 'cat') return;
             var el = formEl.querySelector('[data-field="' + f.key + '"]');
+            if (!el) return;
             if (f.type === 'checkbox') { newItem[f.key] = el.checked; }
             else if (f.type === 'number') { newItem[f.key] = parseFloat(el.value) || 0; }
             else if (f.type === 'datetime-local') { newItem[f.key] = el.value ? new Date(el.value).toISOString() : new Date().toISOString(); }
@@ -5235,18 +5335,17 @@
             if (!newItem.winner) newItem.winner = 'none';
           }
           if (tab === 'gallery' || tab === 'team') {
-            var hiddenCat = formEl.querySelector('input[data-field="cat"]');
-            var catSelect = formEl.querySelector('.admin-cat-select');
-            var customInput = formEl.querySelector('input[data-field="cat_custom"]');
-            if (catSelect && catSelect.value === 'custom_new' && customInput && customInput.value.trim()) {
-              newItem.cat = customInput.value.trim().toLowerCase();
-            } else if (catSelect && catSelect.value !== 'custom_new') {
-              newItem.cat = catSelect.value;
-            } else if (hiddenCat && hiddenCat.value) {
-              newItem.cat = hiddenCat.value.trim().toLowerCase();
-            } else {
-              newItem.cat = 'matches';
+            var selectedCats = [];
+            formEl.querySelectorAll('.admin-cat-multiselect input[type="checkbox"]:checked').forEach(function (chk) {
+              var catVal = (chk.getAttribute('data-cat-check') || chk.value || '').trim().toLowerCase();
+              if (catVal && selectedCats.indexOf(catVal) === -1) {
+                selectedCats.push(catVal);
+              }
+            });
+            if (selectedCats.length === 0) {
+              selectedCats = [tab === 'team' ? 'boys team' : 'matches'];
             }
+            newItem.cat = selectedCats.join(', ');
           }
           if (tab === 'team' || tab === 'matches') {
             var method = item ? 'PUT' : 'POST';
