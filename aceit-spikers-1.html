@@ -3856,12 +3856,13 @@
         var container = document.getElementById('teamFilters');
         if (!container) return;
 
-        var defaultCats = ['boys team', 'girls team', 'alumni', '2nd year'];
+        var deleted = (DB.deletedCategories && DB.deletedCategories.team) || [];
+        var defaultCats = ['boys team', 'girls team', 'alumni', '2nd year'].filter(function(c){ return deleted.indexOf(c) === -1; });
         var customCats = [];
         (DB.team || []).forEach(function (p) {
           if (p.cat && p.cat.trim()) {
             var norm = p.cat.trim().toLowerCase();
-            if (defaultCats.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
+            if (deleted.indexOf(norm) === -1 && defaultCats.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
               customCats.push(norm);
             }
           }
@@ -3926,12 +3927,13 @@
         var container = document.getElementById('galleryFilters');
         if (!container) return;
 
-        var defaultCats = ['matches', 'training', 'team', 'events', 'tournaments'];
+        var deleted = (DB.deletedCategories && DB.deletedCategories.gallery) || [];
+        var defaultCats = ['matches', 'training', 'team', 'events', 'tournaments'].filter(function(c){ return deleted.indexOf(c) === -1; });
         var customCats = [];
         (DB.gallery || []).forEach(function (g) {
           if (g.cat && g.cat.trim()) {
             var norm = g.cat.trim().toLowerCase();
-            if (defaultCats.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
+            if (deleted.indexOf(norm) === -1 && defaultCats.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
               customCats.push(norm);
             }
           }
@@ -4795,7 +4797,7 @@
         var schema = SCHEMAS[tab];
         var items = DB[tab];
         var html = '<div class="admin-panel-head"><h3>' + schema.title + ' <span class="admin-count mono">' + items.length + '</span></h3><div>' +
-          ((tab === 'gallery' || tab === 'team') ? '<button class="admin-btn" id="adminAddCategoryBtn" style="margin-right:8px;background:var(--cream-2);color:var(--charcoal);border:1px solid var(--border);">+ Add Category</button>' : '') +
+          ((tab === 'gallery' || tab === 'team') ? '<button class="admin-btn" id="adminAddCategoryBtn" style="margin-right:8px;background:var(--cream-2);color:var(--charcoal);border:1px solid var(--border);">Manage / Delete Categories</button>' : '') +
           '<button class="admin-btn" id="adminAddBtn">+ Add ' + schema.label + '</button></div></div>';
         if (tab === 'team') { html += '<div class="admin-note">Photos are compressed and stored in this browser. Keep them under a few dozen for best performance — export a backup from Data &amp; PIN after adding photos.</div>'; }
         if (items.length > 4) { html += '<input type="text" id="adminSearch" class="admin-search" placeholder="Search ' + schema.title.toLowerCase() + '...">'; }
@@ -4930,18 +4932,49 @@
       }
       function openAddCategoryModal() {
         if (!customModal || !customModalMsg || !customModalActions) return;
-        var activeTabName = currentAdminTab === 'team' ? 'Player / Squad' : 'Gallery';
-        var catExample = currentAdminTab === 'team' ? 'Girls Team, Alumni, Pass-out 2025, 2nd Year' : 'Tournaments, Championship 2026, Beach Volleyball';
-        var btnText = currentAdminTab === 'team' ? '+ Create &amp; Add Player' : '+ Create &amp; Add Photo';
+        var tab = currentAdminTab;
+        var activeTabName = tab === 'team' ? 'Player / Squad' : 'Gallery';
+        var defaultCats = tab === 'team' ? ['boys team', 'girls team', 'alumni', '2nd year'] : ['matches', 'training', 'team', 'events', 'tournaments'];
+        var deleted = (DB.deletedCategories && DB.deletedCategories[tab]) || [];
+        var activeDefaults = defaultCats.filter(function(c){ return deleted.indexOf(c) === -1; });
+
+        var customCats = [];
+        (DB[tab] || []).forEach(function (it) {
+          if (it.cat && it.cat.trim()) {
+            var norm = it.cat.trim().toLowerCase();
+            if (deleted.indexOf(norm) === -1 && activeDefaults.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
+              customCats.push(norm);
+            }
+          }
+        });
+
+        var existingCats = activeDefaults.concat(customCats);
+
+        var listHtml = '<div style="margin-top:16px;text-align:left;max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;">' +
+          '<b style="display:block;margin-bottom:8px;font-size:13px;color:var(--charcoal);">Existing Categories:</b>';
+
+        if (existingCats.length === 0) {
+          listHtml += '<p style="font-size:12px;color:var(--charcoal-soft);margin:0;">No active categories.</p>';
+        } else {
+          existingCats.forEach(function (catKey) {
+            var count = (DB[tab] || []).filter(function (it) { return (it.cat || '').trim().toLowerCase() === catKey; }).length;
+            var label = catKey.split(/[\s-_]+/).map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+            listHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.05);font-size:13px;">' +
+              '<span><b>' + esc(label) + '</b> <span style="color:var(--charcoal-soft);font-size:11px;">(' + count + ' ' + (tab === 'team' ? 'player' : 'photo') + (count === 1 ? '' : 's') + ')</span></span>' +
+              '<button type="button" class="admin-btn danger del-cat-btn" data-delcat="' + esc(catKey) + '" style="font-size:11px;padding:2px 8px;">Delete</button>' +
+              '</div>';
+          });
+        }
+        listHtml += '</div>';
 
         customModalMsg.innerHTML =
-          '<h4 style="margin-bottom:8px;font-size:18px;">+ Add ' + activeTabName + ' Category</h4>' +
-          '<p style="font-size:13px;color:var(--charcoal-soft);margin-bottom:12px;">Type a category name (e.g. ' + catExample + '). Saving an item in this category will automatically create a filter button on the public site.</p>' +
-          '<input type="text" id="modalNewCatInput" class="admin-search" style="width:100%;margin-bottom:8px;" placeholder="Category Name (e.g. ' + (currentAdminTab === 'team' ? 'Girls Team' : 'Tournaments') + ')">';
+          '<h4 style="margin-bottom:8px;font-size:18px;">Manage / Delete ' + activeTabName + ' Categories</h4>' +
+          '<p style="font-size:13px;color:var(--charcoal-soft);margin-bottom:12px;">Type a category name to add, or click <b>Delete</b> next to any category below to remove it from the public site.</p>' +
+          '<div style="display:flex;gap:8px;"><input type="text" id="modalNewCatInput" class="admin-search" style="flex:1;" placeholder="New category name (e.g. ' + (tab === 'team' ? '1st Year' : 'Championship 2026') + ')">' +
+          '<button class="btn btn-primary" id="cmCatCreate" style="font-size:13px;padding:6px 14px;">+ Add</button></div>' +
+          listHtml;
 
-        customModalActions.innerHTML =
-          '<button class="btn btn-outline" id="cmCatCancel">Cancel</button>' +
-          '<button class="btn btn-primary" id="cmCatCreate">' + btnText + '</button>';
+        customModalActions.innerHTML = '<button class="btn btn-outline" id="cmCatCancel">Close</button>';
 
         customModal.classList.add('open');
 
@@ -4960,9 +4993,47 @@
               return;
             }
             closeCustomModal();
-            openAdminForm(currentAdminTab, null, catName);
+            openAdminForm(tab, null, catName);
           });
         }
+
+        // Attach delete category listeners
+        customModalMsg.querySelectorAll('.del-cat-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var targetCat = btn.getAttribute('data-delcat');
+            var label = targetCat.split(/[\s-_]+/).map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+            var fallbackCat = tab === 'team' ? 'boys team' : 'matches';
+            
+            showConfirm('Delete category "' + label + '"? Items in this category will be reassigned to "' + (fallbackCat === 'boys team' ? 'Boys Team' : 'Matches') + '".', function () {
+              // 1. Reassign items in DB[tab]
+              (DB[tab] || []).forEach(function (it) {
+                if ((it.cat || '').trim().toLowerCase() === targetCat) {
+                  it.cat = fallbackCat;
+                }
+              });
+
+              // 2. Track in DB.deletedCategories
+              if (!DB.deletedCategories) DB.deletedCategories = {};
+              if (!DB.deletedCategories[tab]) DB.deletedCategories[tab] = [];
+              if (DB.deletedCategories[tab].indexOf(targetCat) === -1) {
+                DB.deletedCategories[tab].push(targetCat);
+              }
+
+              // 3. Save & refresh
+              saveDB(DB);
+              if (tab === 'team') {
+                if (currentTeamFilter.toLowerCase() === targetCat) currentTeamFilter = 'all';
+                renderTeamPublic();
+              } else {
+                if (currentGalleryFilter.toLowerCase() === targetCat) currentGalleryFilter = 'all';
+                renderGalleryPublic();
+              }
+              renderAdminTab(tab);
+              closeCustomModal();
+              showAlert('Category "' + label + '" deleted successfully!');
+            });
+          });
+        });
       }
 
       function openAdminForm(tab, id, initialCategory) {

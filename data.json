@@ -58,7 +58,7 @@
       "cap": false,
       "insta": "",
       "photo": "",
-      "cat": "2nd Year"
+      "cat": "boys team"
     },
     {
       "id": "idmsozmogl6",
@@ -420,5 +420,10 @@
       "createdAt": "2026-08-16T06:25:59.129Z",
       "date": "2026-08-16T06:25:59.129Z"
     }
-  ]
+  ],
+  "deletedCategories": {
+    "team": [
+      "2nd year"
+    ]
+  }
 }
