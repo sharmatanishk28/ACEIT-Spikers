@@ -151,6 +151,7 @@ const clubSchema = new mongoose.Schema({
   stats: { type: Array, default: [] },
   gallery: { type: Array, default: [] },
   events: { type: Array, default: [] },
+  training: { type: Array, default: [] },
   about: { type: Object, default: {} },
   contact: { type: Object, default: {} },
   pin: { type: String, default: '2026' }
@@ -363,7 +364,7 @@ function readLocalFileDB() {
     }
   } catch (err) { }
   return {
-    team: [], matches: [], news: [], sponsors: [], testimonials: [], stats: [], gallery: [], events: [],
+    team: [], matches: [], news: [], sponsors: [], testimonials: [], stats: [], gallery: [], events: [], training: [],
     about: {
       eyebrow: 'Who we are',
       title: 'Built on the court,\ndefined by character.',
@@ -452,6 +453,7 @@ async function saveDB(data) {
         stats: data.stats || [],
         gallery: data.gallery || [],
         events: data.events || [],
+        training: data.training || [],
         about: data.about || {},
         contact: data.contact || {}
       },
@@ -1659,6 +1661,86 @@ app.delete('/api/events/:id', authenticateUser, requireAuth, async (req, res) =>
     dbData.events = filtered;
     await saveDB(dbData);
     res.json({ success: true, message: 'Event deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/training
+app.get('/api/training', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) {
+    return res.status(500).json({ success: false, message: `MongoDB Error: ${result.error}` });
+  }
+  res.json({ success: true, training: result.data.training || [] });
+});
+
+// POST /api/training (Create training session)
+app.post('/api/training', authenticateUser, requireAuth, requirePermission('training.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const dbData = dbRes.data;
+    const training = dbData.training || [];
+
+    const newTr = {
+      id: req.body.id || generateId(),
+      icon: req.body.icon || '🏐',
+      title: req.body.title || 'Training Session',
+      time: req.body.time || '',
+      desc: req.body.desc || '',
+      createdAt: new Date().toISOString()
+    };
+
+    training.push(newTr);
+    dbData.training = training;
+    await saveDB(dbData);
+    res.json({ success: true, training: newTr, message: 'Training session created successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/training/:id (Update training session)
+app.put('/api/training/:id', authenticateUser, requireAuth, requirePermission('training.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const dbData = dbRes.data;
+    const training = dbData.training || [];
+    const idx = training.findIndex(t => String(t.id || t._id) === String(req.params.id));
+    if (idx === -1) {
+      return res.status(404).json({ success: false, message: 'Training session not found' });
+    }
+
+    training[idx] = {
+      ...training[idx],
+      ...req.body,
+      id: training[idx].id || req.params.id,
+      updatedAt: new Date().toISOString()
+    };
+    dbData.training = training;
+    await saveDB(dbData);
+    res.json({ success: true, training: training[idx], message: 'Training session updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/training/:id (Delete training session)
+app.delete('/api/training/:id', authenticateUser, requireAuth, requirePermission('training.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const dbData = dbRes.data;
+    const training = dbData.training || [];
+    const filtered = training.filter(t => String(t.id || t._id) !== String(req.params.id));
+    if (filtered.length === training.length) {
+      return res.status(404).json({ success: false, message: 'Training session not found' });
+    }
+    dbData.training = filtered;
+    await saveDB(dbData);
+    res.json({ success: true, message: 'Training session deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

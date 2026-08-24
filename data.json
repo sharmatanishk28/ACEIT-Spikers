@@ -425,5 +425,35 @@
     "team": [
       "2nd year"
     ]
-  }
+  },
+  "training": [
+    {
+      "id": "tr_m1",
+      "icon": "🌅",
+      "title": "Morning Session",
+      "time": "06:00 – 07:30",
+      "desc": "Mon / Wed / Fri — footwork, serving accuracy, and reception drills."
+    },
+    {
+      "id": "tr_e1",
+      "icon": "🌆",
+      "title": "Evening Session",
+      "time": "17:30 – 19:30",
+      "desc": "Daily — full-court scrimmage, attack combinations, block timing."
+    },
+    {
+      "id": "tr_w1",
+      "icon": "🏆",
+      "title": "Weekend Practice",
+      "time": "Sat 09:00 – 12:00",
+      "desc": "Match simulation and set-play rehearsal ahead of fixtures."
+    },
+    {
+      "id": "tr_s1",
+      "icon": "💪",
+      "title": "Strength Training",
+      "time": "Tue / Thu 18:00",
+      "desc": "Conditioning, jump strength, and injury-prevention work in the gym."
+    }
+  ]
 }
