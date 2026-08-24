@@ -1065,7 +1065,7 @@
     }
 
     /* ---------- Gallery ---------- */
-    .gallery-filters {
+    .team-filters, .gallery-filters {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
@@ -3169,6 +3169,7 @@
         <h2 class="section-title">Meet the <span class="gradient-text">Spikers</span></h2>
         <p class="section-sub">The athletes representing ACEIT this season.</p>
       </div>
+      <div class="team-filters reveal" id="teamFilters"></div>
       <div class="team-grid" id="teamGrid"></div>
     </div>
   </section>
@@ -3637,14 +3638,14 @@
       function defaultDB() {
         return {
           team: [
-            { id: uid(), n: 'Shubham Patidar', num: 1, pos: 'Captain / Outside Hitter', h: "6'1\"", exp: '4 yrs', cap: true, insta: '', photo: '' },
-            { id: uid(), n: 'Arjun Verma', num: 5, pos: 'Setter', h: "5'10\"", exp: '3 yrs', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Rohan Mehta', num: 9, pos: 'Middle Blocker', h: "6'3\"", exp: '2 yrs', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Karan Singh', num: 11, pos: 'Libero', h: "5'8\"", exp: '3 yrs', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Aditya Rao', num: 14, pos: 'Opposite', h: "6'0\"", exp: '2 yrs', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Vikram Joshi', num: 7, pos: 'Outside Hitter', h: "5'11\"", exp: '1 yr', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Nikhil Sharma', num: 3, pos: 'Middle Blocker', h: "6'2\"", exp: '3 yrs', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Devansh Rathore', num: 12, pos: 'Setter', h: "5'9\"", exp: '2 yrs', cap: false, insta: '', photo: '' }
+            { id: uid(), n: 'Shubham Patidar', num: 1, pos: 'Captain / Outside Hitter', cat: 'Boys Team', h: "6'1\"", exp: '4 yrs', cap: true, insta: '', photo: '' },
+            { id: uid(), n: 'Arjun Verma', num: 5, pos: 'Setter', cat: 'Boys Team', h: "5'10\"", exp: '3 yrs', cap: false, insta: '', photo: '' },
+            { id: uid(), n: 'Ananya Sharma', num: 8, pos: 'Outside Hitter', cat: 'Girls Team', h: "5'9\"", exp: '2 yrs', cap: true, insta: '', photo: '' },
+            { id: uid(), n: 'Rohan Mehta', num: 9, pos: 'Middle Blocker', cat: '2nd Year', h: "6'3\"", exp: '2 yrs', cap: false, insta: '', photo: '' },
+            { id: uid(), n: 'Vikramaditya Singh', num: 10, pos: 'Setter (Pass-out)', cat: 'Alumni', h: "6'0\"", exp: '5 yrs', cap: false, insta: '', photo: '' },
+            { id: uid(), n: 'Karan Singh', num: 11, pos: 'Libero', cat: 'Boys Team', h: "5'8\"", exp: '3 yrs', cap: false, insta: '', photo: '' },
+            { id: uid(), n: 'Priya Rathore', num: 15, pos: 'Setter', cat: 'Girls Team', h: "5'7\"", exp: '2 yrs', cap: false, insta: '', photo: '' },
+            { id: uid(), n: 'Aditya Rao', num: 14, pos: 'Opposite', cat: '2nd Year', h: "6'0\"", exp: '2 yrs', cap: false, insta: '', photo: '' }
           ],
           gallery: [
             { id: uid(), cat: 'matches', h: 260, label: 'Match Day' }, { id: uid(), cat: 'training', h: 180, label: 'Training' },
@@ -3849,19 +3850,67 @@
         if (/^https?:\/\//i.test(v)) return v;
         return 'https://instagram.com/' + v.replace(/^@/, '');
       }
+      var currentTeamFilter = 'all';
+
+      function renderTeamFilters() {
+        var container = document.getElementById('teamFilters');
+        if (!container) return;
+
+        var defaultCats = ['boys team', 'girls team', 'alumni', '2nd year'];
+        var customCats = [];
+        (DB.team || []).forEach(function (p) {
+          if (p.cat && p.cat.trim()) {
+            var norm = p.cat.trim().toLowerCase();
+            if (defaultCats.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
+              customCats.push(norm);
+            }
+          }
+        });
+
+        var allCats = ['all'].concat(defaultCats).concat(customCats);
+        container.innerHTML = '';
+
+        allCats.forEach(function (catKey) {
+          var btn = document.createElement('button');
+          var isActive = (currentTeamFilter || 'all').toLowerCase() === catKey.toLowerCase();
+          btn.className = 'filter-btn' + (isActive ? ' active' : '');
+          btn.setAttribute('data-filter', catKey);
+
+          var labelStr = catKey === 'all'
+            ? 'All'
+            : catKey.split(/[\s-_]+/).map(function(w){ return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
+          btn.textContent = labelStr;
+
+          btn.addEventListener('click', function () {
+            container.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            currentTeamFilter = catKey;
+            renderTeamPublic();
+          });
+          container.appendChild(btn);
+        });
+      }
+
       function renderTeamPublic() {
+        renderTeamFilters();
+        if (!teamGrid) return;
         teamGrid.innerHTML = '';
-        DB.team.forEach(function (p) {
+        (DB.team || []).filter(function (p) {
+          var cat = (p.cat || 'boys team').trim().toLowerCase();
+          var filter = (currentTeamFilter || 'all').trim().toLowerCase();
+          return filter === 'all' || cat === filter;
+        }).forEach(function (p) {
           var el = document.createElement('div');
           el.className = 'player-card card reveal visible tilt';
           var instaLink = instaUrl(p.insta);
           var hasPhoto = !!p.photo;
+          var catBadge = p.cat ? ' &middot; ' + esc(p.cat) : '';
           el.innerHTML =
             '<div class="player-photo' + (hasPhoto ? ' has-photo' : '') + '"' + (hasPhoto ? ' style="background-image:url(\'' + p.photo + '\')"' : '') + '>' +
             '<span class="jersey-num mono">#' + p.num + '</span><div class="silhouette"></div>' +
             (p.cap ? '<span class="captain-badge">Captain</span>' : '') +
             '</div>' +
-            '<div class="player-info"><h3>' + esc(p.n) + '</h3><div class="player-pos">' + esc(p.pos) + '</div>' +
+            '<div class="player-info"><h3>' + esc(p.n) + '</h3><div class="player-pos">' + esc(p.pos) + catBadge + '</div>' +
             '<div class="player-stats"><span>Height<b>' + esc(p.h) + '</b></span><span>Experience<b>' + esc(p.exp) + '</b></span><span>Jersey<b>#' + p.num + '</b></span></div>' +
             (instaLink ? '<a class="player-insta" href="' + esc(instaLink) + '" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c2.7 0 3.05.01 4.12.06 1.07.05 1.79.22 2.43.46.66.26 1.22.6 1.77 1.15.55.55.9 1.11 1.15 1.77.24.64.41 1.36.46 2.43.05 1.07.06 1.42.06 4.12s-.01 3.05-.06 4.12c-.05 1.07-.22 1.79-.46 2.43a4.9 4.9 0 0 1-1.15 1.77 4.9 4.9 0 0 1-1.77 1.15c-.64.24-1.36.41-2.43.46-1.07.05-1.42.06-4.12.06s-3.05-.01-4.12-.06c-1.07-.05-1.79-.22-2.43-.46a4.9 4.9 0 0 1-1.77-1.15 4.9 4.9 0 0 1-1.15-1.77c-.24-.64-.41-1.36-.46-2.43C2.01 15.05 2 14.7 2 12s.01-3.05.06-4.12c.05-1.07.22-1.79.46-2.43.26-.66.6-1.22 1.15-1.77A4.9 4.9 0 0 1 5.44 2.52c.64-.24 1.36-.41 2.43-.46C8.95 2.01 9.3 2 12 2zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4zm5.2-8.4a1.2 1.2 0 1 1-2.4 0 1.2 1.2 0 0 1 2.4 0z"/></svg> Instagram</a>' : '') +
             '</div>';
@@ -4628,12 +4677,13 @@
             { key: 'n', label: 'Name', type: 'text', full: true },
             { key: 'num', label: 'Jersey Number', type: 'number' },
             { key: 'pos', label: 'Position', type: 'select', options: ['Setter', 'Outside Hitter', 'Middle Blocker', 'Opposite', 'Libero', 'Captain / Outside Hitter'] },
+            { key: 'cat', label: 'Category / Squad (e.g. Boys Team, Girls Team, Alumni, 2nd Year)', type: 'select', options: ['boys team', 'girls team', 'alumni', '2nd year'] },
             { key: 'h', label: "Height (e.g. 6'1\")", type: 'text' },
             { key: 'exp', label: 'Experience (e.g. 3 yrs)', type: 'text' },
             { key: 'cap', label: 'Team Captain', type: 'checkbox' },
             { key: 'insta', label: 'Instagram (handle or full URL)', type: 'text', full: true }
           ],
-          summary: function (it) { return { title: it.n + ' (#' + it.num + ')', sub: it.pos + ' &middot; ' + it.h + ' &middot; ' + it.exp + (it.cap ? ' &middot; Captain' : '') }; }
+          summary: function (it) { return { title: it.n + ' (#' + it.num + ')', sub: it.pos + (it.cat ? ' &middot; ' + it.cat : '') + ' &middot; ' + it.h + ' &middot; ' + it.exp + (it.cap ? ' &middot; Captain' : '') }; }
         },
         matches: {
           title: 'Matches', label: 'Match',
@@ -4745,7 +4795,7 @@
         var schema = SCHEMAS[tab];
         var items = DB[tab];
         var html = '<div class="admin-panel-head"><h3>' + schema.title + ' <span class="admin-count mono">' + items.length + '</span></h3><div>' +
-          (tab === 'gallery' ? '<button class="admin-btn" id="adminAddCategoryBtn" style="margin-right:8px;background:var(--cream-2);color:var(--charcoal);border:1px solid var(--border);">+ Add Category</button>' : '') +
+          ((tab === 'gallery' || tab === 'team') ? '<button class="admin-btn" id="adminAddCategoryBtn" style="margin-right:8px;background:var(--cream-2);color:var(--charcoal);border:1px solid var(--border);">+ Add Category</button>' : '') +
           '<button class="admin-btn" id="adminAddBtn">+ Add ' + schema.label + '</button></div></div>';
         if (tab === 'team') { html += '<div class="admin-note">Photos are compressed and stored in this browser. Keep them under a few dozen for best performance — export a backup from Data &amp; PIN after adding photos.</div>'; }
         if (items.length > 4) { html += '<input type="text" id="adminSearch" class="admin-search" placeholder="Search ' + schema.title.toLowerCase() + '...">'; }
@@ -4880,14 +4930,18 @@
       }
       function openAddCategoryModal() {
         if (!customModal || !customModalMsg || !customModalActions) return;
+        var activeTabName = currentAdminTab === 'team' ? 'Player / Squad' : 'Gallery';
+        var catExample = currentAdminTab === 'team' ? 'Girls Team, Alumni, Pass-out 2025, 2nd Year' : 'Tournaments, Championship 2026, Beach Volleyball';
+        var btnText = currentAdminTab === 'team' ? '+ Create &amp; Add Player' : '+ Create &amp; Add Photo';
+
         customModalMsg.innerHTML =
-          '<h4 style="margin-bottom:8px;font-size:18px;">+ Add Gallery Category</h4>' +
-          '<p style="font-size:13px;color:var(--charcoal-soft);margin-bottom:12px;">Type a category name (e.g. Tournaments, Championship 2026, Beach Volleyball). Saving a photo in this category will add a filter button on the public site.</p>' +
-          '<input type="text" id="modalNewCatInput" class="admin-search" style="width:100%;margin-bottom:8px;" placeholder="Category Name (e.g. Tournaments)">';
+          '<h4 style="margin-bottom:8px;font-size:18px;">+ Add ' + activeTabName + ' Category</h4>' +
+          '<p style="font-size:13px;color:var(--charcoal-soft);margin-bottom:12px;">Type a category name (e.g. ' + catExample + '). Saving an item in this category will automatically create a filter button on the public site.</p>' +
+          '<input type="text" id="modalNewCatInput" class="admin-search" style="width:100%;margin-bottom:8px;" placeholder="Category Name (e.g. ' + (currentAdminTab === 'team' ? 'Girls Team' : 'Tournaments') + ')">';
 
         customModalActions.innerHTML =
           '<button class="btn btn-outline" id="cmCatCancel">Cancel</button>' +
-          '<button class="btn btn-primary" id="cmCatCreate">+ Create &amp; Add Photo</button>';
+          '<button class="btn btn-primary" id="cmCatCreate">' + btnText + '</button>';
 
         customModal.classList.add('open');
 
@@ -4906,7 +4960,7 @@
               return;
             }
             closeCustomModal();
-            openAdminForm('gallery', null, catName);
+            openAdminForm(currentAdminTab, null, catName);
           });
         }
       }
@@ -4919,12 +4973,14 @@
         schema.fields.forEach(function (f) {
           var val = item ? item[f.key] : '';
           var cls = f.full ? 'admin-field full' : 'admin-field';
-          if (f.key === 'cat' && tab === 'gallery') {
-            var defaultOptions = ['matches', 'training', 'team', 'events', 'tournaments'];
+          if (f.key === 'cat' && (tab === 'gallery' || tab === 'team')) {
+            var defaultOptions = tab === 'team'
+              ? ['boys team', 'girls team', 'alumni', '2nd year']
+              : ['matches', 'training', 'team', 'events', 'tournaments'];
             var customOptions = [];
-            (DB.gallery || []).forEach(function (g) {
-              if (g.cat && g.cat.trim()) {
-                var norm = g.cat.trim().toLowerCase();
+            (DB[tab] || []).forEach(function (it) {
+              if (it.cat && it.cat.trim()) {
+                var norm = it.cat.trim().toLowerCase();
                 if (defaultOptions.indexOf(norm) === -1 && customOptions.indexOf(norm) === -1) {
                   customOptions.push(norm);
                 }
@@ -4938,7 +4994,7 @@
             }
 
             var allCategoryOptions = defaultOptions.concat(customOptions);
-            var activeCategoryVal = (item ? item.cat : (initialCategory || 'matches')).trim().toLowerCase();
+            var activeCategoryVal = (item && item.cat ? item.cat : (initialCategory || (tab === 'team' ? 'boys team' : 'matches'))).trim().toLowerCase();
             var isCustomVal = activeCategoryVal && allCategoryOptions.indexOf(activeCategoryVal) === -1;
             var currentSelected = isCustomVal ? 'custom_new' : activeCategoryVal;
 
@@ -4951,7 +5007,7 @@
               '<option value="custom_new"' + (currentSelected === 'custom_new' ? ' selected' : '') + '>+ Type Custom Category Name...</option>' +
               '</select>' +
               '<div class="admin-custom-cat-wrap" style="margin-top:8px;' + (currentSelected === 'custom_new' ? 'display:block;' : 'display:none;') + '">' +
-              '<input type="text" data-field="cat_custom" placeholder="Type category name (e.g. Tournaments)" value="' + esc(isCustomVal ? activeCategoryVal : '') + '">' +
+              '<input type="text" data-field="cat_custom" placeholder="Type category name (e.g. Girls Team, Alumni, Tournaments)" value="' + esc(isCustomVal ? activeCategoryVal : '') + '">' +
               '</div>' +
               '<input type="hidden" data-field="cat" value="' + esc(activeCategoryVal) + '">' +
               '</div>';
@@ -5070,7 +5126,7 @@
             if (!newItem.team2 && newItem.opp) newItem.team2 = newItem.opp;
             if (!newItem.winner) newItem.winner = 'none';
           }
-          if (tab === 'gallery') {
+          if (tab === 'gallery' || tab === 'team') {
             var hiddenCat = formEl.querySelector('input[data-field="cat"]');
             var catSelect = formEl.querySelector('.admin-cat-select');
             var customInput = formEl.querySelector('input[data-field="cat_custom"]');

@@ -9,7 +9,8 @@
       "exp": "4 yrs",
       "cap": true,
       "insta": "",
-      "photo": ""
+      "photo": "",
+      "cat": "Boys Team"
     },
     {
       "id": "idmsozmogl2",
@@ -20,7 +21,8 @@
       "exp": "3 yrs",
       "cap": false,
       "insta": "",
-      "photo": ""
+      "photo": "",
+      "cat": "Boys Team"
     },
     {
       "id": "idmsozmogl3",
@@ -31,7 +33,8 @@
       "exp": "2 yrs",
       "cap": false,
       "insta": "",
-      "photo": ""
+      "photo": "",
+      "cat": "Girls Team"
     },
     {
       "id": "idmsozmogl4",
@@ -42,7 +45,8 @@
       "exp": "3 yrs",
       "cap": false,
       "insta": "",
-      "photo": ""
+      "photo": "",
+      "cat": "Alumni"
     },
     {
       "id": "idmsozmogl5",
@@ -53,7 +57,8 @@
       "exp": "2 yrs",
       "cap": false,
       "insta": "",
-      "photo": ""
+      "photo": "",
+      "cat": "2nd Year"
     },
     {
       "id": "idmsozmogl6",
@@ -64,7 +69,8 @@
       "exp": "1 yr",
       "cap": false,
       "insta": "",
-      "photo": ""
+      "photo": "",
+      "cat": "Boys Team"
     },
     {
       "id": "idmsozmogl7",
@@ -75,7 +81,8 @@
       "exp": "3 yrs",
       "cap": false,
       "insta": "",
-      "photo": ""
+      "photo": "",
+      "cat": "Girls Team"
     },
     {
       "id": "idmsozmogl8",
@@ -86,7 +93,44 @@
       "exp": "2 yrs",
       "cap": false,
       "insta": "",
+      "photo": "",
+      "cat": "Alumni"
+    },
+    {
+      "id": "idmsozmogl_g1",
+      "n": "Ananya Sharma",
+      "num": 8,
+      "pos": "Outside Hitter",
+      "h": "5'9\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "cat": "Girls Team",
+      "insta": "",
       "photo": ""
+    },
+    {
+      "id": "idmsozmogl_a1",
+      "n": "Vikramaditya Singh",
+      "num": 10,
+      "pos": "Setter (Pass-out)",
+      "h": "6'0\"",
+      "exp": "5 yrs",
+      "cap": false,
+      "cat": "Alumni",
+      "insta": "",
+      "photo": ""
+    },
+    {
+      "id": "idmt7aagjz45",
+      "photo": "",
+      "n": "Rishabh Sen",
+      "num": 99,
+      "pos": "Outside Hitter",
+      "cat": "pass-out 2025",
+      "h": "",
+      "exp": "",
+      "cap": false,
+      "insta": ""
     }
   ],
   "gallery": [
