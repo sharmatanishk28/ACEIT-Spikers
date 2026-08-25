@@ -3953,6 +3953,268 @@
       text-transform: uppercase;
       color: var(--charcoal-soft);
     }
+
+    /* ============ PHASE 4: NOTIFICATIONS, LIVE MATCHES & NOTICE BOARD ============ */
+    /* 1. Notification Center */
+    .notif-bell-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .notif-bell-btn {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      color: var(--charcoal);
+      transition: all var(--trans-fast);
+      position: relative;
+    }
+    .notif-bell-btn:hover {
+      border-color: var(--amber);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    .notif-unread-badge {
+      position: absolute;
+      top: -3px;
+      right: -3px;
+      background: #E74C3C;
+      color: #FFFFFF;
+      font-size: 10px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      min-width: 18px;
+      height: 18px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      border: 2px solid var(--bg-card);
+      box-shadow: 0 0 8px rgba(231, 76, 60, 0.75);
+    }
+    .notif-dropdown {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 360px;
+      max-width: calc(100vw - 32px);
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      z-index: 10000;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      animation: fadeInDown 0.2s ease-out;
+    }
+    .notif-dropdown.open {
+      display: flex;
+    }
+    .notif-drop-head {
+      padding: 12px 16px;
+      background: var(--cream-2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .notif-list-scroll {
+      max-height: 380px;
+      overflow-y: auto;
+    }
+    .notif-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      transition: background var(--trans-fast);
+      cursor: pointer;
+      text-align: left;
+    }
+    .notif-item:last-child {
+      border-bottom: none;
+    }
+    .notif-item:hover {
+      background: var(--cream-2);
+    }
+    .notif-item.unread {
+      background: rgba(245, 166, 35, 0.08);
+      border-left: 3px solid var(--amber);
+    }
+    .notif-icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--cream-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* 2. Live Match Top Banner & Ticker */
+    .live-match-banner {
+      background: linear-gradient(90deg, #900C3F 0%, #C0392B 50%, #900C3F 100%);
+      color: #FFFFFF;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(192, 57, 43, 0.4);
+      position: relative;
+      z-index: 999;
+      cursor: pointer;
+      transition: opacity var(--trans-fast);
+    }
+    .live-pulse-dot {
+      width: 10px;
+      height: 10px;
+      background: #2ECC71;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7);
+      animation: livePulse 1.6s infinite;
+    }
+    @keyframes livePulse {
+      0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.8);
+      }
+      70% {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 8px rgba(46, 204, 113, 0);
+      }
+      100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+      }
+    }
+    .live-score-pill {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-family: var(--font-mono);
+      letter-spacing: 0.5px;
+    }
+
+    /* 3. Club Announcements Notice Board */
+    .ann-section {
+      padding: 40px 0;
+      background: var(--bg-surface);
+    }
+    .ann-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      margin-top: 24px;
+    }
+    .ann-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      position: relative;
+      transition: all var(--trans-medium);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+    }
+    .ann-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--amber);
+    }
+    .ann-card.pinned {
+      border-color: var(--amber);
+      background: linear-gradient(180deg, rgba(245, 166, 35, 0.05) 0%, var(--bg-card) 100%);
+    }
+    .ann-cat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      letter-spacing: 0.5px;
+    }
+    .ann-cat-Urgent { background: rgba(231, 76, 60, 0.15); color: #E74C3C; border: 1px solid rgba(231, 76, 60, 0.3); }
+    .ann-cat-Selection { background: rgba(241, 196, 15, 0.15); color: #D4AC0D; border: 1px solid rgba(241, 196, 15, 0.3); }
+    .ann-cat-Practice { background: rgba(41, 128, 185, 0.15); color: #2980B9; border: 1px solid rgba(41, 128, 185, 0.3); }
+    .ann-cat-Tournament { background: rgba(142, 68, 173, 0.15); color: #8E44AD; border: 1px solid rgba(142, 68, 173, 0.3); }
+    .ann-cat-General { background: rgba(39, 174, 96, 0.15); color: #27AE60; border: 1px solid rgba(39, 174, 96, 0.3); }
+
+    /* 4. Live Scorer Console (Admin/Captain) */
+    .scorer-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+    .scorer-scoreboard {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+      margin: 16px 0;
+      background: var(--cream-2);
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .scorer-score-num {
+      font-family: var(--font-display);
+      font-size: 48px;
+      font-weight: 900;
+      color: var(--charcoal);
+      line-height: 1;
+    }
+    .scorer-btn-group {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .live-pbp-box {
+      max-height: 260px;
+      overflow-y: auto;
+      background: var(--cream-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .live-pbp-item {
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
   </style>
 </head>
 
@@ -3974,6 +4236,7 @@
         <li><a href="#about">About</a></li>
         <li><a href="#team">Team</a></li>
         <li><a href="#leaderboard">Leaderboard</a></li>
+        <li><a href="#notice-board">Notice Board</a></li>
         <li><a href="#achievements">Achievements</a></li>
         <li><a href="#gallery">Gallery</a></li>
         <li><a href="#matches">Matches</a></li>
@@ -3984,6 +4247,25 @@
       </ul>
       <div class="nav-actions">
         <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+        <!-- Phase 4: Notification Bell & Dropdown -->
+        <div class="notif-bell-wrap" id="navNotifWrap">
+          <button class="notif-bell-btn" id="navNotifBtn" aria-label="Notifications" title="Notifications">
+            🔔
+            <span class="notif-unread-badge" id="navNotifBadge" style="display:none;">0</span>
+          </button>
+          <div class="notif-dropdown" id="navNotifDropdown">
+            <div class="notif-drop-head">
+              <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;color:var(--charcoal);">
+                <span>🔔 Notifications</span>
+                <span class="pill" id="notifTotalBadge" style="font-size:10px;padding:2px 6px;">0 Unread</span>
+              </div>
+              <button class="btn btn-ghost" id="notifMarkAllReadBtn" style="font-size:11px;padding:4px 8px;cursor:pointer;">Mark All Read</button>
+            </div>
+            <div class="notif-list-scroll" id="navNotifList">
+              <div style="padding:24px;text-align:center;color:var(--charcoal-soft);font-size:12px;">No notifications yet.</div>
+            </div>
+          </div>
+        </div>
         <div id="navUserArea" style="display:inline-flex;align-items:center;gap:6px;"></div>
         <button class="admin-trigger" id="adminTrigger" aria-label="Open admin dashboard"
           title="Admin dashboard">⚙️</button>
@@ -3992,6 +4274,15 @@
       </div>
     </div>
   </nav>
+
+  <!-- Phase 4: Live Match Top Ticker Pulse Banner (Hidden when not live) -->
+  <div id="liveMatchTopBanner" class="live-match-banner" style="display:none;" onclick="openLiveMatchPublicModal()">
+    <span class="live-pulse-dot"></span>
+    <span style="letter-spacing:1px;font-family:var(--font-mono);font-size:11px;">🔴 LIVE MATCH:</span>
+    <span id="liveBannerTeams">ACEIT Spikers vs SKIT Jaipur</span>
+    <span class="live-score-pill" id="liveBannerScore">Set 1 [0 - 0]</span>
+    <span style="font-size:11px;opacity:0.9;text-decoration:underline;margin-left:8px;">View Live Commentary ›</span>
+  </div>
 
   <!-- ============ HERO ============ -->
   <header class="hero" id="hero">
@@ -4149,6 +4440,31 @@
           <span style="text-align:center;">MVP Points</span>
         </div>
         <div id="leaderboardRows"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PHASE 4: CLUB NOTICE BOARD & ANNOUNCEMENTS ============ -->
+  <section id="notice-board" class="ann-section" style="padding:80px 0;">
+    <div class="container">
+      <div class="reveal" style="text-align:center;margin-bottom:32px;">
+        <span class="eyebrow"><span class="pulse-dot"></span>Official Dispatch</span>
+        <h2 class="section-title">Club <span class="gradient-text">Notice Board</span></h2>
+        <p class="section-sub" style="margin:0 auto;max-width:640px;">Stay updated with official team notices, urgent trials schedules, practice sessions, and tournament selections.</p>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="ann-filters" style="display:flex;justify-content:center;gap:10px;margin-bottom:28px;flex-wrap:wrap;">
+        <button class="filter-btn active" data-annfilter="all">📢 All Notices</button>
+        <button class="filter-btn" data-annfilter="Urgent">🚨 Urgent</button>
+        <button class="filter-btn" data-annfilter="Selection">🏆 Selection</button>
+        <button class="filter-btn" data-annfilter="Tournament">🏐 Tournament</button>
+        <button class="filter-btn" data-annfilter="Practice">⚡ Practice</button>
+      </div>
+
+      <!-- Announcements Grid -->
+      <div class="ann-grid" id="publicAnnouncementsGrid">
+        <!-- Rendered dynamically by JS -->
       </div>
     </div>
   </section>
@@ -4586,6 +4902,7 @@
         <button class="profile-tab-item" id="spTabBtnSchedule" data-sptab="schedule">My Schedule &amp; RSVPs</button>
         <button class="profile-tab-item" id="spTabBtnStats" data-sptab="stats">My Stats &amp; Badges</button>
         <button class="profile-tab-item" id="spTabBtnPreview" data-sptab="preview">Public Preview</button>
+        <button class="profile-tab-item" id="spTabBtnNotifs" data-sptab="notifs">🔔 Notifications <span id="spNotifBadgeCount" class="pill" style="font-size:10px;padding:1px 5px;display:none;background:#E74C3C;color:#fff;">0</span></button>
       </div>
 
       <div class="profile-modal-body">
@@ -4781,6 +5098,21 @@
           </div>
           <div id="spPublicPreviewCard" style="border:1px solid var(--border);border-radius:14px;background:var(--bg-card);padding:20px;text-align:center;box-shadow:var(--shadow-sm);"></div>
         </div>
+
+        <!-- Tab 7: My Notifications -->
+        <div id="spTabContentNotifs" style="display:none;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;" id="spNotifFilterPills">
+              <button class="filter-btn active" data-snotiffilter="all" style="font-size:11px;padding:4px 10px;">All</button>
+              <button class="filter-btn" data-snotiffilter="match" style="font-size:11px;padding:4px 10px;">🏐 Matches</button>
+              <button class="filter-btn" data-snotiffilter="selection" style="font-size:11px;padding:4px 10px;">⭐ Selection</button>
+              <button class="filter-btn" data-snotiffilter="badge" style="font-size:11px;padding:4px 10px;">🎖️ Badges</button>
+              <button class="filter-btn" data-snotiffilter="announcement" style="font-size:11px;padding:4px 10px;">📢 Notices</button>
+            </div>
+            <button class="btn btn-outline" id="spMarkAllNotifsReadBtn" style="font-size:11px;padding:4px 10px;">Mark All Read</button>
+          </div>
+          <div id="spNotifsList" style="display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;"></div>
+        </div>
       </div>
 
       <div style="padding:12px 24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--cream-2);">
@@ -4801,6 +5133,92 @@
     </div>
   </div>
 
+  <!-- ============ PHASE 4: PUBLIC LIVE MATCH SCORECARD MODAL ============ -->
+  <div class="custom-modal-overlay" id="liveMatchPublicModal" style="display:none;z-index:9999;">
+    <div class="profile-modal-box" style="max-width:640px;background:var(--bg-card) !important;box-shadow:0 24px 70px rgba(0,0,0,0.55);">
+      <div class="profile-modal-header" style="background:var(--cream-2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="live-pulse-dot"></span>
+          <h4 style="margin:0;font-size:16px;font-family:var(--font-display);letter-spacing:0.5px;color:var(--charcoal);">LIVE MATCH SCORECARD &amp; COMMENTARY</h4>
+        </div>
+        <button id="liveMatchPublicCloseBtn" style="background:none;border:none;font-size:22px;color:var(--charcoal-soft);cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+      <div class="profile-modal-body" style="padding:20px;background:var(--bg-card);" id="liveMatchPublicBody">
+        <!-- Dynamic content rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PHASE 4: LIVE SCORER CONSOLE MODAL (ADMIN / CAPTAIN) ============ -->
+  <div class="custom-modal-overlay" id="liveMatchScorerModal" style="display:none;z-index:9999;">
+    <div class="profile-modal-box" style="max-width:680px;background:var(--bg-card) !important;box-shadow:0 24px 70px rgba(0,0,0,0.55);">
+      <div class="profile-modal-header" style="background:var(--cream-2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">🔴</span>
+          <h4 style="margin:0;font-size:16px;font-family:var(--font-display);letter-spacing:0.5px;color:var(--charcoal);" id="scorerModalTitle">LIVE MATCH SCORER CONSOLE</h4>
+        </div>
+        <button id="liveScorerCloseBtn" style="background:none;border:none;font-size:22px;color:var(--charcoal-soft);cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+      <div class="profile-modal-body" style="padding:20px;background:var(--bg-card);" id="liveScorerModalBody">
+        <!-- Dynamic live court pad and scoring buttons rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PHASE 4: ANNOUNCEMENT CREATE / EDIT MODAL (ADMIN) ============ -->
+  <div class="custom-modal-overlay" id="announcementModal" style="display:none;z-index:9999;">
+    <div class="profile-modal-box" style="max-width:540px;background:var(--bg-card) !important;box-shadow:0 24px 70px rgba(0,0,0,0.55);">
+      <div class="profile-modal-header" style="background:var(--cream-2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <h4 style="margin:0;font-size:16px;font-family:var(--font-display);letter-spacing:0.5px;color:var(--charcoal);" id="annModalTitle">CREATE NOTICE / ANNOUNCEMENT</h4>
+        <button id="annModalCloseBtn" style="background:none;border:none;font-size:22px;color:var(--charcoal-soft);cursor:pointer;padding:4px 8px;">&times;</button>
+      </div>
+      <div class="profile-modal-body" style="padding:20px;background:var(--bg-card);">
+        <input type="hidden" id="annId">
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Notice Title *</label>
+          <input type="text" id="annTitleInput" placeholder="e.g. State Selection Trials Announcement" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);font-size:13px;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Category *</label>
+            <select id="annCategorySelect" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);font-size:12px;">
+              <option value="Urgent">🚨 Urgent</option>
+              <option value="Selection">🏆 Selection</option>
+              <option value="Tournament">🏐 Tournament</option>
+              <option value="Practice">⚡ Practice</option>
+              <option value="General" selected>📢 General</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Club</label>
+            <select id="annClubSelect" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);font-size:12px;">
+              <option value="spikers">ACEIT Spikers (Volleyball)</option>
+              <option value="all">All ACEIT Sports Clubs</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Notice Content / Details *</label>
+          <textarea id="annContentInput" rows="4" placeholder="Write full details of the announcement for athletes and students..." style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);font-family:var(--font-body);font-size:13px;"></textarea>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;background:var(--cream-2);padding:10px 12px;border-radius:8px;border:1px solid var(--border);">
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
+            <input type="checkbox" id="annIsPinned">
+            <span>📌 <b>Pin to Top</b> of Notice Board &amp; Homepage</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
+            <input type="checkbox" id="annSendBroadcast" checked>
+            <span>🔔 <b>Send In-App Notification</b> to all registered students</span>
+          </label>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;">
+          <button class="btn btn-outline" id="annCancelBtn" style="font-size:12px;padding:6px 14px;">Cancel</button>
+          <button class="btn btn-primary" id="annSaveBtn" style="font-size:12px;padding:6px 16px;">Publish Announcement</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ ADMIN DASHBOARD ============ -->
   <div class="admin-overlay" id="adminOverlay">
     <div class="admin-topbar">
@@ -4816,6 +5234,8 @@
         <button class="admin-tab active" data-tab="team">Players</button>
         <button class="admin-tab" data-tab="slideshow">Hero Slideshow</button>
         <button class="admin-tab" data-tab="matches">Matches</button>
+        <button class="admin-tab" data-tab="livescore" id="tabBtnLiveScore">🔴 Live Match Scorer</button>
+        <button class="admin-tab" data-tab="announcements" id="tabBtnAnnouncements">📢 Notice Board</button>
         <button class="admin-tab" data-tab="training" id="tabBtnTraining">Training</button>
         <button class="admin-tab" data-tab="news">News</button>
         <button class="admin-tab" data-tab="gallery">Gallery</button>
@@ -6610,6 +7030,8 @@
         var statsTab = document.getElementById('spTabContentStats');
         if (statsTab) statsTab.style.display = tabKey === 'stats' ? 'block' : 'none';
         document.getElementById('spTabContentPreview').style.display = tabKey === 'preview' ? 'block' : 'none';
+        var notifsTab = document.getElementById('spTabContentNotifs');
+        if (notifsTab) notifsTab.style.display = tabKey === 'notifs' ? 'block' : 'none';
 
         if (tabKey === 'apps') {
           renderSpAppsTab();
@@ -6619,6 +7041,8 @@
           renderSpStatsTab();
         } else if (tabKey === 'preview' && currentStudentProfile) {
           renderSpPublicPreview(currentStudentProfile);
+        } else if (tabKey === 'notifs') {
+          renderStudentNotificationsTab('all');
         }
       }
 
@@ -7449,6 +7873,8 @@
           var tabMap = {
             team: 'players',
             matches: 'matches',
+            livescore: 'matches',
+            announcements: 'news',
             news: 'news',
             gallery: 'gallery',
             training: 'training',
@@ -7686,6 +8112,8 @@
         if (tab === 'roles') { renderRolesTab(); return; }
         if (tab === 'clubs') { renderClubsTab(); return; }
         if (tab === 'data') { renderDataTab(); return; }
+        if (tab === 'livescore') { renderLiveScoreTab(); return; }
+        if (tab === 'announcements') { renderAnnouncementsAdminTab(); return; }
         var schema = SCHEMAS[tab];
         var items = DB[tab];
         var html = '<div class="admin-panel-head"><h3>' + schema.title + ' <span class="admin-count mono">' + items.length + '</span></h3><div>' +
@@ -9383,6 +9811,906 @@
             .catch(function () { showAlert('Network error: Could not save club.'); });
         });
       }
+
+      /* ============================================================
+         PHASE 4: NOTIFICATION CENTER CONTROLLER
+      ============================================================ */
+      var currentNotifications = [];
+      var notifPollingInterval = null;
+
+      function fetchNotifications() {
+        if (!currentUser) {
+          updateNotifBadges(0);
+          return;
+        }
+        authFetch(API_BASE + '/notifications')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res && res.success) {
+              currentNotifications = res.notifications || [];
+              var unread = typeof res.unreadCount === 'number' ? res.unreadCount : currentNotifications.filter(function (n) { return !n.read; }).length;
+              updateNotifBadges(unread);
+              renderNavNotificationDropdown(currentNotifications);
+              if (document.getElementById('spTabContentNotifs') && document.getElementById('spTabContentNotifs').style.display !== 'none') {
+                renderStudentNotificationsTab('all');
+              }
+            }
+          })
+          .catch(function () {});
+      }
+
+      function updateNotifBadges(count) {
+        var navBadge = document.getElementById('navNotifBadge');
+        var totalBadge = document.getElementById('notifTotalBadge');
+        var spPill = document.getElementById('spNotifBadgeCount');
+        if (navBadge) {
+          navBadge.textContent = count;
+          navBadge.style.display = count > 0 ? 'flex' : 'none';
+        }
+        if (totalBadge) {
+          totalBadge.textContent = count + ' Unread';
+        }
+        if (spPill) {
+          spPill.textContent = count;
+          spPill.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+      }
+
+      function getNotifIcon(type) {
+        switch (type) {
+          case 'match': case 'match_live': case 'match_result': return '🏐';
+          case 'selection': return '⭐';
+          case 'badge': return '🎖️';
+          case 'announcement': return '📢';
+          case 'urgent': return '🚨';
+          case 'rsvp': return '📅';
+          case 'application': return '📝';
+          default: return '🔔';
+        }
+      }
+
+      function renderNavNotificationDropdown(notifs) {
+        var listEl = document.getElementById('navNotifList');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+        if (!notifs || notifs.length === 0) {
+          listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--charcoal-soft);font-size:12px;">No notifications yet.</div>';
+          return;
+        }
+        notifs.slice(0, 15).forEach(function (n) {
+          var item = document.createElement('div');
+          item.className = 'notif-item' + (n.read ? '' : ' unread');
+          var timeStr = '';
+          try {
+            var dt = new Date(n.createdAt);
+            timeStr = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ', ' + dt.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+          } catch (e) { timeStr = ''; }
+
+          item.innerHTML = '<div class="notif-icon-box">' + getNotifIcon(n.type) + '</div>' +
+            '<div class="notif-content-box">' +
+            '<div class="notif-item-title">' + esc(n.title) + '</div>' +
+            '<div class="notif-item-msg">' + esc(n.message) + '</div>' +
+            '<div class="notif-item-time">' + esc(timeStr) + '</div>' +
+            '</div>';
+
+          item.addEventListener('click', function () {
+            if (!n.read) {
+              markNotificationAsRead(n._id || n.id);
+            }
+            if (n.linkUrl) {
+              if (n.linkUrl.indexOf('#') === 0) {
+                var target = document.querySelector(n.linkUrl);
+                if (target) target.scrollIntoView({ behavior: 'smooth' });
+              } else {
+                window.location.href = n.linkUrl;
+              }
+            }
+          });
+          listEl.appendChild(item);
+        });
+      }
+
+      function markNotificationAsRead(id) {
+        authFetch(API_BASE + '/notifications/' + id + '/read', { method: 'PUT' })
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res && res.success) {
+              fetchNotifications();
+            }
+          })
+          .catch(function () {});
+      }
+
+      function markAllNotificationsAsRead() {
+        authFetch(API_BASE + '/notifications/read-all', { method: 'PUT' })
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res && res.success) {
+              fetchNotifications();
+            }
+          })
+          .catch(function () {});
+      }
+
+      // Nav Notification Dropdown Toggle
+      var navNotifBtn = document.getElementById('navNotifBtn');
+      var navNotifDropdown = document.getElementById('navNotifDropdown');
+      if (navNotifBtn && navNotifDropdown) {
+        navNotifBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          navNotifDropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', function (e) {
+          if (!e.target.closest('#navNotifWrap')) {
+            navNotifDropdown.classList.remove('open');
+          }
+        });
+      }
+
+      var notifMarkAllReadBtn = document.getElementById('notifMarkAllReadBtn');
+      if (notifMarkAllReadBtn) {
+        notifMarkAllReadBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          markAllNotificationsAsRead();
+        });
+      }
+
+      // Student Profile Modal Tab 7
+      var currentSpNotifFilter = 'all';
+      function renderStudentNotificationsTab(filter) {
+        currentSpNotifFilter = filter || 'all';
+        var listEl = document.getElementById('spNotifsList');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+
+        var filtered = currentNotifications.filter(function (n) {
+          if (currentSpNotifFilter === 'all') return true;
+          if (currentSpNotifFilter === 'match') return (n.type || '').indexOf('match') !== -1;
+          if (currentSpNotifFilter === 'selection') return n.type === 'selection';
+          if (currentSpNotifFilter === 'badge') return n.type === 'badge';
+          if (currentSpNotifFilter === 'announcement') return n.type === 'announcement' || n.type === 'urgent';
+          return true;
+        });
+
+        if (filtered.length === 0) {
+          listEl.innerHTML = '<div style="padding:32px;text-align:center;color:var(--charcoal-soft);font-size:13px;">No notifications found for this filter.</div>';
+          return;
+        }
+
+        filtered.forEach(function (n) {
+          var item = document.createElement('div');
+          item.className = 'notif-item' + (n.read ? '' : ' unread');
+          item.style.border = '1px solid var(--border)';
+          item.style.borderRadius = '10px';
+          item.style.padding = '12px 14px';
+
+          var timeStr = '';
+          try {
+            var dt = new Date(n.createdAt);
+            timeStr = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ', ' + dt.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+          } catch (e) { timeStr = ''; }
+
+          item.innerHTML = '<div class="notif-icon-box" style="width:40px;height:40px;font-size:20px;">' + getNotifIcon(n.type) + '</div>' +
+            '<div class="notif-content-box" style="flex:1;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">' +
+            '<span class="notif-item-title" style="font-size:13px;font-weight:700;">' + esc(n.title) + '</span>' +
+            '<span class="notif-item-time" style="font-size:11px;">' + esc(timeStr) + '</span>' +
+            '</div>' +
+            '<div class="notif-item-msg" style="font-size:12px;line-height:1.4;">' + esc(n.message) + '</div>' +
+            '</div>';
+
+          item.addEventListener('click', function () {
+            if (!n.read) markNotificationAsRead(n._id || n.id);
+            if (n.linkUrl && n.linkUrl.indexOf('#') === 0) {
+              if (studentProfileModal) studentProfileModal.style.display = 'none';
+              var target = document.querySelector(n.linkUrl);
+              if (target) target.scrollIntoView({ behavior: 'smooth' });
+            }
+          });
+          listEl.appendChild(item);
+        });
+      }
+
+      var spMarkAllNotifsReadBtn = document.getElementById('spMarkAllNotifsReadBtn');
+      if (spMarkAllNotifsReadBtn) {
+        spMarkAllNotifsReadBtn.addEventListener('click', function () {
+          markAllNotificationsAsRead();
+        });
+      }
+
+      var spNotifFilterPills = document.getElementById('spNotifFilterPills');
+      if (spNotifFilterPills) {
+        spNotifFilterPills.querySelectorAll('button').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            spNotifFilterPills.querySelectorAll('button').forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            renderStudentNotificationsTab(btn.getAttribute('data-snotiffilter'));
+          });
+        });
+      }
+
+
+      /* ============================================================
+         PHASE 4: LIVE MATCH PUBLIC TICKER & SCORECARD MODAL
+      ============================================================ */
+      var activeLiveMatch = null;
+      var liveTickerInterval = null;
+      var liveModalInterval = null;
+
+      function checkLiveMatchTicker() {
+        fetch(API_BASE + '/matches/live')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            var banner = document.getElementById('liveMatchTopBanner');
+            if (res && res.success && res.live && res.match) {
+              activeLiveMatch = res.match;
+              if (banner) {
+                banner.style.display = 'flex';
+                var teamsEl = document.getElementById('liveBannerTeams');
+                var scoreEl = document.getElementById('liveBannerScore');
+                if (teamsEl) teamsEl.textContent = (activeLiveMatch.teamHome || 'ACEIT Spikers') + ' vs ' + (activeLiveMatch.teamAway || activeLiveMatch.opponent || 'Opponent');
+                if (scoreEl) scoreEl.textContent = 'Set ' + (activeLiveMatch.liveSetNumber || 1) + ' [' + (activeLiveMatch.liveScoreHome || 0) + ' - ' + (activeLiveMatch.liveScoreAway || 0) + ']';
+              }
+            } else {
+              activeLiveMatch = null;
+              if (banner) banner.style.display = 'none';
+            }
+          })
+          .catch(function () {});
+      }
+
+      window.openLiveMatchPublicModal = function (matchId) {
+        var modal = document.getElementById('liveMatchPublicModal');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        renderLiveMatchPublicScorecard(matchId);
+        if (liveModalInterval) clearInterval(liveModalInterval);
+        liveModalInterval = setInterval(function () {
+          renderLiveMatchPublicScorecard(matchId);
+        }, 4000);
+      };
+
+      var liveMatchPublicCloseBtn = document.getElementById('liveMatchPublicCloseBtn');
+      if (liveMatchPublicCloseBtn) {
+        liveMatchPublicCloseBtn.addEventListener('click', function () {
+          var modal = document.getElementById('liveMatchPublicModal');
+          if (modal) modal.style.display = 'none';
+          if (liveModalInterval) { clearInterval(liveModalInterval); liveModalInterval = null; }
+        });
+      }
+
+      function renderLiveMatchPublicScorecard(matchId) {
+        var body = document.getElementById('liveMatchPublicBody');
+        if (!body) return;
+        var url = matchId ? (API_BASE + '/matches/' + matchId + '/live') : (API_BASE + '/matches/live');
+        fetch(url)
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (!res || !res.success || !res.match) {
+              body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--charcoal-soft);font-size:13px;">No active live match in progress right now.</div>';
+              return;
+            }
+            var m = res.match;
+            var homeName = m.teamHome || 'ACEIT Spikers';
+            var awayName = m.teamAway || m.opponent || 'Opponent';
+            var isLive = m.isLive !== false;
+            var setsWonHome = m.setsWonHome || 0;
+            var setsWonAway = m.setsWonAway || 0;
+            var liveScoreHome = m.liveScoreHome || 0;
+            var liveScoreAway = m.liveScoreAway || 0;
+            var setNum = m.liveSetNumber || 1;
+            var serving = m.servingTeam === 'away' ? awayName : homeName;
+            var pbp = m.playByPlay || [];
+
+            var setsHistoryHtml = '';
+            if (m.setsHistory && m.setsHistory.length > 0) {
+              setsHistoryHtml = '<div style="display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;">';
+              m.setsHistory.forEach(function (sh) {
+                setsHistoryHtml += '<div style="background:var(--cream-2);padding:6px 12px;border-radius:8px;border:1px solid var(--border);font-family:var(--font-mono);font-size:12px;">' +
+                  '<b>Set ' + sh.setNumber + ':</b> ' + sh.scoreHome + ' - ' + sh.scoreAway +
+                  (sh.winner ? ' <span style="color:var(--amber);">(' + (sh.winner === 'home' ? homeName : awayName) + ')</span>' : '') +
+                  '</div>';
+              });
+              setsHistoryHtml += '</div>';
+            }
+
+            var pbpStreamHtml = '';
+            if (pbp.length === 0) {
+              pbpStreamHtml = '<div style="padding:16px;text-align:center;color:var(--charcoal-soft);font-size:12px;">Match commenced. Play-by-play scoring events will appear here in real-time.</div>';
+            } else {
+              pbp.slice().reverse().forEach(function (log) {
+                var ptIcon = '🏐';
+                if (log.pointType === 'spike') ptIcon = '⚡';
+                if (log.pointType === 'block') ptIcon = '🛡️';
+                if (log.pointType === 'ace') ptIcon = '🎯';
+                if (log.pointType === 'error') ptIcon = '⚠️';
+
+                pbpStreamHtml += '<div class="live-pbp-item">' +
+                  '<span style="font-size:16px;">' + ptIcon + '</span>' +
+                  '<div style="flex:1;">' +
+                  '<div style="font-weight:700;color:var(--charcoal);">' + esc(log.commentary || 'Point scored') + '</div>' +
+                  (log.scorerName ? '<div style="color:var(--amber);font-size:11px;">Player: ' + esc(log.scorerName) + ' (' + (log.pointType ? log.pointType.toUpperCase() : 'PT') + ')</div>' : '') +
+                  '</div>' +
+                  '<div style="font-family:var(--font-mono);font-weight:800;color:var(--charcoal);background:var(--cream-2);padding:3px 8px;border-radius:6px;border:1px solid var(--border);font-size:12px;">' +
+                  log.scoreHome + ' - ' + log.scoreAway +
+                  '</div>' +
+                  '</div>';
+              });
+            }
+
+            body.innerHTML = '<div style="text-align:center;margin-bottom:18px;">' +
+              '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(231,76,60,0.12);padding:4px 12px;border-radius:20px;margin-bottom:6px;">' +
+              (isLive ? '<span class="live-pulse-dot"></span><b style="color:#E74C3C;font-size:12px;letter-spacing:1px;font-family:var(--font-mono);">SET ' + setNum + ' IN PROGRESS</b>' : '<b style="color:var(--charcoal-soft);font-size:12px;font-family:var(--font-mono);">MATCH COMPLETED</b>') +
+              '</div>' +
+              '<h3 style="margin:4px 0;font-size:20px;font-family:var(--font-display);color:var(--charcoal);">' + esc(homeName) + ' vs ' + esc(awayName) + '</h3>' +
+              '<div style="font-size:12px;color:var(--charcoal-soft);">' + esc(m.venue || 'ACEIT Volleyball Court') + (m.court ? ' &middot; Court ' + esc(m.court) : '') + '</div>' +
+              '</div>' +
+
+              '<!-- Visual Big Scoreboard -->' +
+              '<div class="scorer-scoreboard">' +
+              '<div class="scorer-team-block">' +
+              '<div class="scorer-team-name">' + esc(homeName) + '</div>' +
+              '<div class="scorer-sets-pill">Sets Won: ' + setsWonHome + '</div>' +
+              '<div class="scorer-score-num">' + liveScoreHome + '</div>' +
+              '</div>' +
+              '<div class="scorer-divider">VS</div>' +
+              '<div class="scorer-team-block">' +
+              '<div class="scorer-team-name">' + esc(awayName) + '</div>' +
+              '<div class="scorer-sets-pill">Sets Won: ' + setsWonAway + '</div>' +
+              '<div class="scorer-score-num">' + liveScoreAway + '</div>' +
+              '</div>' +
+              '</div>' +
+
+              '<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--charcoal-soft);">' +
+              '🏐 <b>Currently Serving:</b> <span style="color:var(--charcoal);font-weight:700;">' + esc(serving) + '</span>' +
+              '</div>' +
+
+              setsHistoryHtml +
+
+              '<!-- Play-by-Play Stream -->' +
+              '<div style="margin-top:24px;">' +
+              '<div style="font-family:var(--font-mono);font-size:12px;text-transform:uppercase;color:var(--charcoal-soft);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;">' +
+              '<span>⚡ Live Play-By-Play Commentary</span>' +
+              '<span class="pill" style="font-size:10px;padding:2px 6px;">Real-Time</span>' +
+              '</div>' +
+              '<div class="live-pbp-box">' + pbpStreamHtml + '</div>' +
+              '</div>';
+          })
+          .catch(function () {
+            body.innerHTML = '<div style="text-align:center;padding:40px;color:#C0392B;font-size:13px;">Error loading live scorecard.</div>';
+          });
+      }
+
+
+      /* ============================================================
+         PHASE 4: CLUB NOTICE BOARD & ANNOUNCEMENTS CONTROLLER
+      ============================================================ */
+      var currentAnnouncements = [];
+      var activeAnnFilter = 'all';
+
+      function renderPublicAnnouncements(category) {
+        activeAnnFilter = category || 'all';
+        var grid = document.getElementById('publicAnnouncementsGrid');
+        if (!grid) return;
+
+        var url = API_BASE + '/announcements';
+        if (activeAnnFilter !== 'all') {
+          url += '?category=' + encodeURIComponent(activeAnnFilter);
+        }
+
+        fetch(url)
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (!res || !res.success) {
+              grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--charcoal-soft);grid-column:1/-1;">Could not load announcements.</div>';
+              return;
+            }
+            currentAnnouncements = res.announcements || [];
+            if (currentAnnouncements.length === 0) {
+              grid.innerHTML = '<div style="text-align:center;padding:48px;color:var(--charcoal-soft);grid-column:1/-1;background:var(--bg-card);border-radius:14px;border:1px solid var(--border);">' +
+                '<div style="font-size:32px;margin-bottom:8px;">📢</div>' +
+                '<b>No announcements in this category.</b>' +
+                '<p style="font-size:12px;margin-top:4px;">Check back later for official team updates, match trials, and tournament notices.</p>' +
+                '</div>';
+              return;
+            }
+
+            grid.innerHTML = '';
+            currentAnnouncements.forEach(function (ann) {
+              var card = document.createElement('div');
+              card.className = 'ann-card card reveal visible' + (ann.isPinned ? ' pinned' : '');
+              var dateStr = '';
+              try {
+                var dt = new Date(ann.createdAt);
+                dateStr = dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+              } catch (e) { dateStr = ''; }
+
+              var cat = ann.category || 'General';
+              var catClass = 'ann-cat-pill cat-' + cat.toLowerCase();
+
+              card.innerHTML = '<div class="ann-card-header">' +
+                '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
+                (ann.isPinned ? '<span class="pill" style="background:#D97706;color:#fff;font-size:10px;padding:2px 6px;">📌 Pinned</span>' : '') +
+                '<span class="' + catClass + '">' + esc(cat) + '</span>' +
+                '</div>' +
+                '<span class="ann-date mono">' + esc(dateStr) + '</span>' +
+                '</div>' +
+                '<h3 class="ann-title">' + esc(ann.title) + '</h3>' +
+                '<div class="ann-body">' + esc(ann.content) + '</div>' +
+                '<div class="ann-footer">' +
+                '<span>👤 Posted by <b>' + esc(ann.authorName || 'Club Admin') + '</b></span>' +
+                '<span>🏐 ACEIT Spikers</span>' +
+                '</div>';
+
+              grid.appendChild(card);
+            });
+          })
+          .catch(function () {
+            grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--charcoal-soft);grid-column:1/-1;">Unable to connect to server.</div>';
+          });
+      }
+
+      // Public Notice Board Category Filter Clicks
+      document.querySelectorAll('[data-annfilter]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          document.querySelectorAll('[data-annfilter]').forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          renderPublicAnnouncements(btn.getAttribute('data-annfilter'));
+        });
+      });
+
+
+      /* ============================================================
+         PHASE 4: ADMIN LIVE SCORER CONSOLE CONTROLLER
+      ============================================================ */
+      function renderLiveScoreTab() {
+        authFetch(API_BASE + '/matches')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            var matches = (res && res.matches) ? res.matches : (DB.matches || []);
+            var activeMatches = matches.filter(function (m) { return m.status === 'upcoming' || m.status === 'live' || m.isLive; });
+
+            var html = '<div class="admin-panel-head"><h3>🔴 Live Match Scorer Console <span class="admin-count mono">' + activeMatches.length + '</span></h3></div>' +
+              '<div class="admin-note">Run real-time court scoring for upcoming and active volleyball fixtures. Record kills (+Spikes), blocks, service aces, and errors to automatically attribute player stats and award MVP points.</div>' +
+              '<div class="admin-list" style="margin-top:16px;">';
+
+            if (activeMatches.length === 0) {
+              html += '<p style="color:var(--charcoal-soft);padding:24px;text-align:center;">No upcoming or live matches found. Create a match fixture in the <b>Matches</b> tab first.</p>';
+            } else {
+              activeMatches.forEach(function (m) {
+                var mid = String(m._id || m.id);
+                var home = m.teamHome || m.team1 || 'ACEIT Spikers';
+                var away = m.teamAway || m.team2 || m.opp || 'Opponent';
+                var isLive = m.isLive || m.status === 'live';
+
+                html += '<div class="admin-item" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);margin-bottom:10px;">' +
+                  '<div>' +
+                  '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+                  (isLive ? '<span class="live-pulse-dot"></span><span style="color:#E74C3C;font-weight:700;font-size:12px;font-family:var(--font-mono);">LIVE SCORING ACTIVE</span>' : '<span class="status-badge upcoming">UPCOMING</span>') +
+                  '<b style="font-size:15px;color:var(--charcoal);">' + esc(home) + ' vs ' + esc(away) + '</b>' +
+                  '</div>' +
+                  '<div style="font-size:12px;color:var(--charcoal-soft);">' + esc(m.venue || 'Main Court') + ' &middot; Date: ' + esc(m.date || '') + '</div>' +
+                  '</div>' +
+                  '<div class="actions">' +
+                  '<button class="btn btn-primary" data-scorer-open="' + esc(mid) + '" style="font-size:12px;padding:6px 16px;">' + (isLive ? '🔴 Continue Scoring' : '▶️ Launch Scorer') + '</button>' +
+                  '</div>' +
+                  '</div>';
+              });
+            }
+
+            html += '</div>';
+            adminContent.innerHTML = html;
+            adminContent.scrollTop = 0;
+
+            adminContent.querySelectorAll('[data-scorer-open]').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var mid = btn.getAttribute('data-scorer-open');
+                openLiveScorerConsoleModal(mid);
+              });
+            });
+          })
+          .catch(function () {
+            adminContent.innerHTML = '<p style="color:#C0392B;padding:16px;">Error loading matches for live scorer.</p>';
+          });
+      }
+
+      function openLiveScorerConsoleModal(matchId) {
+        var modal = document.getElementById('liveMatchScorerModal');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        renderLiveScorerModalBody(matchId);
+      }
+
+      var liveScorerCloseBtn = document.getElementById('liveScorerCloseBtn');
+      if (liveScorerCloseBtn) {
+        liveScorerCloseBtn.addEventListener('click', function () {
+          var modal = document.getElementById('liveMatchScorerModal');
+          if (modal) modal.style.display = 'none';
+          renderLiveScoreTab();
+        });
+      }
+
+      function renderLiveScorerModalBody(matchId) {
+        var body = document.getElementById('liveScorerModalBody');
+        if (!body) return;
+
+        authFetch(API_BASE + '/matches/' + matchId + '/live')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (!res || !res.success || !res.match) {
+              body.innerHTML = '<p style="color:#C0392B;padding:16px;">Match not found.</p>';
+              return;
+            }
+            var m = res.match;
+            var homeName = m.teamHome || m.team1 || 'ACEIT Spikers';
+            var awayName = m.teamAway || m.team2 || m.opp || 'Opponent';
+            var isLive = m.isLive || m.status === 'live';
+            var setNum = m.liveSetNumber || 1;
+            var homeScore = m.liveScoreHome || 0;
+            var awayScore = m.liveScoreAway || 0;
+            var setsWonHome = m.setsWonHome || 0;
+            var setsWonAway = m.setsWonAway || 0;
+            var servingTeam = m.servingTeam || 'home';
+
+            if (!isLive) {
+              body.innerHTML = '<div style="text-align:center;padding:32px 16px;">' +
+                '<h3 style="margin-bottom:8px;font-size:20px;color:var(--charcoal);">' + esc(homeName) + ' vs ' + esc(awayName) + '</h3>' +
+                '<p style="color:var(--charcoal-soft);font-size:13px;max-width:480px;margin:0 auto 20px;">Live match scoring has not been started yet. Starting live scoring will publish the match to the live scoreboard and notify students.</p>' +
+                '<button class="btn btn-primary" id="btnStartLiveMatch" style="padding:10px 24px;font-size:14px;">🔴 Start Live Match</button>' +
+                '</div>';
+
+              document.getElementById('btnStartLiveMatch').addEventListener('click', function () {
+                authFetch(API_BASE + '/matches/' + matchId + '/live-start', { method: 'POST' })
+                  .then(function (r) { return r.json(); })
+                  .then(function (sRes) {
+                    if (sRes && sRes.success) {
+                      showAlert('Live match started!');
+                      renderLiveScorerModalBody(matchId);
+                      checkLiveMatchTicker();
+                    } else {
+                      showAlert(sRes && sRes.message ? sRes.message : 'Error starting live match.');
+                    }
+                  });
+              });
+              return;
+            }
+
+            // Populate roster player dropdown for home points
+            var rosterOptions = '<option value="">-- Attributed Player (Optional) --</option>';
+            var homePlayers = (DB.team || []).concat(team || []);
+            homePlayers.forEach(function (p) {
+              var uname = p.username || (p.name ? p.name.toLowerCase().replace(/\s+/g, '') : '');
+              rosterOptions += '<option value="' + esc(uname) + '">' + esc(p.name) + ' (' + esc(p.role || 'Player') + ')</option>';
+            });
+
+            body.innerHTML = '<div style="text-align:center;margin-bottom:14px;">' +
+              '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(231,76,60,0.12);padding:3px 10px;border-radius:20px;margin-bottom:4px;">' +
+              '<span class="live-pulse-dot"></span><b style="color:#E74C3C;font-size:11px;font-family:var(--font-mono);">ACTIVE SET ' + setNum + '</b>' +
+              '</div>' +
+              '<h3 style="margin:0;font-size:18px;color:var(--charcoal);">' + esc(homeName) + ' vs ' + esc(awayName) + '</h3>' +
+              '</div>' +
+
+              '<div class="scorer-scoreboard">' +
+              '<div class="scorer-team-block">' +
+              '<div class="scorer-team-name">' + esc(homeName) + '</div>' +
+              '<div class="scorer-sets-pill">Sets Won: ' + setsWonHome + '</div>' +
+              '<div class="scorer-score-num">' + homeScore + '</div>' +
+              '</div>' +
+              '<div class="scorer-divider">VS</div>' +
+              '<div class="scorer-team-block">' +
+              '<div class="scorer-team-name">' + esc(awayName) + '</div>' +
+              '<div class="scorer-sets-pill">Sets Won: ' + setsWonAway + '</div>' +
+              '<div class="scorer-score-num">' + awayScore + '</div>' +
+              '</div>' +
+              '</div>' +
+
+              '<!-- Player Attribution & Serving Controls -->' +
+              '<div style="margin:16px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--cream-2);padding:12px;border-radius:8px;border:1px solid var(--border);">' +
+              '<div>' +
+              '<label style="display:block;font-size:11px;font-family:var(--font-mono);color:var(--charcoal-soft);margin-bottom:4px;text-transform:uppercase;">Attributed Scorer (' + esc(homeName) + ')</label>' +
+              '<select id="liveScorerPlayerSelect" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);font-size:12px;">' + rosterOptions + '</select>' +
+              '</div>' +
+              '<div>' +
+              '<label style="display:block;font-size:11px;font-family:var(--font-mono);color:var(--charcoal-soft);margin-bottom:4px;text-transform:uppercase;">Serving Team Indicator</label>' +
+              '<select id="liveServingSelect" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);font-size:12px;">' +
+              '<option value="home"' + (servingTeam === 'home' ? ' selected' : '') + '>🏐 ' + esc(homeName) + '</option>' +
+              '<option value="away"' + (servingTeam === 'away' ? ' selected' : '') + '>🏐 ' + esc(awayName) + '</option>' +
+              '</select>' +
+              '</div>' +
+              '</div>' +
+
+              '<!-- Point Pads -->' +
+              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;">' +
+              '<div style="background:var(--bg-card);border:1.5px solid var(--amber);padding:12px;border-radius:10px;">' +
+              '<b style="display:block;font-size:13px;color:var(--amber);margin-bottom:8px;text-align:center;">+ POINT FOR ' + esc(homeName).toUpperCase() + '</b>' +
+              '<div class="scorer-btn-group">' +
+              '<button class="scorer-btn" data-point-team="home" data-point-type="spike">⚡ + Spike (Kill)</button>' +
+              '<button class="scorer-btn" data-point-team="home" data-point-type="block">🛡️ + Block Point</button>' +
+              '<button class="scorer-btn" data-point-team="home" data-point-type="ace">🎯 + Service Ace</button>' +
+              '<button class="scorer-btn" data-point-team="home" data-point-type="error">⚠️ + Opp. Error</button>' +
+              '<button class="scorer-btn" data-point-team="home" data-point-type="normal">🏐 + Normal Point</button>' +
+              '</div>' +
+              '</div>' +
+              '<div style="background:var(--bg-card);border:1.5px solid var(--border);padding:12px;border-radius:10px;">' +
+              '<b style="display:block;font-size:13px;color:var(--charcoal-soft);margin-bottom:8px;text-align:center;">+ POINT FOR ' + esc(awayName).toUpperCase() + '</b>' +
+              '<div class="scorer-btn-group">' +
+              '<button class="scorer-btn" data-point-team="away" data-point-type="spike">⚡ + Spike Point</button>' +
+              '<button class="scorer-btn" data-point-team="away" data-point-type="block">🛡️ + Block Point</button>' +
+              '<button class="scorer-btn" data-point-team="away" data-point-type="ace">🎯 + Ace Point</button>' +
+              '<button class="scorer-btn" data-point-team="away" data-point-type="error">⚠️ + Error Point</button>' +
+              '<button class="scorer-btn" data-point-team="away" data-point-type="normal">🏐 + Normal Point</button>' +
+              '</div>' +
+              '</div>' +
+              '</div>' +
+
+              '<!-- Set / Match Finalize Controls -->' +
+              '<div style="display:flex;justify-content:space-between;gap:12px;padding-top:14px;border-top:1px solid var(--border);">' +
+              '<button class="btn btn-outline" id="btnEndLiveSet" style="font-size:12px;padding:8px 16px;">🏁 End Set ' + setNum + '</button>' +
+              '<button class="btn btn-primary" id="btnFinalizeLiveMatch" style="font-size:12px;padding:8px 16px;background:#27AE60;border-color:#27AE60;">🏆 Finalize Match &amp; Award MVP</button>' +
+              '</div>';
+
+            // Point Pad Listeners
+            body.querySelectorAll('[data-point-team]').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var team = btn.getAttribute('data-point-team');
+                var type = btn.getAttribute('data-point-type');
+                var playerSelect = document.getElementById('liveScorerPlayerSelect');
+                var playerUname = playerSelect ? playerSelect.value : '';
+                var servingSelect = document.getElementById('liveServingSelect');
+                var serving = servingSelect ? servingSelect.value : 'home';
+
+                authFetch(API_BASE + '/matches/' + matchId + '/live-score', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    team: team,
+                    pointType: type,
+                    playerUsername: playerUname,
+                    servingTeam: serving
+                  })
+                })
+                  .then(function (r) { return r.json(); })
+                  .then(function (pRes) {
+                    if (pRes && pRes.success) {
+                      renderLiveScorerModalBody(matchId);
+                      checkLiveMatchTicker();
+                    } else {
+                      showAlert(pRes && pRes.message ? pRes.message : 'Error recording point.');
+                    }
+                  });
+              });
+            });
+
+            // End Set Listener
+            document.getElementById('btnEndLiveSet').addEventListener('click', function () {
+              var setWinner = homeScore > awayScore ? 'home' : (awayScore > homeScore ? 'away' : 'home');
+              showConfirm('End Set ' + setNum + ' with final score ' + homeScore + ' - ' + awayScore + '?', function () {
+                authFetch(API_BASE + '/matches/' + matchId + '/live-set-end', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ winner: setWinner })
+                })
+                  .then(function (r) { return r.json(); })
+                  .then(function (eRes) {
+                    if (eRes && eRes.success) {
+                      showAlert('Set ' + setNum + ' finalized!');
+                      renderLiveScorerModalBody(matchId);
+                      checkLiveMatchTicker();
+                    } else {
+                      showAlert(eRes && eRes.message ? eRes.message : 'Error ending set.');
+                    }
+                  });
+              });
+            });
+
+            // Finalize Match Listener
+            document.getElementById('btnFinalizeLiveMatch').addEventListener('click', function () {
+              var mvpUsername = prompt('Enter MVP player username to award MVP Badge & +30 Performance Points (Optional):', '');
+              var matchWinner = setsWonHome >= setsWonAway ? 'team1' : 'team2';
+              showConfirm('Finalize Match and publish results to official stats?', function () {
+                authFetch(API_BASE + '/matches/' + matchId + '/live-finish', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    winner: matchWinner,
+                    mvpUsername: (mvpUsername || '').trim()
+                  })
+                })
+                  .then(function (r) { return r.json(); })
+                  .then(function (fRes) {
+                    if (fRes && fRes.success) {
+                      showAlert('Match finalized and MVP points awarded successfully!');
+                      var modal = document.getElementById('liveMatchScorerModal');
+                      if (modal) modal.style.display = 'none';
+                      checkLiveMatchTicker();
+                      renderLiveScoreTab();
+                    } else {
+                      showAlert(fRes && fRes.message ? fRes.message : 'Error finalizing match.');
+                    }
+                  });
+              });
+            });
+          })
+          .catch(function () {
+            body.innerHTML = '<p style="color:#C0392B;padding:16px;">Network error loading live scorer state.</p>';
+          });
+      }
+
+
+      /* ============================================================
+         PHASE 4: ADMIN NOTICE BOARD / ANNOUNCEMENTS TAB
+      ============================================================ */
+      function renderAnnouncementsAdminTab() {
+        authFetch(API_BASE + '/announcements')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            var anns = (res && res.announcements) ? res.announcements : [];
+
+            var html = '<div class="admin-panel-head"><h3>📢 Official Notice Board <span class="admin-count mono">' + anns.length + '</span></h3>' +
+              '<button class="admin-btn" id="adminCreateAnnBtn">+ Create Notice / Announcement</button>' +
+              '</div>' +
+              '<div class="admin-note">Publish team announcements, trials schedules, selection notices, and broadcast instant push notifications to all registered students.</div>' +
+              '<div class="admin-list" style="margin-top:16px;">';
+
+            if (anns.length === 0) {
+              html += '<p style="color:var(--charcoal-soft);padding:24px;text-align:center;">No announcements published yet. Click "+ Create Notice / Announcement" to publish one.</p>';
+            } else {
+              anns.forEach(function (ann) {
+                var aid = String(ann._id || ann.id);
+                var cat = ann.category || 'General';
+                var catClass = 'ann-cat-pill cat-' + cat.toLowerCase();
+
+                html += '<div class="admin-item" style="display:flex;justify-content:space-between;align-items:flex-start;padding:14px 18px;border:1px solid var(--border);border-radius:10px;background:var(--bg-card);margin-bottom:10px;">' +
+                  '<div style="flex:1;margin-right:16px;">' +
+                  '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+                  (ann.isPinned ? '<span class="pill" style="background:#D97706;color:#fff;font-size:10px;padding:2px 6px;">📌 Pinned</span>' : '') +
+                  '<span class="' + catClass + '">' + esc(cat) + '</span>' +
+                  '<b style="font-size:14px;color:var(--charcoal);">' + esc(ann.title) + '</b>' +
+                  '</div>' +
+                  '<p style="font-size:12px;color:var(--charcoal-soft);margin:4px 0 6px;line-height:1.4;">' + esc(ann.content) + '</p>' +
+                  '<div style="font-size:11px;color:var(--charcoal-soft);">' +
+                  'Author: <b>' + esc(ann.authorName || 'Admin') + '</b> &middot; Club: ' + esc(ann.club || 'spikers') +
+                  '</div>' +
+                  '</div>' +
+                  '<div class="actions" style="display:flex;gap:8px;flex-shrink:0;">' +
+                  '<button class="admin-btn" data-edit-ann="' + esc(aid) + '">Edit</button>' +
+                  '<button class="admin-btn danger" data-del-ann="' + esc(aid) + '">Delete</button>' +
+                  '</div>' +
+                  '</div>';
+              });
+            }
+
+            html += '</div>';
+            adminContent.innerHTML = html;
+            adminContent.scrollTop = 0;
+
+            document.getElementById('adminCreateAnnBtn').addEventListener('click', function () {
+              openAnnouncementModal(null);
+            });
+
+            adminContent.querySelectorAll('[data-edit-ann]').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var aid = btn.getAttribute('data-edit-ann');
+                var target = anns.find(function (a) { return String(a._id || a.id) === aid; });
+                openAnnouncementModal(target);
+              });
+            });
+
+            adminContent.querySelectorAll('[data-del-ann]').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var aid = btn.getAttribute('data-del-ann');
+                showConfirm('Are you sure you want to delete this announcement?', function () {
+                  authFetch(API_BASE + '/announcements/' + aid, { method: 'DELETE' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (dRes) {
+                      if (dRes && dRes.success) {
+                        showAlert('Announcement deleted.');
+                        renderAnnouncementsAdminTab();
+                        renderPublicAnnouncements('all');
+                      } else {
+                        showAlert(dRes && dRes.message ? dRes.message : 'Error deleting announcement.');
+                      }
+                    });
+                });
+              });
+            });
+          })
+          .catch(function () {
+            adminContent.innerHTML = '<p style="color:#C0392B;padding:16px;">Error loading notice board.</p>';
+          });
+      }
+
+      function openAnnouncementModal(ann) {
+        var modal = document.getElementById('announcementModal');
+        if (!modal) return;
+        modal.style.display = 'flex';
+
+        document.getElementById('annModalTitle').textContent = ann ? 'EDIT NOTICE / ANNOUNCEMENT' : 'CREATE NOTICE / ANNOUNCEMENT';
+        document.getElementById('annId').value = ann ? (ann._id || ann.id) : '';
+        document.getElementById('annTitleInput').value = ann ? ann.title : '';
+        document.getElementById('annCategorySelect').value = ann ? (ann.category || 'General') : 'General';
+        document.getElementById('annClubSelect').value = ann ? (ann.club || 'spikers') : 'spikers';
+        document.getElementById('annContentInput').value = ann ? ann.content : '';
+        document.getElementById('annIsPinned').checked = ann ? !!ann.isPinned : false;
+        document.getElementById('annSendBroadcast').checked = ann ? false : true;
+      }
+
+      var annModalCloseBtn = document.getElementById('annModalCloseBtn');
+      var annCancelBtn = document.getElementById('annCancelBtn');
+      if (annModalCloseBtn) {
+        annModalCloseBtn.addEventListener('click', function () {
+          var modal = document.getElementById('announcementModal');
+          if (modal) modal.style.display = 'none';
+        });
+      }
+      if (annCancelBtn) {
+        annCancelBtn.addEventListener('click', function () {
+          var modal = document.getElementById('announcementModal');
+          if (modal) modal.style.display = 'none';
+        });
+      }
+
+      var annSaveBtn = document.getElementById('annSaveBtn');
+      if (annSaveBtn) {
+        annSaveBtn.addEventListener('click', function () {
+          var id = document.getElementById('annId').value;
+          var title = (document.getElementById('annTitleInput').value || '').trim();
+          var category = document.getElementById('annCategorySelect').value;
+          var club = document.getElementById('annClubSelect').value;
+          var content = (document.getElementById('annContentInput').value || '').trim();
+          var isPinned = document.getElementById('annIsPinned').checked;
+          var sendBroadcast = document.getElementById('annSendBroadcast').checked;
+
+          if (!title || !content) {
+            showAlert('Notice Title and Content are required.');
+            return;
+          }
+
+          var payload = {
+            title: title,
+            category: category,
+            club: club,
+            content: content,
+            isPinned: isPinned,
+            sendBroadcast: sendBroadcast
+          };
+
+          var url = id ? (API_BASE + '/announcements/' + id) : (API_BASE + '/announcements');
+          var method = id ? 'PUT' : 'POST';
+
+          authFetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+              if (res && res.success) {
+                showAlert(id ? 'Announcement updated successfully.' : 'Announcement published successfully.');
+                var modal = document.getElementById('announcementModal');
+                if (modal) modal.style.display = 'none';
+                renderAnnouncementsAdminTab();
+                renderPublicAnnouncements('all');
+                fetchNotifications();
+              } else {
+                showAlert(res && res.message ? res.message : 'Error saving announcement.');
+              }
+            })
+            .catch(function () {
+              showAlert('Network error saving announcement.');
+            });
+        });
+      }
+
+      /* ============ PHASE 4: INITIALIZATION CALLS ============ */
+      checkLiveMatchTicker();
+      if (liveTickerInterval) clearInterval(liveTickerInterval);
+      liveTickerInterval = setInterval(checkLiveMatchTicker, 10000);
+
+      renderPublicAnnouncements('all');
+      fetchNotifications();
+      if (notifPollingInterval) clearInterval(notifPollingInterval);
+      notifPollingInterval = setInterval(fetchNotifications, 30000);
 
       /* ============ SMOOTH ANCHOR (fallback for older browsers already handled by CSS) ============ */
     })();

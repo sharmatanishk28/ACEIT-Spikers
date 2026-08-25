@@ -242,8 +242,17 @@
       "team2Logo": "",
       "date": "2026-08-23T18:22:28.437Z",
       "venue": "JECRC Arena, Jaipur",
-      "status": "upcoming",
-      "winner": "none"
+      "status": "completed",
+      "winner": "team1",
+      "isLive": false,
+      "sets": "1 - 0",
+      "setScores": [
+        {
+          "set": 1,
+          "team1": 2,
+          "team2": 0
+        }
+      ]
     },
     {
       "id": "idmsozmogm23",

@@ -280,9 +280,97 @@ const matchAvailabilitySchema = new mongoose.Schema({
 
 const MatchAvailability = mongoose.models.MatchAvailability || mongoose.model('MatchAvailability', matchAvailabilitySchema);
 
-// Fallback Stores for Phase 3
+// Phase 4: In-App Notifications Model
+const notificationSchema = new mongoose.Schema({
+  recipientUsername: { type: String, required: true },
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  type: { type: String, default: 'broadcast' }, // 'selection', 'badge', 'application', 'match', 'broadcast'
+  linkUrl: { type: String, default: '' },
+  read: { type: Boolean, default: false }
+}, { timestamps: true });
+
+const Notification = mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
+
+// Phase 4: Club Announcements & Notice Board Model
+const announcementSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  clubId: { type: String, default: 'all' }, // 'all' or specific club slug
+  category: { type: String, default: 'General' }, // 'Urgent', 'Selection', 'Practice', 'Tournament', 'General'
+  isPinned: { type: Boolean, default: false },
+  authorName: { type: String, default: 'Club Coordinator' },
+  authorRole: { type: String, default: 'COORDINATOR' },
+  authorUsername: { type: String, default: 'admin' }
+}, { timestamps: true });
+
+const Announcement = mongoose.models.Announcement || mongoose.model('Announcement', announcementSchema);
+
+// Fallback Stores for Phase 3 & Phase 4
 let localEventRsvps = [];
 let localMatchAvailability = [];
+let localNotifications = [];
+let localAnnouncements = [
+  {
+    _id: 'ann_1',
+    title: 'Inter-College State Championship Trials Announced',
+    content: 'Selection trials for the Men\'s & Women\'s volleyball first-team roster will take place this Saturday at the ACEIT Indoor Sports Complex. All registered students are welcome to attend with valid college ID.',
+    clubId: 'all',
+    category: 'Selection',
+    isPinned: true,
+    authorName: 'Shubham Patidar',
+    authorRole: 'CAPTAIN',
+    authorUsername: 'shubham_cap',
+    createdAt: new Date(Date.now() - 3600000 * 24)
+  },
+  {
+    _id: 'ann_2',
+    title: 'Evening Strength & Conditioning Schedule Update',
+    content: 'Starting next Monday, tactical practice and jump training will run from 5:30 PM to 7:30 PM under head coach supervision. Check the training tab for detailed drill breakdowns.',
+    clubId: 'aceit-spikers',
+    category: 'Practice',
+    isPinned: false,
+    authorName: 'Sports Coordinator',
+    authorRole: 'COORDINATOR',
+    authorUsername: 'coordinator',
+    createdAt: new Date(Date.now() - 3600000 * 48)
+  }
+];
+let localLiveMatches = {}; // matchId -> { isLive, currentSet, team1SetsWon, team2SetsWon, liveScore: { team1, team2 }, setScores: [], liveServingTeam, playByPlay: [] }
+
+// Phase 4 Notification Helper
+async function createNotification(recipientUsername, title, message, type = 'broadcast', linkUrl = '') {
+  try {
+    const uname = String(recipientUsername || '').toLowerCase().trim();
+    if (!uname) return null;
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      return await Notification.create({
+        recipientUsername: uname,
+        title,
+        message,
+        type,
+        linkUrl,
+        read: false
+      });
+    }
+    const notif = {
+      _id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      recipientUsername: uname,
+      title,
+      message,
+      type,
+      linkUrl,
+      read: false,
+      createdAt: new Date()
+    };
+    localNotifications.unshift(notif);
+    return notif;
+  } catch (e) {
+    console.error('Error creating notification:', e.message);
+    return null;
+  }
+}
 
 const DEFAULT_PERF_BADGES = [
   { badgeKey: 'MVP_GOLD', title: 'MVP of the Match', icon: '🏆', glow: 'rgba(241, 196, 15, 0.95)', bg: '#F1C40F', text: '#000000', description: 'Awarded MVP in collegiate matches' },
@@ -2284,6 +2372,14 @@ app.put('/api/applications/:id/status', authenticateUser, requireAuth, async (re
         }
       }
 
+      // Trigger automatic in-app notification to applicant
+      const recipientName = doc.username || (applicantUser ? applicantUser.username : null);
+      if (recipientName) {
+        const notifTitle = status === 'Accepted' ? '🎉 Tryout Application Accepted!' : `Application Update: ${status}`;
+        const notifMsg = `Your application for ${doc.clubSlug || 'ACEIT Sports'} has been marked as ${status}.${adminFeedback ? ' Note: ' + adminFeedback : ''}`;
+        await createNotification(recipientName, notifTitle, notifMsg, 'application');
+      }
+
       return res.json({ success: true, application: doc, message: 'Status updated successfully' });
     } else {
       const dbRes = await getDB();
@@ -2295,16 +2391,23 @@ app.put('/api/applications/:id/status', authenticateUser, requireAuth, async (re
       if (adminFeedback !== undefined) item.adminFeedback = adminFeedback;
       await saveDB(dbData);
 
-      if (status === 'Accepted' && item.clubSlug) {
-        const u = localUsers.find(u =>
-          (item.userId && String(u._id) === String(item.userId)) ||
-          (item.username && u.username === item.username) ||
-          (item.email && u.email && u.email.toLowerCase() === item.email.toLowerCase())
-        );
-        if (u) {
-          u.clubs = u.clubs || [];
-          if (!u.clubs.includes(item.clubSlug)) u.clubs.push(item.clubSlug);
-        }
+      const u = localUsers.find(user =>
+        (item.userId && String(user._id) === String(item.userId)) ||
+        (item.username && user.username === item.username) ||
+        (item.email && user.email && user.email.toLowerCase() === item.email.toLowerCase())
+      );
+
+      if (status === 'Accepted' && item.clubSlug && u) {
+        u.clubs = u.clubs || [];
+        if (!u.clubs.includes(item.clubSlug)) u.clubs.push(item.clubSlug);
+      }
+
+      // Trigger automatic in-app notification to applicant
+      const recipientName = item.username || (u ? u.username : null);
+      if (recipientName) {
+        const notifTitle = status === 'Accepted' ? '🎉 Tryout Application Accepted!' : `Application Update: ${status}`;
+        const notifMsg = `Your application for ${item.clubSlug || 'ACEIT Sports'} has been marked as ${status}.${adminFeedback ? ' Note: ' + adminFeedback : ''}`;
+        await createNotification(recipientName, notifTitle, notifMsg, 'application');
       }
 
       return res.json({ success: true, application: item, message: 'Status updated successfully' });
@@ -2787,6 +2890,15 @@ app.put('/api/matches/:matchId/lineup', authenticateUser, requireAuth, async (re
           { isStartingLineup: true, position: st.position || 'Starter', name: st.name },
           { upsert: true, new: true }
         );
+
+        if (st.username) {
+          await createNotification(
+            st.username,
+            '⭐ Selected in Starting 6 Lineup!',
+            `You have been named in the Starting 6 lineup as ${st.position || 'Starter'} for upcoming Match #${matchId}!`,
+            'selection'
+          );
+        }
       }
       return res.json({ success: true, message: 'Starting lineup updated successfully!' });
     }
@@ -2815,6 +2927,15 @@ app.put('/api/matches/:matchId/lineup', authenticateUser, requireAuth, async (re
           isStartingLineup: true,
           position: st.position || 'Starter'
         });
+      }
+
+      if (st.username) {
+        await createNotification(
+          st.username,
+          '⭐ Selected in Starting 6 Lineup!',
+          `You have been named in the Starting 6 lineup as ${st.position || 'Starter'} for upcoming Match #${matchId}!`,
+          'selection'
+        );
       }
     }
 
@@ -2971,6 +3092,12 @@ app.put('/api/users/:username/stats', authenticateUser, requireAuth, async (req,
           };
           if (!user.badges.some(b => b.badgeKey === badgeToAdd)) {
             user.badges.push({ ...bDef, awardedAt: new Date() });
+            await createNotification(
+              uname,
+              '🎖️ Performance Badge Awarded!',
+              `Congratulations! You have been awarded the "${bDef.title}" performance badge (${bDef.icon}) for outstanding collegiate play!`,
+              'badge'
+            );
           }
         }
 
@@ -3014,6 +3141,12 @@ app.put('/api/users/:username/stats', authenticateUser, requireAuth, async (req,
         };
         if (!user.badges.some(b => b.badgeKey === badgeToAdd)) {
           user.badges.push({ ...bDef, awardedAt: new Date() });
+          await createNotification(
+            uname,
+            '🎖️ Performance Badge Awarded!',
+            `Congratulations! You have been awarded the "${bDef.title}" performance badge (${bDef.icon}) for outstanding collegiate play!`,
+            'badge'
+          );
         }
       }
 
@@ -3050,6 +3183,567 @@ app.get('/api/profile/stats', authenticateUser, requireAuth, async (req, res) =>
       badges: (user && user.badges) ? user.badges : [],
       badgeDefs: DEFAULT_PERF_BADGES
     });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==========================================
+// PHASE 4: NOTIFICATIONS & REAL-TIME ALERTS API
+// ==========================================
+
+// GET /api/notifications: Retrieve logged-in student's notifications
+app.get('/api/notifications', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const uname = String(req.user.username || '').toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+    let notifications = [];
+
+    if (dbConn) {
+      notifications = await Notification.find({ recipientUsername: uname }).sort({ createdAt: -1 }).limit(50);
+    } else {
+      notifications = localNotifications.filter(n => n.recipientUsername === uname).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 50);
+    }
+
+    const unreadCount = notifications.filter(n => !n.read).length;
+    res.json({ success: true, notifications, unreadCount });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/notifications/:id/read: Mark single notification as read
+app.put('/api/notifications/:id/read', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const uname = String(req.user.username || '').toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+
+    if (dbConn) {
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        await Notification.findOneAndUpdate({ _id: id, recipientUsername: uname }, { read: true });
+      }
+    } else {
+      const n = localNotifications.find(n => String(n._id) === String(id) && n.recipientUsername === uname);
+      if (n) n.read = true;
+    }
+
+    res.json({ success: true, message: 'Notification marked as read' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/notifications/read-all: Mark all notifications as read for current user
+app.put('/api/notifications/read-all', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const uname = String(req.user.username || '').toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+
+    if (dbConn) {
+      await Notification.updateMany({ recipientUsername: uname, read: false }, { read: true });
+    } else {
+      localNotifications.forEach(n => {
+        if (n.recipientUsername === uname) n.read = true;
+      });
+    }
+
+    res.json({ success: true, message: 'All notifications marked as read' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/notifications/:id: Delete single notification
+app.delete('/api/notifications/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const uname = String(req.user.username || '').toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+
+    if (dbConn) {
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        await Notification.findOneAndDelete({ _id: id, recipientUsername: uname });
+      }
+    } else {
+      localNotifications = localNotifications.filter(n => !(String(n._id) === String(id) && n.recipientUsername === uname));
+    }
+
+    res.json({ success: true, message: 'Notification deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/notifications/broadcast: Admin/Coordinator sends broadcast notification
+app.post('/api/notifications/broadcast', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { title, message, clubSlug, type, linkUrl } = req.body;
+    if (!title || !message) {
+      return res.status(400).json({ success: false, message: 'Title and message are required' });
+    }
+
+    const dbConn = await connectToDatabase();
+    let targetUsers = [];
+
+    if (dbConn) {
+      const query = { active: true };
+      if (clubSlug && clubSlug !== 'all') {
+        query.clubs = clubSlug;
+      }
+      targetUsers = await User.find(query).select('username');
+    } else {
+      targetUsers = localUsers.filter(u => u.active !== false && (!clubSlug || clubSlug === 'all' || (u.clubs && u.clubs.includes(clubSlug))));
+    }
+
+    const created = [];
+    for (const u of targetUsers) {
+      if (u.username) {
+        const notif = await createNotification(u.username, title, message, type || 'broadcast', linkUrl || '');
+        if (notif) created.push(notif);
+      }
+    }
+
+    res.json({ success: true, count: created.length, message: `Broadcast sent to ${created.length} students` });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==========================================
+// PHASE 4: CLUB ANNOUNCEMENTS & NOTICE BOARD API
+// ==========================================
+
+// GET /api/announcements: Public announcement list (sorted: pinned first, then newest)
+app.get('/api/announcements', async (req, res) => {
+  try {
+    const { clubId, category } = req.query;
+    const dbConn = await connectToDatabase();
+    let announcements = [];
+
+    if (dbConn) {
+      const query = {};
+      if (clubId && clubId !== 'all') {
+        query.$or = [{ clubId: 'all' }, { clubId: clubId }];
+      }
+      if (category && category !== 'all') {
+        query.category = category;
+      }
+      announcements = await Announcement.find(query).sort({ isPinned: -1, createdAt: -1 });
+    } else {
+      announcements = localAnnouncements.filter(a => {
+        const matchClub = !clubId || clubId === 'all' || a.clubId === 'all' || a.clubId === clubId;
+        const matchCat = !category || category === 'all' || a.category === category;
+        return matchClub && matchCat;
+      }).sort((a, b) => {
+        if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+    }
+
+    res.json({ success: true, announcements });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/announcements: Create new club announcement
+app.post('/api/announcements', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { title, content, clubId, category, isPinned, sendBroadcast } = req.body;
+    if (!title || !content) {
+      return res.status(400).json({ success: false, message: 'Title and content are required' });
+    }
+
+    const authorName = req.user.name || req.user.username;
+    const authorRole = req.user.role || 'COORDINATOR';
+    const authorUsername = req.user.username;
+
+    const dbConn = await connectToDatabase();
+    let newAnn = null;
+
+    if (dbConn) {
+      newAnn = await Announcement.create({
+        title,
+        content,
+        clubId: clubId || 'all',
+        category: category || 'General',
+        isPinned: Boolean(isPinned),
+        authorName,
+        authorRole,
+        authorUsername
+      });
+    } else {
+      newAnn = {
+        _id: 'ann_' + Date.now(),
+        title,
+        content,
+        clubId: clubId || 'all',
+        category: category || 'General',
+        isPinned: Boolean(isPinned),
+        authorName,
+        authorRole,
+        authorUsername,
+        createdAt: new Date()
+      };
+      localAnnouncements.unshift(newAnn);
+    }
+
+    // If requested, send automated in-app notification broadcast
+    if (sendBroadcast) {
+      const notifTitle = (isPinned ? '📌 ' : '📢 ') + title;
+      const notifMsg = content.length > 120 ? content.substring(0, 117) + '...' : content;
+      let targetUsers = [];
+      if (dbConn) {
+        targetUsers = await User.find({ active: true }).select('username');
+      } else {
+        targetUsers = localUsers.filter(u => u.active !== false);
+      }
+      for (const u of targetUsers) {
+        if (u.username) {
+          await createNotification(u.username, notifTitle, notifMsg, 'broadcast');
+        }
+      }
+    }
+
+    res.json({ success: true, announcement: newAnn, message: 'Announcement published successfully!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/announcements/:id: Update an announcement
+app.put('/api/announcements/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content, clubId, category, isPinned } = req.body;
+    const dbConn = await connectToDatabase();
+
+    if (dbConn) {
+      const ann = await Announcement.findById(id);
+      if (!ann) return res.status(404).json({ success: false, message: 'Announcement not found' });
+      if (title !== undefined) ann.title = title;
+      if (content !== undefined) ann.content = content;
+      if (clubId !== undefined) ann.clubId = clubId;
+      if (category !== undefined) ann.category = category;
+      if (isPinned !== undefined) ann.isPinned = Boolean(isPinned);
+      await ann.save();
+      return res.json({ success: true, announcement: ann, message: 'Announcement updated successfully' });
+    }
+
+    const ann = localAnnouncements.find(a => String(a._id) === String(id));
+    if (!ann) return res.status(404).json({ success: false, message: 'Announcement not found' });
+    if (title !== undefined) ann.title = title;
+    if (content !== undefined) ann.content = content;
+    if (clubId !== undefined) ann.clubId = clubId;
+    if (category !== undefined) ann.category = category;
+    if (isPinned !== undefined) ann.isPinned = Boolean(isPinned);
+    res.json({ success: true, announcement: ann, message: 'Announcement updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/announcements/:id: Delete an announcement
+app.delete('/api/announcements/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const dbConn = await connectToDatabase();
+
+    if (dbConn) {
+      await Announcement.findByIdAndDelete(id);
+    } else {
+      localAnnouncements = localAnnouncements.filter(a => String(a._id) !== String(id));
+    }
+
+    res.json({ success: true, message: 'Announcement deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==========================================
+// PHASE 4: LIVE MATCH SCORING & PLAY-BY-PLAY API
+// ==========================================
+
+// GET /api/matches/live: Return active live match status & details
+app.get('/api/matches/live', async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const matches = dbRes.data.matches || [];
+    
+    // Find active match marked isLive or status === 'live'
+    const liveMatch = matches.find(m => m.isLive || m.status === 'live');
+    if (!liveMatch) {
+      return res.json({ success: true, isLive: false, liveMatch: null });
+    }
+
+    const mId = String(liveMatch.id || liveMatch._id);
+    const liveState = localLiveMatches[mId] || {
+      isLive: true,
+      currentSet: 1,
+      team1SetsWon: 0,
+      team2SetsWon: 0,
+      liveScore: { team1: 0, team2: 0 },
+      setScores: [],
+      liveServingTeam: 'team1',
+      playByPlay: []
+    };
+
+    res.json({
+      success: true,
+      isLive: true,
+      match: liveMatch,
+      liveState
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/matches/:id/live: Get live state of a specific match
+app.get('/api/matches/:id/live', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const matches = dbRes.data.matches || [];
+    const match = matches.find(m => String(m.id || m._id) === String(id));
+    if (!match) return res.status(404).json({ success: false, message: 'Match not found' });
+
+    const liveState = localLiveMatches[String(id)] || {
+      isLive: match.isLive || match.status === 'live',
+      currentSet: 1,
+      team1SetsWon: 0,
+      team2SetsWon: 0,
+      liveScore: { team1: 0, team2: 0 },
+      setScores: [],
+      liveServingTeam: 'team1',
+      playByPlay: []
+    };
+
+    res.json({ success: true, match, liveState });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/matches/:id/live-start: Captain/Admin starts live scoring mode
+app.post('/api/matches/:id/live-start', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const dbData = dbRes.data;
+    const matches = dbData.matches || [];
+    const match = matches.find(m => String(m.id || m._id) === String(id));
+    if (!match) return res.status(404).json({ success: false, message: 'Match not found' });
+
+    // Mark match as live
+    match.status = 'live';
+    match.isLive = true;
+    await saveDB(dbData);
+
+    // Initialize or reset live state
+    localLiveMatches[String(id)] = {
+      isLive: true,
+      currentSet: 1,
+      team1SetsWon: 0,
+      team2SetsWon: 0,
+      liveScore: { team1: 0, team2: 0 },
+      setScores: [],
+      liveServingTeam: 'team1',
+      playByPlay: [
+        {
+          id: 'pbp_' + Date.now(),
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          text: `Match started! Set 1 underway between ${match.team1 || 'ACEIT Spikers'} and ${match.opp || match.team2 || 'Opponent'}.`,
+          type: 'start',
+          score: '0 - 0'
+        }
+      ]
+    };
+
+    // Broadcast notification to all students
+    const matchTitle = `${match.team1 || 'ACEIT Spikers'} vs ${match.opp || match.team2 || 'Opponent'}`;
+    const notifMsg = `Live scoring is now ON for ${matchTitle} at ${match.venue || 'Sports Complex'}. Follow live points!`;
+    const targetUsers = localUsers.filter(u => u.active !== false);
+    for (const u of targetUsers) {
+      if (u.username) {
+        await createNotification(u.username, '🏐 Match is LIVE!', notifMsg, 'match');
+      }
+    }
+
+    res.json({ success: true, message: 'Live match scoring started!', liveState: localLiveMatches[String(id)] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/matches/:id/live-score: Log point / spike / block / ace in real-time
+app.post('/api/matches/:id/live-score', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { scoringTeam, pointType, playerUsername, comment } = req.body;
+    // scoringTeam: 'team1' | 'team2'
+    // pointType: 'spike' | 'block' | 'ace' | 'error' | 'point'
+
+    let state = localLiveMatches[String(id)];
+    if (!state) {
+      state = localLiveMatches[String(id)] = {
+        isLive: true,
+        currentSet: 1,
+        team1SetsWon: 0,
+        team2SetsWon: 0,
+        liveScore: { team1: 0, team2: 0 },
+        setScores: [],
+        liveServingTeam: 'team1',
+        playByPlay: []
+      };
+    }
+
+    const teamKey = scoringTeam === 'team2' ? 'team2' : 'team1';
+    state.liveScore[teamKey] = (state.liveScore[teamKey] || 0) + 1;
+    state.liveServingTeam = teamKey;
+
+    let pbpText = '';
+    if (comment) {
+      pbpText = comment;
+    } else if (pointType === 'spike') {
+      pbpText = `💥 Spectacular Spike point by ${playerUsername || 'ACEIT'}!`;
+    } else if (pointType === 'block') {
+      pbpText = `🛡️ Monster Block by ${playerUsername || 'ACEIT'} at the net!`;
+    } else if (pointType === 'ace') {
+      pbpText = `🎯 Clean Service Ace scored by ${playerUsername || 'ACEIT'}!`;
+    } else if (scoringTeam === 'team2') {
+      pbpText = `Point scored by opponent.`;
+    } else {
+      pbpText = `Point for ACEIT Spikers.`;
+    }
+
+    const scoreStr = `${state.liveScore.team1} - ${state.liveScore.team2}`;
+    state.playByPlay.unshift({
+      id: 'pbp_' + Date.now(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      text: pbpText,
+      type: pointType || 'point',
+      scoringTeam: teamKey,
+      playerUsername: playerUsername || '',
+      score: scoreStr
+    });
+
+    // If playerUsername provided and scoringTeam is team1, dynamically update player stats
+    if (playerUsername && teamKey === 'team1') {
+      const uname = String(playerUsername).toLowerCase().trim();
+      const u = localUsers.find(user => user.username === uname);
+      if (u) {
+        u.stats = u.stats || { matchesPlayed: 0, points: 0, spikes: 0, blocks: 0, aces: 0, mvpAwards: 0 };
+        u.stats.points = (u.stats.points || 0) + 1;
+        if (pointType === 'spike') u.stats.spikes = (u.stats.spikes || 0) + 1;
+        if (pointType === 'block') u.stats.blocks = (u.stats.blocks || 0) + 1;
+        if (pointType === 'ace') u.stats.aces = (u.stats.aces || 0) + 1;
+        u.stats.mvpPoints = calculateMvpPoints(u.stats);
+      }
+    }
+
+    res.json({ success: true, liveState: state });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/matches/:id/live-set-end: End current set, record score and advance set
+app.post('/api/matches/:id/live-set-end', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    let state = localLiveMatches[String(id)];
+    if (!state) return res.status(404).json({ success: false, message: 'Live match state not found' });
+
+    const setNum = state.currentSet;
+    const finalSetScore = {
+      set: setNum,
+      team1: state.liveScore.team1,
+      team2: state.liveScore.team2
+    };
+
+    if (state.liveScore.team1 > state.liveScore.team2) {
+      state.team1SetsWon = (state.team1SetsWon || 0) + 1;
+    } else {
+      state.team2SetsWon = (state.team2SetsWon || 0) + 1;
+    }
+
+    state.setScores.push(finalSetScore);
+    state.currentSet += 1;
+    state.liveScore = { team1: 0, team2: 0 };
+
+    state.playByPlay.unshift({
+      id: 'pbp_' + Date.now(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      text: `🔔 Set ${setNum} concluded: ${finalSetScore.team1} - ${finalSetScore.team2}. Overall sets: ${state.team1SetsWon} - ${state.team2SetsWon}.`,
+      type: 'set_end',
+      score: `${finalSetScore.team1} - ${finalSetScore.team2}`
+    });
+
+    res.json({ success: true, message: `Set ${setNum} recorded!`, liveState: state });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/matches/:id/live-finish: Finalize match, record winner and update player records
+app.post('/api/matches/:id/live-finish', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { mvpUsername } = req.body;
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const dbData = dbRes.data;
+    const matches = dbData.matches || [];
+    const match = matches.find(m => String(m.id || m._id) === String(id));
+    if (!match) return res.status(404).json({ success: false, message: 'Match not found' });
+
+    let state = localLiveMatches[String(id)] || {
+      team1SetsWon: 3,
+      team2SetsWon: 1,
+      setScores: [{ set: 1, team1: 25, team2: 20 }, { set: 2, team1: 25, team2: 22 }, { set: 3, team1: 21, team2: 25 }, { set: 4, team1: 25, team2: 18 }]
+    };
+
+    match.status = 'completed';
+    match.isLive = false;
+    match.winner = state.team1SetsWon >= state.team2SetsWon ? 'team1' : 'team2';
+    match.sets = `${state.team1SetsWon} - ${state.team2SetsWon}`;
+    match.setScores = state.setScores;
+    await saveDB(dbData);
+
+    state.isLive = false;
+
+    // If MVP is awarded, increment MVP awards and notify student
+    if (mvpUsername) {
+      const uname = String(mvpUsername).toLowerCase().trim();
+      const mvpUser = localUsers.find(u => u.username === uname);
+      if (mvpUser) {
+        mvpUser.stats = mvpUser.stats || { matchesPlayed: 0, points: 0, spikes: 0, blocks: 0, aces: 0, mvpAwards: 0 };
+        mvpUser.stats.mvpAwards = (mvpUser.stats.mvpAwards || 0) + 1;
+        mvpUser.stats.mvpPoints = calculateMvpPoints(mvpUser.stats);
+        
+        // Award MVP Gold Badge
+        mvpUser.badges = mvpUser.badges || [];
+        if (!mvpUser.badges.some(b => b.badgeKey === 'MVP_GOLD')) {
+          const bDef = DEFAULT_PERF_BADGES.find(b => b.badgeKey === 'MVP_GOLD');
+          if (bDef) mvpUser.badges.push({ ...bDef, awardedAt: new Date() });
+        }
+
+        await createNotification(
+          uname,
+          '👑 MVP of the Match Awarded!',
+          `Congratulations! You have been awarded the MVP of the Match for the victory against ${match.opp || match.team2 || 'Opponent'} (+15 MVP Pts)!`,
+          'badge'
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Match finalized and archived successfully!', match });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
