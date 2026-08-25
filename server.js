@@ -19,6 +19,14 @@ let localClubs = [
   { _id: 'c1', name: 'ACEIT Spikers', sport: 'Volleyball', slug: 'aceit-spikers', logo: '', description: 'ACEIT Official Volleyball Club', active: true, createdAt: new Date() }
 ];
 
+let localRoles = [
+  { _id: 'r_owner', name: 'OWNER', title: 'Club Owner / Founder', badgeBg: '#F39C12', badgeText: '#FFFFFF', badgeGlow: 'rgba(243, 156, 18, 0.85)', permissions: ['*'], isSystem: true, description: 'Super-admin with unrestricted permissions' },
+  { _id: 'r_admin', name: 'ADMIN', title: 'Administrator', badgeBg: '#2980B9', badgeText: '#FFFFFF', badgeGlow: 'rgba(41, 128, 185, 0.85)', permissions: ['*'], isSystem: true, description: 'System administrator with full club management' },
+  { _id: 'r_coord', name: 'COORDINATOR', title: 'Sports Coordinator', badgeBg: '#8E44AD', badgeText: '#FFFFFF', badgeGlow: 'rgba(142, 68, 173, 0.85)', permissions: ['players.*', 'matches.*', 'events.*', 'news.*', 'gallery.*', 'training.*', 'testimonials.*', 'sponsors.*', 'stats.*', 'about.*', 'contact.*', 'applications.*'], isSystem: false, description: 'Club coordinator managing matches, events, news and tryouts' },
+  { _id: 'r_capt', name: 'CAPTAIN', title: 'Team Captain', badgeBg: '#E67E22', badgeText: '#FFFFFF', badgeGlow: 'rgba(230, 126, 34, 0.85)', permissions: ['matches.*', 'players.view', 'training.*'], isSystem: false, description: 'Team leader with squad and match management' },
+  { _id: 'r_student', name: 'STUDENT', title: 'Student Athlete', badgeBg: '#27AE60', badgeText: '#FFFFFF', badgeGlow: 'rgba(39, 174, 96, 0.65)', permissions: ['profile.view', 'profile.edit', 'clubs.join', 'applications.submit'], isSystem: true, description: 'Registered student athlete' }
+];
+
 let localUsers = [
   {
     _id: 'owner_local',
@@ -27,6 +35,7 @@ let localUsers = [
     passwordHash: bcrypt.hashSync(process.env.OWNER_PASSWORD || 'OwnerSecret123!', 10),
     role: 'OWNER',
     clubId: 'ALL',
+    clubs: ['aceit-spikers'],
     permissions: ['*'],
     active: true,
     createdAt: new Date()
@@ -171,7 +180,21 @@ const clubItemSchema = new mongoose.Schema({
 
 const Club = mongoose.models.Club || mongoose.model('Club', clubItemSchema);
 
-// Scalable Multi-User & Granular Permission Model (Students + Admins + Owner)
+// Dynamic Role & Permissions Model with Custom Glow & Badge Styling
+const roleSchema = new mongoose.Schema({
+  name: { type: String, required: true, unique: true, uppercase: true, trim: true },
+  title: { type: String, required: true, trim: true },
+  badgeBg: { type: String, default: '#8E44AD' },
+  badgeText: { type: String, default: '#FFFFFF' },
+  badgeGlow: { type: String, default: 'rgba(142, 68, 173, 0.85)' },
+  permissions: { type: [String], default: [] },
+  isSystem: { type: Boolean, default: false },
+  description: { type: String, default: '' }
+}, { timestamps: true });
+
+const Role = mongoose.models.Role || mongoose.model('Role', roleSchema);
+
+// Scalable Multi-User & Granular Permission Model (Students + Admins + Custom Roles + Owner)
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   username: { type: String, required: true, unique: true, lowercase: true, trim: true },
@@ -180,7 +203,7 @@ const userSchema = new mongoose.Schema({
   mobile: { type: String, default: '', trim: true },
   photo: { type: String, default: '' },
   passwordHash: { type: String, required: true },
-  role: { type: String, enum: ['OWNER', 'ADMIN', 'CUSTOM', 'STUDENT'], default: 'STUDENT' },
+  role: { type: String, default: 'STUDENT', uppercase: true, trim: true },
   clubId: { type: String, default: 'ALL' },
   clubs: { type: [String], default: ['aceit-spikers'] },
   bio: { type: String, default: '' },
@@ -193,8 +216,11 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
-// Join Club Application Model for Tally Webhook & Website Submissions
+// Join Club Application Model for Tally Webhook & Student Dashboard
 const applicationSchema = new mongoose.Schema({
+  userId: { type: String, default: null },
+  username: { type: String, default: null },
+  clubSlug: { type: String, default: 'aceit-spikers' },
   name: { type: String, required: true },
   email: { type: String, required: true },
   phone: { type: String, default: '' },
@@ -202,14 +228,43 @@ const applicationSchema = new mongoose.Schema({
   experience: { type: String, default: '' },
   message: { type: String, default: '' },
   status: { type: String, default: 'Pending' }, // 'Pending', 'Reviewed', 'Accepted', 'Rejected'
-  source: { type: String, default: 'Tally Webhook' },
+  source: { type: String, default: 'Website Form' },
+  adminFeedback: { type: String, default: '' },
   tallyEventId: { type: String, default: null },
   tallyResponseId: { type: String, default: null }
 }, { timestamps: true });
 
 const ApplicationDoc = mongoose.models.ApplicationDoc || mongoose.model('ApplicationDoc', applicationSchema);
 
-// Initial Seeding Helper: Auto-seeds initial Club & OWNER account if database is fresh
+// Helper: Get Role Styling Metadata (Colors, Glow, Title)
+async function getRoleMetadata(roleName) {
+  const normName = String(roleName || 'STUDENT').toUpperCase().trim();
+  const dbConn = await connectToDatabase();
+  if (dbConn) {
+    const r = await Role.findOne({ name: normName });
+    if (r) {
+      return {
+        role: r.name,
+        roleTitle: r.title,
+        badgeBg: r.badgeBg,
+        badgeText: r.badgeText,
+        badgeGlow: r.badgeGlow,
+        permissions: r.permissions
+      };
+    }
+  }
+  const fallback = localRoles.find(r => r.name === normName) || localRoles.find(r => r.name === 'STUDENT');
+  return {
+    role: fallback ? fallback.name : normName,
+    roleTitle: fallback ? fallback.title : normName,
+    badgeBg: fallback ? fallback.badgeBg : '#27AE60',
+    badgeText: fallback ? fallback.badgeText : '#FFFFFF',
+    badgeGlow: fallback ? fallback.badgeGlow : 'rgba(39, 174, 96, 0.65)',
+    permissions: fallback ? fallback.permissions : []
+  };
+}
+
+// Initial Seeding Helper: Auto-seeds initial Club, Roles & OWNER account if database is fresh
 async function seedInitialAuthAndClubs() {
   const dbConn = await connectToDatabase();
   if (!dbConn) return;
@@ -226,6 +281,15 @@ async function seedInitialAuthAndClubs() {
         active: true
       });
       console.log('[MongoDB Atlas] Auto-seeded default club: ACEIT Spikers (Volleyball)');
+    }
+
+    const roleCount = await Role.countDocuments();
+    if (roleCount === 0) {
+      for (const r of localRoles) {
+        const { _id, ...rData } = r;
+        await Role.create(rData);
+      }
+      console.log('[MongoDB Atlas] Auto-seeded default system and custom roles');
     }
 
     const ownerCount = await User.countDocuments({ role: 'OWNER' });
@@ -1207,12 +1271,18 @@ app.get('/api/users/profile/:username', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Public profile not found or inactive.' });
     }
 
+    const roleMeta = await getRoleMetadata(user.role);
+
     // Public fields ONLY: No roll number, email, mobile, password, permissions
     const publicProfile = {
       name: user.name,
       username: user.username,
       photo: user.photo || '',
-      role: user.role,
+      role: roleMeta.role,
+      roleTitle: roleMeta.roleTitle,
+      badgeBg: roleMeta.badgeBg,
+      badgeText: roleMeta.badgeText,
+      badgeGlow: roleMeta.badgeGlow,
       clubs: user.clubs || (user.clubId && user.clubId !== 'ALL' ? [user.clubId] : ['aceit-spikers']),
       bio: user.bio || '',
       sport: user.sport || 'Volleyball',
@@ -1221,6 +1291,164 @@ app.get('/api/users/profile/:username', async (req, res) => {
     };
 
     res.json({ success: true, profile: publicProfile });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==========================================
+// DYNAMIC ROLES & GLOWING PERMISSIONS ROUTES
+// ==========================================
+
+// 10. Roles: GET List (Public/Authenticated)
+app.get('/api/roles', async (req, res) => {
+  try {
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      await seedInitialAuthAndClubs();
+      const roles = await Role.find({}).sort({ createdAt: 1 });
+      return res.json({ success: true, roles });
+    }
+    res.json({ success: true, roles: localRoles });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 11. Roles: POST Create Custom Role
+app.post('/api/roles', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== 'OWNER' && req.user.role !== 'ADMIN' && (!req.user.permissions || (!req.user.permissions.includes('roles.*') && !req.user.permissions.includes('*')))) {
+      return res.status(403).json({ success: false, message: 'Forbidden: You do not have permission to create roles' });
+    }
+    const { name, title, badgeBg, badgeText, badgeGlow, permissions, description } = req.body;
+    if (!name || !title) {
+      return res.status(400).json({ success: false, message: 'Role Identifier and Title are required' });
+    }
+    const cleanName = String(name).toUpperCase().trim().replace(/[^A-Z0-9_]/g, '_');
+    const cleanTitle = String(title).trim();
+    const bg = badgeBg || '#8E44AD';
+    const text = badgeText || '#FFFFFF';
+    const glow = badgeGlow || 'rgba(142, 68, 173, 0.85)';
+    const perms = Array.isArray(permissions) ? permissions : [];
+
+    const dbConn = await connectToDatabase();
+    if (!dbConn) {
+      const existing = localRoles.find(r => r.name === cleanName);
+      if (existing) return res.status(400).json({ success: false, message: 'A role with this name already exists' });
+      const newRole = {
+        _id: 'r_' + Date.now(),
+        name: cleanName,
+        title: cleanTitle,
+        badgeBg: bg,
+        badgeText: text,
+        badgeGlow: glow,
+        permissions: perms,
+        isSystem: false,
+        description: description || ''
+      };
+      localRoles.push(newRole);
+      return res.json({ success: true, role: newRole, message: 'Custom role created successfully!' });
+    }
+
+    const existing = await Role.findOne({ name: cleanName });
+    if (existing) return res.status(400).json({ success: false, message: 'A role with this name already exists' });
+
+    const newRole = await Role.create({
+      name: cleanName,
+      title: cleanTitle,
+      badgeBg: bg,
+      badgeText: text,
+      badgeGlow: glow,
+      permissions: perms,
+      isSystem: false,
+      description: description || ''
+    });
+
+    res.json({ success: true, role: newRole, message: 'Custom role created successfully!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 12. Roles: PUT Update Role
+app.put('/api/roles/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== 'OWNER' && req.user.role !== 'ADMIN' && (!req.user.permissions || (!req.user.permissions.includes('roles.*') && !req.user.permissions.includes('*')))) {
+      return res.status(403).json({ success: false, message: 'Forbidden: Insufficient permissions' });
+    }
+    const { id } = req.params;
+    const { title, badgeBg, badgeText, badgeGlow, permissions, description } = req.body;
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const r = localRoles.find(r => String(r._id) === String(id) || r.name === String(id).toUpperCase());
+      if (!r) return res.status(404).json({ success: false, message: 'Role not found' });
+      if (title) r.title = String(title).trim();
+      if (badgeBg) r.badgeBg = badgeBg;
+      if (badgeText) r.badgeText = badgeText;
+      if (badgeGlow) r.badgeGlow = badgeGlow;
+      if (Array.isArray(permissions)) r.permissions = permissions;
+      if (description !== undefined) r.description = description;
+      return res.json({ success: true, role: r, message: 'Role updated successfully!' });
+    }
+
+    let r = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      r = await Role.findById(id);
+    }
+    if (!r) {
+      r = await Role.findOne({ name: String(id).toUpperCase() });
+    }
+    if (!r) return res.status(404).json({ success: false, message: 'Role not found' });
+
+    if (title) r.title = String(title).trim();
+    if (badgeBg) r.badgeBg = badgeBg;
+    if (badgeText) r.badgeText = badgeText;
+    if (badgeGlow) r.badgeGlow = badgeGlow;
+    if (Array.isArray(permissions)) r.permissions = permissions;
+    if (description !== undefined) r.description = description;
+
+    await r.save();
+    res.json({ success: true, role: r, message: 'Role updated successfully!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 13. Roles: DELETE Custom Role
+app.delete('/api/roles/:id', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    if (req.user.role !== 'OWNER' && req.user.role !== 'ADMIN' && (!req.user.permissions || (!req.user.permissions.includes('roles.*') && !req.user.permissions.includes('*')))) {
+      return res.status(403).json({ success: false, message: 'Forbidden: Insufficient permissions' });
+    }
+    const { id } = req.params;
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const idx = localRoles.findIndex(r => String(r._id) === String(id) || r.name === String(id).toUpperCase());
+      if (idx === -1) return res.status(404).json({ success: false, message: 'Role not found' });
+      if (localRoles[idx].isSystem) {
+        return res.status(400).json({ success: false, message: 'Cannot delete core system role' });
+      }
+      localRoles.splice(idx, 1);
+      return res.json({ success: true, message: 'Custom role deleted' });
+    }
+
+    let r = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      r = await Role.findById(id);
+    }
+    if (!r) {
+      r = await Role.findOne({ name: String(id).toUpperCase() });
+    }
+    if (!r) return res.status(404).json({ success: false, message: 'Role not found' });
+    if (r.isSystem) {
+      return res.status(400).json({ success: false, message: 'Cannot delete core system role' });
+    }
+
+    await r.deleteOne();
+    res.json({ success: true, message: 'Custom role deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1816,7 +2044,68 @@ app.post('/api/applications', async (req, res) => {
   }
 });
 
-// Applications: GET List (OWNER / ADMIN)
+// Applications: GET Student's own applications
+app.get('/api/profile/applications', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const userId = String(req.user._id || req.user.id);
+    const username = req.user.username;
+    const email = req.user.email ? req.user.email.toLowerCase() : '';
+    const dbConn = await connectToDatabase();
+
+    if (dbConn) {
+      const orConditions = [{ userId: userId }];
+      if (username) orConditions.push({ username: username });
+      if (email) orConditions.push({ email: email });
+
+      const apps = await ApplicationDoc.find({ $or: orConditions }).sort({ createdAt: -1 });
+      return res.json({ success: true, applications: apps });
+    }
+
+    const dbRes = await getDB();
+    const allApps = (dbRes && dbRes.data && Array.isArray(dbRes.data.applications)) ? dbRes.data.applications : [];
+    const apps = allApps.filter(a =>
+      String(a.userId) === userId ||
+      (a.username && a.username === username) ||
+      (a.email && email && a.email.toLowerCase() === email)
+    );
+    res.json({ success: true, applications: apps });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Applications: POST Submit Club Application (Authenticated Student)
+app.post('/api/profile/applications', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { clubSlug, position, experience, message } = req.body;
+    const cleanClubSlug = String(clubSlug || 'aceit-spikers').toLowerCase().trim();
+    const userId = String(req.user._id || req.user.id);
+    const username = req.user.username;
+    const name = req.user.name || username;
+    const email = req.user.email || '';
+    const phone = req.user.mobile || '';
+
+    const doc = await createApplication({
+      userId,
+      username,
+      clubSlug: cleanClubSlug,
+      name,
+      email,
+      phone,
+      position: position || 'Player',
+      experience: experience || 'Beginner',
+      message: message || '',
+      status: 'Pending',
+      source: 'Student Portal'
+    });
+
+    res.json({ success: true, application: doc, message: 'Application submitted successfully! Your club coordinator will review it shortly.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Applications: GET List (OWNER / ADMIN / COORDINATOR)
 app.get('/api/applications', authenticateUser, requireAuth, async (req, res) => {
   try {
     const dbConn = await connectToDatabase();
@@ -1833,21 +2122,21 @@ app.get('/api/applications', authenticateUser, requireAuth, async (req, res) => 
   }
 });
 
-// Applications: PUT Update Status
+// Applications: PUT Update Status & Auto-Membership on Acceptance
 app.put('/api/applications/:id/status', authenticateUser, requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, adminFeedback } = req.body;
     if (!status) return res.status(400).json({ success: false, message: 'Status is required' });
 
     const dbConn = await connectToDatabase();
     if (dbConn) {
       let doc = null;
       if (mongoose.Types.ObjectId.isValid(id)) {
-        doc = await ApplicationDoc.findByIdAndUpdate(id, { status }, { new: true });
+        doc = await ApplicationDoc.findByIdAndUpdate(id, { status, adminFeedback: adminFeedback || '' }, { new: true });
       }
       if (!doc) {
-        doc = await ApplicationDoc.findOneAndUpdate({ _id: id }, { status }, { new: true });
+        doc = await ApplicationDoc.findOneAndUpdate({ _id: id }, { status, adminFeedback: adminFeedback || '' }, { new: true });
       }
 
       // Also update ClubDoc fallback applications array if present
@@ -1856,7 +2145,29 @@ app.put('/api/applications/:id/status', authenticateUser, requireAuth, async (re
         const item = dbRes.data.applications.find(a => String(a.id || a._id) === String(id));
         if (item) {
           item.status = status;
+          if (adminFeedback !== undefined) item.adminFeedback = adminFeedback;
           await saveDB(dbRes.data);
+        }
+      }
+
+      // If status is Accepted, auto-add the club to applicant's clubs list!
+      if (status === 'Accepted' && doc && doc.clubSlug) {
+        let applicantUser = null;
+        if (doc.userId && mongoose.Types.ObjectId.isValid(doc.userId)) {
+          applicantUser = await User.findById(doc.userId);
+        }
+        if (!applicantUser && doc.username) {
+          applicantUser = await User.findOne({ username: doc.username.toLowerCase() });
+        }
+        if (!applicantUser && doc.email) {
+          applicantUser = await User.findOne({ email: doc.email.toLowerCase() });
+        }
+        if (applicantUser) {
+          applicantUser.clubs = applicantUser.clubs || [];
+          if (!applicantUser.clubs.includes(doc.clubSlug)) {
+            applicantUser.clubs.push(doc.clubSlug);
+            await applicantUser.save();
+          }
         }
       }
 
@@ -1868,7 +2179,21 @@ app.put('/api/applications/:id/status', authenticateUser, requireAuth, async (re
       const item = dbData.applications.find(a => String(a.id || a._id) === String(id));
       if (!item) return res.status(404).json({ success: false, message: 'Application not found' });
       item.status = status;
+      if (adminFeedback !== undefined) item.adminFeedback = adminFeedback;
       await saveDB(dbData);
+
+      if (status === 'Accepted' && item.clubSlug) {
+        const u = localUsers.find(u =>
+          (item.userId && String(u._id) === String(item.userId)) ||
+          (item.username && u.username === item.username) ||
+          (item.email && u.email && u.email.toLowerCase() === item.email.toLowerCase())
+        );
+        if (u) {
+          u.clubs = u.clubs || [];
+          if (!u.clubs.includes(item.clubSlug)) u.clubs.push(item.clubSlug);
+        }
+      }
+
       return res.json({ success: true, application: item, message: 'Status updated successfully' });
     }
   } catch (err) {
