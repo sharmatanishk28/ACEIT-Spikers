@@ -1924,9 +1924,6 @@
       .showcase-viewport {
         -webkit-mask-image: none;
         mask-image: none;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x mandatory;
         padding-bottom: 12px;
       }
     }
@@ -1935,20 +1932,35 @@
       cursor: grabbing;
     }
 
+    @keyframes marqueeScrollRTL {
+      0% {
+        transform: translate3d(0, 0, 0);
+      }
+      100% {
+        transform: translate3d(-50%, 0, 0);
+      }
+    }
+
     .showcase-track {
       display: flex;
       gap: 24px;
       width: max-content;
       will-change: transform;
       padding: 0 var(--space-3);
-      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: marqueeScrollRTL 28s linear infinite;
+    }
+
+    .showcase-viewport:hover .showcase-track,
+    .showcase-viewport.is-paused .showcase-track,
+    .showcase-viewport.is-interacting .showcase-track {
+      animation-play-state: paused;
     }
 
     @media (max-width: 768px) {
       .showcase-track {
         gap: 16px;
         padding: 0 16px;
-        transition: none;
+        animation-duration: 22s;
       }
     }
 
@@ -4827,7 +4839,6 @@
         grid.innerHTML = html;
       }
 
-      var showcaseTimer = null;
       var showcasePlaying = true;
       var showcaseCurrentIndex = 0;
 
@@ -4842,21 +4853,12 @@
 
         if (!section || !track || !viewport) return;
 
-        if (showcaseTimer) {
-          clearInterval(showcaseTimer);
-          showcaseTimer = null;
-        }
-
         var items = DB.slideshow || [];
         if (!items.length) {
           section.style.display = 'none';
           return;
         }
         section.style.display = 'block';
-
-        if (showcaseCurrentIndex >= items.length) {
-          showcaseCurrentIndex = 0;
-        }
 
         function getCategoryBadge(slide, idx) {
           var t = ((slide.title || '') + ' ' + (slide.date || '')).toLowerCase();
@@ -4874,9 +4876,10 @@
           'https://images.unsplash.com/photo-1592656094267-764a45160876?auto=format&fit=crop&w=1600&q=80'
         ];
 
-        // If items are few (e.g. <= 3), duplicate cards for smooth continuous flow
-        var displayItems = items.slice();
-        if (items.length > 1 && items.length < 5) {
+        // Duplicate items for continuous seamless loop right-to-left
+        var repeatCount = items.length < 4 ? 4 : 2;
+        var displayItems = [];
+        for (var r = 0; r < repeatCount; r++) {
           displayItems = displayItems.concat(items);
         }
 
@@ -4920,60 +4923,12 @@
           dotsContainer.innerHTML = dotsHtml;
         }
 
-        // Navigation and scroll logic
-        var cards = track.querySelectorAll('.showcase-card');
         var dots = dotsContainer ? dotsContainer.querySelectorAll('.showcase-dot') : [];
 
-        function updateDots() {
+        function updateDots(idx) {
           dots.forEach(function (dot, i) {
-            dot.classList.toggle('active', i === showcaseCurrentIndex);
+            dot.classList.toggle('active', i === idx);
           });
-        }
-
-        function scrollToIndex(idx, smooth) {
-          if (idx < 0) idx = items.length - 1;
-          if (idx >= items.length) idx = 0;
-          showcaseCurrentIndex = idx;
-          updateDots();
-
-          // Find target card in viewport
-          var targetCard = track.querySelector('.showcase-card[data-index="' + idx + '"]');
-          if (targetCard) {
-            var cardLeft = targetCard.offsetLeft;
-            var vpWidth = viewport.clientWidth;
-            var cardWidth = targetCard.offsetWidth;
-            var scrollPos = cardLeft - (vpWidth / 2) + (cardWidth / 2);
-            if (scrollPos < 0) scrollPos = 0;
-
-            if (window.innerWidth <= 768) {
-              viewport.scrollTo({ left: scrollPos, behavior: smooth === false ? 'auto' : 'smooth' });
-            } else {
-              track.style.transition = smooth === false ? 'none' : 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)';
-              track.style.transform = 'translateX(-' + scrollPos + 'px)';
-            }
-          }
-        }
-
-        function nextSlide() {
-          scrollToIndex(showcaseCurrentIndex + 1);
-        }
-
-        function prevSlide() {
-          scrollToIndex(showcaseCurrentIndex - 1);
-        }
-
-        // Button events
-        if (prevBtn) {
-          prevBtn.onclick = function () {
-            prevSlide();
-            resetTimer();
-          };
-        }
-        if (nextBtn) {
-          nextBtn.onclick = function () {
-            nextSlide();
-            resetTimer();
-          };
         }
 
         // Play/Pause button
@@ -4985,17 +4940,41 @@
             iconPause.style.display = showcasePlaying ? 'inline-block' : 'none';
             iconPlay.style.display = showcasePlaying ? 'none' : 'inline-block';
           }
+          if (showcasePlaying) {
+            viewport.classList.remove('is-paused');
+          } else {
+            viewport.classList.add('is-paused');
+          }
         }
 
         if (playPauseBtn) {
           playPauseBtn.onclick = function () {
             showcasePlaying = !showcasePlaying;
             updatePlayPauseBtn();
-            if (showcasePlaying) {
-              startTimer();
-            } else {
-              if (showcaseTimer) clearInterval(showcaseTimer);
-            }
+          };
+        }
+
+        // Prev / Next button manual step
+        if (prevBtn) {
+          prevBtn.onclick = function () {
+            showcaseCurrentIndex = (showcaseCurrentIndex - 1 + items.length) % items.length;
+            updateDots(showcaseCurrentIndex);
+            track.style.animationPlayState = 'paused';
+            viewport.scrollBy({ left: -360, behavior: 'smooth' });
+            setTimeout(function () {
+              if (showcasePlaying) track.style.animationPlayState = 'running';
+            }, 1200);
+          };
+        }
+        if (nextBtn) {
+          nextBtn.onclick = function () {
+            showcaseCurrentIndex = (showcaseCurrentIndex + 1) % items.length;
+            updateDots(showcaseCurrentIndex);
+            track.style.animationPlayState = 'paused';
+            viewport.scrollBy({ left: 360, behavior: 'smooth' });
+            setTimeout(function () {
+              if (showcasePlaying) track.style.animationPlayState = 'running';
+            }, 1200);
           };
         }
 
@@ -5004,70 +4983,17 @@
           dot.onclick = function () {
             var g = parseInt(dot.getAttribute('data-goto'), 10);
             if (!isNaN(g)) {
-              scrollToIndex(g);
-              resetTimer();
+              showcaseCurrentIndex = g;
+              updateDots(g);
+              var targetCard = track.querySelector('.showcase-card[data-index="' + g + '"]');
+              if (targetCard) {
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+              }
             }
           };
         });
 
-        // Mouse Drag / Touch Swipe
-        var isDown = false;
-        var startX = 0;
-        var scrollLeftInit = 0;
-        var trackTransformInit = 0;
-
-        viewport.addEventListener('mousedown', function (e) {
-          if (e.target.closest('a') || e.target.closest('button')) return;
-          isDown = true;
-          viewport.classList.add('grabbing');
-          startX = e.pageX - viewport.offsetLeft;
-          var tr = track.style.transform || '';
-          var match = tr.match(/translateX\(-?([0-9.]+)px\)/);
-          trackTransformInit = match ? parseFloat(match[1]) : 0;
-        });
-
-        window.addEventListener('mouseup', function () {
-          if (isDown) {
-            isDown = false;
-            viewport.classList.remove('grabbing');
-          }
-        });
-
-        viewport.addEventListener('mousemove', function (e) {
-          if (!isDown) return;
-          e.preventDefault();
-          var x = e.pageX - viewport.offsetLeft;
-          var walk = (x - startX) * 1.4;
-          var newPos = Math.max(0, trackTransformInit - walk);
-          track.style.transition = 'none';
-          track.style.transform = 'translateX(-' + newPos + 'px)';
-        });
-
-        // Autoplay timer
-        function startTimer() {
-          if (!showcasePlaying || items.length <= 1) return;
-          if (showcaseTimer) clearInterval(showcaseTimer);
-          showcaseTimer = setInterval(function () {
-            nextSlide();
-          }, 3800);
-        }
-
-        function resetTimer() {
-          if (showcaseTimer) clearInterval(showcaseTimer);
-          if (showcasePlaying) startTimer();
-        }
-
-        viewport.addEventListener('mouseenter', function () {
-          if (showcaseTimer) clearInterval(showcaseTimer);
-        });
-
-        viewport.addEventListener('mouseleave', function () {
-          if (showcasePlaying) resetTimer();
-        });
-
         updatePlayPauseBtn();
-        startTimer();
-        scrollToIndex(0, false);
       }
 
       function renderAllPublic() {
