@@ -171,13 +171,21 @@ const clubItemSchema = new mongoose.Schema({
 
 const Club = mongoose.models.Club || mongoose.model('Club', clubItemSchema);
 
-// Scalable Multi-User & Granular Permission Model
+// Scalable Multi-User & Granular Permission Model (Students + Admins + Owner)
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   username: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  rtuRollNo: { type: String, trim: true, default: '' },
+  email: { type: String, default: '', lowercase: true, trim: true },
+  mobile: { type: String, default: '', trim: true },
+  photo: { type: String, default: '' },
   passwordHash: { type: String, required: true },
-  role: { type: String, enum: ['OWNER', 'ADMIN', 'CUSTOM'], default: 'ADMIN' },
+  role: { type: String, enum: ['OWNER', 'ADMIN', 'CUSTOM', 'STUDENT'], default: 'STUDENT' },
   clubId: { type: String, default: 'ALL' },
+  clubs: { type: [String], default: ['aceit-spikers'] },
+  bio: { type: String, default: '' },
+  sport: { type: String, default: '' },
+  achievements: { type: Array, default: [] },
   permissions: { type: [String], default: [] },
   active: { type: Boolean, default: true },
   lastLoginAt: { type: Date }
@@ -261,8 +269,8 @@ async function authenticateUser(req, res, next) {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     token = req.headers.authorization.split(' ')[1];
   }
-  if (!token && req.cookies && req.cookies.token) {
-    token = req.cookies.token;
+  if (!token && req.cookies) {
+    token = req.cookies.token || req.cookies.auth_token;
   }
 
   if (!token) return next();
@@ -845,42 +853,166 @@ app.post('/api/pin', authenticateUser, requireAuth, requirePermission('settings.
 });
 
 // ==========================================
-// PHASE 1: AUTHENTICATION & MULTI-CLUB ROUTES
+// STUDENT SIGNUP, AUTHENTICATION & PROFILE ROUTES
 // ==========================================
 
-// 1. Auth: Login
+// 1. Auth: Student Signup
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const { name, username, rtuRollNo, email, mobile, password, photo } = req.body;
+    if (!name || !username || !rtuRollNo || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Full Name, Username, RTU Roll No., Email, and Password are required.' });
+    }
+
+    const cleanName = String(name).trim();
+    const cleanUsername = String(username).toLowerCase().trim();
+    const cleanEmail = String(email).toLowerCase().trim();
+    const cleanRollNo = String(rtuRollNo).trim();
+    const cleanMobile = mobile ? String(mobile).trim() : '';
+
+    if (cleanUsername.length < 3) {
+      return res.status(400).json({ success: false, message: 'Username must be at least 3 characters long.' });
+    }
+    if (!/^[a-z0-9_.-]+$/.test(cleanUsername)) {
+      return res.status(400).json({ success: false, message: 'Username can only contain letters, numbers, dots, dashes, and underscores.' });
+    }
+    if (cleanEmail.indexOf('@') === -1 || cleanEmail.indexOf('.') === -1) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid email address.' });
+    }
+    if (String(password).length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
+    }
+
+    const dbConn = await connectToDatabase();
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(String(password), salt);
+
+    if (!dbConn) {
+      const existingUser = localUsers.find(u => u.username === cleanUsername || (u.email && u.email.toLowerCase() === cleanEmail));
+      if (existingUser) {
+        if (existingUser.username === cleanUsername) {
+          return res.status(400).json({ success: false, message: 'Username is already taken. Please pick another.' });
+        }
+        return res.status(400).json({ success: false, message: 'Email is already registered. Please sign in.' });
+      }
+      const newUser = {
+        _id: 'u_' + Date.now(),
+        name: cleanName,
+        username: cleanUsername,
+        rtuRollNo: cleanRollNo,
+        email: cleanEmail,
+        mobile: cleanMobile,
+        photo: photo || '',
+        passwordHash: hash,
+        role: 'STUDENT',
+        clubId: 'aceit-spikers',
+        clubs: ['aceit-spikers'],
+        bio: '',
+        sport: 'Volleyball',
+        achievements: [],
+        permissions: ['profile.view', 'profile.edit', 'clubs.join'],
+        active: true,
+        createdAt: new Date(),
+        lastLoginAt: new Date()
+      };
+      localUsers.unshift(newUser);
+
+      const token = jwt.sign(
+        { id: String(newUser._id), username: newUser.username, role: newUser.role, clubId: newUser.clubId, permissions: newUser.permissions },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+      res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
+      res.cookie('auth_token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
+
+      const safeUser = Object.assign({}, newUser);
+      delete safeUser.passwordHash;
+      return res.json({ success: true, token, user: safeUser, message: 'Student account registered successfully!' });
+    }
+
+    const existing = await User.findOne({
+      $or: [{ username: cleanUsername }, { email: cleanEmail }]
+    });
+    if (existing) {
+      if (existing.username === cleanUsername) {
+        return res.status(400).json({ success: false, message: 'Username is already taken. Please pick another.' });
+      }
+      return res.status(400).json({ success: false, message: 'Email is already registered. Please sign in.' });
+    }
+
+    const newUser = await User.create({
+      name: cleanName,
+      username: cleanUsername,
+      rtuRollNo: cleanRollNo,
+      email: cleanEmail,
+      mobile: cleanMobile,
+      photo: photo || '',
+      passwordHash: hash,
+      role: 'STUDENT',
+      clubId: 'aceit-spikers',
+      clubs: ['aceit-spikers'],
+      bio: '',
+      sport: 'Volleyball',
+      achievements: [],
+      permissions: ['profile.view', 'profile.edit', 'clubs.join'],
+      active: true,
+      lastLoginAt: new Date()
+    });
+
+    const token = jwt.sign(
+      { id: String(newUser._id), username: newUser.username, role: newUser.role, clubId: newUser.clubId, permissions: newUser.permissions },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
+    res.cookie('auth_token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
+
+    const safeUser = newUser.toObject();
+    delete safeUser.passwordHash;
+
+    res.json({ success: true, token, user: safeUser, message: 'Student account registered successfully!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 2. Auth: Login (supports Username or Email)
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
-      return res.status(400).json({ success: false, message: 'Username and password are required' });
+      return res.status(400).json({ success: false, message: 'Username/Email and Password are required' });
     }
 
-    const cleanUsername = String(username).toLowerCase().trim();
+    const cleanInput = String(username).toLowerCase().trim();
     const dbConn = await connectToDatabase();
 
     let user = null;
     if (dbConn) {
-      user = await User.findOne({ username: cleanUsername });
+      user = await User.findOne({
+        $or: [{ username: cleanInput }, { email: cleanInput }]
+      });
       if (!user) {
         await seedInitialAuthAndClubs();
-        user = await User.findOne({ username: cleanUsername });
+        user = await User.findOne({
+          $or: [{ username: cleanInput }, { email: cleanInput }]
+        });
       }
     } else {
-      user = localUsers.find(u => u.username === cleanUsername);
+      user = localUsers.find(u => u.username === cleanInput || (u.email && u.email.toLowerCase() === cleanInput));
     }
 
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+      return res.status(401).json({ success: false, message: 'Invalid username/email or password' });
     }
 
     if (!user.active) {
-      return res.status(403).json({ success: false, message: 'Account is disabled. Please contact the Owner.' });
+      return res.status(403).json({ success: false, message: 'Account is deactivated. Please contact administrator/owner.' });
     }
 
     const match = bcrypt.compareSync(String(password), user.passwordHash);
     if (!match) {
-      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+      return res.status(401).json({ success: false, message: 'Invalid username/email or password' });
     }
 
     const userId = user._id || user.id || 'owner_local';
@@ -892,34 +1024,32 @@ app.post('/api/auth/login', async (req, res) => {
     const token = jwt.sign(
       { id: String(userId), username: user.username, role: user.role, clubId: user.clubId, permissions: user.permissions },
       JWT_SECRET,
-      { expiresIn: '1d' }
+      { expiresIn: '7d' }
     );
-    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 86400000 });
+    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
+    res.cookie('auth_token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
+
+    const safeUser = user.toObject ? user.toObject() : Object.assign({}, user);
+    delete safeUser.passwordHash;
 
     res.json({
       success: true,
       token: token,
-      user: {
-        id: String(userId),
-        name: user.name,
-        username: user.username,
-        role: user.role,
-        clubId: user.role === 'OWNER' ? 'ALL' : (user.clubId || 'ALL'),
-        permissions: user.role === 'OWNER' ? ['*'] : (user.permissions || [])
-      }
+      user: safeUser
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// 2. Auth: Logout
+// 3. Auth: Logout
 app.post('/api/auth/logout', (req, res) => {
   res.clearCookie('token');
+  res.clearCookie('auth_token');
   res.json({ success: true, message: 'Logged out' });
 });
 
-// 3. Auth: Current User Info
+// 4. Auth: Current User Info
 app.get('/api/auth/me', authenticateUser, async (req, res) => {
   if (!req.user) {
     return res.json({ success: true, authenticated: false });
@@ -934,19 +1064,166 @@ app.get('/api/auth/me', authenticateUser, async (req, res) => {
     clubs = localClubs.filter(c => c.active !== false);
   }
 
+  const safeUser = req.user.toObject ? req.user.toObject() : Object.assign({}, req.user);
+  delete safeUser.passwordHash;
+
   res.json({
     success: true,
     authenticated: true,
-    user: {
-      id: String(req.user._id || req.user.id),
-      name: req.user.name,
-      username: req.user.username,
-      role: req.user.role,
-      clubId: req.user.role === 'OWNER' ? 'ALL' : (req.user.clubId || 'ALL'),
-      permissions: req.user.role === 'OWNER' ? ['*'] : (req.user.permissions || [])
-    },
+    user: safeUser,
     clubs
   });
+});
+
+// 5. Profile: GET Logged-in User Profile (Full Details)
+app.get('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const dbConn = await connectToDatabase();
+    let user = null;
+    if (dbConn) {
+      user = await User.findById(req.user._id || req.user.id).select('-passwordHash');
+    } else {
+      const u = localUsers.find(u => String(u._id) === String(req.user._id || req.user.id));
+      if (u) {
+        user = Object.assign({}, u);
+        delete user.passwordHash;
+      }
+    }
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, profile: user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 6. Profile: PUT Update Logged-in User Profile
+app.put('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { name, mobile, photo, bio, sport, achievements } = req.body;
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const u = localUsers.find(u => String(u._id) === String(req.user._id || req.user.id));
+      if (!u) return res.status(404).json({ success: false, message: 'User not found' });
+      if (name) u.name = String(name).trim();
+      if (mobile !== undefined) u.mobile = String(mobile).trim();
+      if (photo !== undefined) u.photo = photo;
+      if (bio !== undefined) u.bio = String(bio).trim();
+      if (sport !== undefined) u.sport = String(sport).trim();
+      if (Array.isArray(achievements)) u.achievements = achievements;
+
+      const safe = Object.assign({}, u);
+      delete safe.passwordHash;
+      return res.json({ success: true, profile: safe, message: 'Profile updated successfully!' });
+    }
+
+    const u = await User.findById(req.user._id || req.user.id);
+    if (!u) return res.status(404).json({ success: false, message: 'User not found' });
+    if (name) u.name = String(name).trim();
+    if (mobile !== undefined) u.mobile = String(mobile).trim();
+    if (photo !== undefined) u.photo = photo;
+    if (bio !== undefined) u.bio = String(bio).trim();
+    if (sport !== undefined) u.sport = String(sport).trim();
+    if (Array.isArray(achievements)) u.achievements = achievements;
+
+    await u.save();
+    const safe = u.toObject();
+    delete safe.passwordHash;
+    res.json({ success: true, profile: safe, message: 'Profile updated successfully!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 7. Profile: POST Follow/Join Club
+app.post('/api/profile/clubs/join', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { clubSlug } = req.body;
+    if (!clubSlug) return res.status(400).json({ success: false, message: 'Club identifier required' });
+    const slug = String(clubSlug).toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const u = localUsers.find(u => String(u._id) === String(req.user._id || req.user.id));
+      if (!u) return res.status(404).json({ success: false, message: 'User not found' });
+      u.clubs = u.clubs || [];
+      if (u.clubs.indexOf(slug) === -1) u.clubs.push(slug);
+      return res.json({ success: true, clubs: u.clubs, message: 'Joined club successfully!' });
+    }
+
+    const u = await User.findById(req.user._id || req.user.id);
+    if (!u) return res.status(404).json({ success: false, message: 'User not found' });
+    u.clubs = u.clubs || [];
+    if (u.clubs.indexOf(slug) === -1) {
+      u.clubs.push(slug);
+      await u.save();
+    }
+    res.json({ success: true, clubs: u.clubs, message: 'Joined club successfully!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 8. Profile: POST Leave Club
+app.post('/api/profile/clubs/leave', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { clubSlug } = req.body;
+    if (!clubSlug) return res.status(400).json({ success: false, message: 'Club identifier required' });
+    const slug = String(clubSlug).toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const u = localUsers.find(u => String(u._id) === String(req.user._id || req.user.id));
+      if (!u) return res.status(404).json({ success: false, message: 'User not found' });
+      u.clubs = (u.clubs || []).filter(c => c !== slug);
+      return res.json({ success: true, clubs: u.clubs, message: 'Left club' });
+    }
+
+    const u = await User.findById(req.user._id || req.user.id);
+    if (!u) return res.status(404).json({ success: false, message: 'User not found' });
+    u.clubs = (u.clubs || []).filter(c => c !== slug);
+    await u.save();
+    res.json({ success: true, clubs: u.clubs, message: 'Left club' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 9. Public Profile: GET Public Profile by Username (Stripped of RTU Roll No, Mobile, Email, Passwords)
+app.get('/api/users/profile/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const cleanUsername = String(username).toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+
+    let user = null;
+    if (dbConn) {
+      user = await User.findOne({ username: cleanUsername });
+    } else {
+      user = localUsers.find(u => u.username === cleanUsername);
+    }
+
+    if (!user || !user.active) {
+      return res.status(404).json({ success: false, message: 'Public profile not found or inactive.' });
+    }
+
+    // Public fields ONLY: No roll number, email, mobile, password, permissions
+    const publicProfile = {
+      name: user.name,
+      username: user.username,
+      photo: user.photo || '',
+      role: user.role,
+      clubs: user.clubs || (user.clubId && user.clubId !== 'ALL' ? [user.clubId] : ['aceit-spikers']),
+      bio: user.bio || '',
+      sport: user.sport || 'Volleyball',
+      achievements: user.achievements || [],
+      memberSince: user.createdAt
+    };
+
+    res.json({ success: true, profile: publicProfile });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // 4. Clubs: GET List
@@ -1137,19 +1414,23 @@ app.get('/api/users', authenticateUser, requireAuth, requirePermission('users.vi
 // 9. Users: POST Create
 app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.create'), async (req, res) => {
   try {
-    const { name, username, password, role, clubId, permissions, active } = req.body;
+    const { name, username, rtuRollNo, email, mobile, password, role, clubId, clubs, permissions, active, photo, bio, sport, achievements } = req.body;
     if (!name || !username || !password) {
       return res.status(400).json({ success: false, message: 'Name, username, and password are required' });
     }
 
     const cleanUsername = String(username).toLowerCase().trim();
+    const cleanEmail = email ? String(email).toLowerCase().trim() : '';
+    const cleanRollNo = rtuRollNo ? String(rtuRollNo).trim() : '';
+    const cleanMobile = mobile ? String(mobile).trim() : '';
+
     const dbConn = await connectToDatabase();
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(String(password), salt);
 
     const isOwnerRole = role === 'OWNER';
     const userClubId = isOwnerRole ? 'ALL' : (clubId || 'ALL');
-    const userPerms = isOwnerRole ? ['*'] : (Array.isArray(permissions) ? permissions : []);
+    const userPerms = isOwnerRole ? ['*'] : (Array.isArray(permissions) ? permissions : (role === 'STUDENT' ? ['profile.view', 'profile.edit', 'clubs.join'] : []));
 
     if (req.user && req.user.role !== 'OWNER') {
       if (isOwnerRole) {
@@ -1161,20 +1442,29 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
     }
 
     if (!dbConn) {
-      const existingLocal = localUsers.find(u => u.username === cleanUsername);
+      const existingLocal = localUsers.find(u => u.username === cleanUsername || (cleanEmail && u.email && u.email.toLowerCase() === cleanEmail));
       if (existingLocal) {
-        return res.status(400).json({ success: false, message: `Username '${cleanUsername}' is already taken.` });
+        return res.status(400).json({ success: false, message: `Username or Email is already taken.` });
       }
       const newUser = {
         _id: 'u_' + Date.now(),
         name,
         username: cleanUsername,
+        rtuRollNo: cleanRollNo,
+        email: cleanEmail,
+        mobile: cleanMobile,
+        photo: photo || '',
         passwordHash: hash,
-        role: role || 'ADMIN',
+        role: role || 'STUDENT',
         clubId: userClubId,
+        clubs: Array.isArray(clubs) ? clubs : (userClubId && userClubId !== 'ALL' ? [userClubId] : ['aceit-spikers']),
+        bio: bio || '',
+        sport: sport || 'Volleyball',
+        achievements: Array.isArray(achievements) ? achievements : [],
         permissions: userPerms,
         active: active !== undefined ? active : true,
-        createdAt: new Date()
+        createdAt: new Date(),
+        lastLoginAt: null
       };
       localUsers.unshift(newUser);
       const userObj = Object.assign({}, newUser);
@@ -1182,17 +1472,30 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
       return res.json({ success: true, user: userObj, message: 'User created successfully' });
     }
 
-    const existing = await User.findOne({ username: cleanUsername });
+    const existing = await User.findOne({
+      $or: [
+        { username: cleanUsername },
+        ...(cleanEmail ? [{ email: cleanEmail }] : [])
+      ]
+    });
     if (existing) {
-      return res.status(400).json({ success: false, message: `Username '${cleanUsername}' is already taken.` });
+      return res.status(400).json({ success: false, message: `Username or Email is already taken.` });
     }
 
     const newUser = await User.create({
       name,
       username: cleanUsername,
+      rtuRollNo: cleanRollNo,
+      email: cleanEmail,
+      mobile: cleanMobile,
+      photo: photo || '',
       passwordHash: hash,
-      role: role || 'ADMIN',
+      role: role || 'STUDENT',
       clubId: userClubId,
+      clubs: Array.isArray(clubs) ? clubs : (userClubId && userClubId !== 'ALL' ? [userClubId] : ['aceit-spikers']),
+      bio: bio || '',
+      sport: sport || 'Volleyball',
+      achievements: Array.isArray(achievements) ? achievements : [],
       permissions: userPerms,
       active: active !== undefined ? active : true
     });
@@ -1210,7 +1513,7 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
 app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('users.edit'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, username, password, role, clubId, permissions, active } = req.body;
+    const { name, username, rtuRollNo, email, mobile, password, role, clubId, clubs, permissions, active, photo, bio, sport, achievements } = req.body;
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
@@ -1232,6 +1535,15 @@ app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('user
 
       if (name) targetUser.name = name;
       if (username) targetUser.username = String(username).toLowerCase().trim();
+      if (rtuRollNo !== undefined) targetUser.rtuRollNo = String(rtuRollNo).trim();
+      if (email !== undefined) targetUser.email = String(email).toLowerCase().trim();
+      if (mobile !== undefined) targetUser.mobile = String(mobile).trim();
+      if (photo !== undefined) targetUser.photo = photo;
+      if (bio !== undefined) targetUser.bio = String(bio).trim();
+      if (sport !== undefined) targetUser.sport = String(sport).trim();
+      if (Array.isArray(achievements)) targetUser.achievements = achievements;
+      if (Array.isArray(clubs)) targetUser.clubs = clubs;
+
       if (role && req.user.role === 'OWNER') {
         targetUser.role = role;
         if (role === 'OWNER') {
@@ -1288,6 +1600,22 @@ app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('user
       }
       targetUser.username = cleanUsername;
     }
+    if (email) {
+      const cleanEmail = String(email).toLowerCase().trim();
+      const existing = await User.findOne({ email: cleanEmail, _id: { $ne: targetUser._id } });
+      if (existing) {
+        return res.status(400).json({ success: false, message: `Email '${cleanEmail}' is already in use.` });
+      }
+      targetUser.email = cleanEmail;
+    }
+    if (rtuRollNo !== undefined) targetUser.rtuRollNo = String(rtuRollNo).trim();
+    if (mobile !== undefined) targetUser.mobile = String(mobile).trim();
+    if (photo !== undefined) targetUser.photo = photo;
+    if (bio !== undefined) targetUser.bio = String(bio).trim();
+    if (sport !== undefined) targetUser.sport = String(sport).trim();
+    if (Array.isArray(achievements)) targetUser.achievements = achievements;
+    if (Array.isArray(clubs)) targetUser.clubs = clubs;
+
     if (role && req.user.role === 'OWNER') {
       targetUser.role = role;
       if (role === 'OWNER') {
