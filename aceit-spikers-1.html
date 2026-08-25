@@ -4013,8 +4013,18 @@
           .then(function (res) { return res.json(); })
           .then(function (res) {
             if (res && res.success && res.data) {
+              var fresh = defaultDB();
               DB = res.data;
-              if (!Array.isArray(DB.training)) { DB.training = defaultDB().training; }
+              if (!Array.isArray(DB.training)) { DB.training = fresh.training; }
+              if (!Array.isArray(DB.slideshow) || DB.slideshow.length === 0) { DB.slideshow = fresh.slideshow; }
+              if (!Array.isArray(DB.team)) { DB.team = fresh.team; }
+              if (!Array.isArray(DB.matches)) { DB.matches = fresh.matches; }
+              if (!Array.isArray(DB.news)) { DB.news = fresh.news; }
+              if (!Array.isArray(DB.sponsors)) { DB.sponsors = fresh.sponsors; }
+              if (!Array.isArray(DB.stats)) { DB.stats = fresh.stats; }
+              if (!Array.isArray(DB.events)) { DB.events = fresh.events; }
+              if (!DB.about || typeof DB.about !== 'object') { DB.about = fresh.about; }
+              if (!DB.contact || typeof DB.contact !== 'object') { DB.contact = fresh.contact; }
               try { window.localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch (e) { }
               if (onComplete) onComplete();
             }
