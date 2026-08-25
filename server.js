@@ -1247,10 +1247,14 @@ app.post('/api/pin', authenticateUser, requireAuth, requirePermission('settings.
 // STUDENT SIGNUP, AUTHENTICATION & PROFILE ROUTES
 // ==========================================
 
+// ==========================================
+// STUDENT SIGNUP, AUTHENTICATION & PROFILE ROUTES
+// ==========================================
+
 // 1. Auth: Student Signup
-app.post('/api/auth/signup', async (req, res) => {
+const handleSignup = async (req, res) => {
   try {
-    const { name, username, rtuRollNo, email, mobile, password, photo, branch, year, position, jerseyNo, height, sport } = req.body;
+    const { name, username, rtuRollNo, email, mobile, password, photo, branch, year, position, jerseyNo, height, sport, clubs } = req.body;
     if (!name || !username || !rtuRollNo || !email || !password) {
       return res.status(400).json({ success: false, message: 'Full Name, Username, RTU Roll No., Email, and Password are required.' });
     }
@@ -1262,10 +1266,13 @@ app.post('/api/auth/signup', async (req, res) => {
     const cleanMobile = mobile ? String(mobile).trim() : '';
     const cleanBranch = branch ? String(branch).trim() : 'Computer Science & Engineering';
     const cleanYear = year ? String(year).trim() : '3rd Year';
-    const cleanPosition = position ? String(position).trim() : 'Outside Hitter';
+    const cleanPosition = position ? String(position).trim() : 'Athlete';
     const cleanJersey = jerseyNo ? String(jerseyNo).trim() : '';
     const cleanHeight = height ? String(height).trim() : '';
     const cleanSport = sport ? String(sport).trim() : 'Volleyball';
+    const userClubs = Array.isArray(clubs) && clubs.length > 0
+      ? clubs.map(c => String(c).toLowerCase().trim())
+      : ['spikers'];
 
     if (cleanUsername.length < 3) {
       return res.status(400).json({ success: false, message: 'Username must be at least 3 characters long.' });
@@ -1288,9 +1295,9 @@ app.post('/api/auth/signup', async (req, res) => {
       const existingUser = localUsers.find(u => u.username === cleanUsername || (u.email && u.email.toLowerCase() === cleanEmail));
       if (existingUser) {
         if (existingUser.username === cleanUsername) {
-          return res.status(400).json({ success: false, message: 'Username is already taken. Please pick another.' });
+          return res.status(400).json({ success: false, message: `Username '${cleanUsername}' is already taken. Please pick another.` });
         }
-        return res.status(400).json({ success: false, message: 'Email is already registered. Please sign in.' });
+        return res.status(400).json({ success: false, message: `Email '${cleanEmail}' is already registered. Please sign in.` });
       }
       const newUser = {
         _id: 'u_' + Date.now(),
@@ -1302,8 +1309,8 @@ app.post('/api/auth/signup', async (req, res) => {
         photo: photo || '',
         passwordHash: hash,
         role: 'STUDENT',
-        clubId: 'aceit-spikers',
-        clubs: ['aceit-spikers'],
+        clubId: userClubs[0] || 'spikers',
+        clubs: userClubs,
         bio: '',
         sport: cleanSport,
         branch: cleanBranch,
@@ -1337,9 +1344,9 @@ app.post('/api/auth/signup', async (req, res) => {
     });
     if (existing) {
       if (existing.username === cleanUsername) {
-        return res.status(400).json({ success: false, message: 'Username is already taken. Please pick another.' });
+        return res.status(400).json({ success: false, message: `Username '${cleanUsername}' is already taken. Please pick another.` });
       }
-      return res.status(400).json({ success: false, message: 'Email is already registered. Please sign in.' });
+      return res.status(400).json({ success: false, message: `Email '${cleanEmail}' is already registered. Please sign in.` });
     }
 
     const newUser = await User.create({
@@ -1351,8 +1358,8 @@ app.post('/api/auth/signup', async (req, res) => {
       photo: photo || '',
       passwordHash: hash,
       role: 'STUDENT',
-      clubId: 'aceit-spikers',
-      clubs: ['aceit-spikers'],
+      clubId: userClubs[0] || 'spikers',
+      clubs: userClubs,
       bio: '',
       sport: cleanSport,
       branch: cleanBranch,
@@ -1381,10 +1388,13 @@ app.post('/api/auth/signup', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
-});
+};
+
+app.post('/api/auth/signup', handleSignup);
+app.post('/api/signup', handleSignup);
 
 // 2. Auth: Login (supports Username or Email)
-app.post('/api/auth/login', async (req, res) => {
+const handleLogin = async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -1447,14 +1457,20 @@ app.post('/api/auth/login', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
-});
+};
+
+app.post('/api/auth/login', handleLogin);
+app.post('/api/login', handleLogin);
 
 // 3. Auth: Logout
-app.post('/api/auth/logout', (req, res) => {
+const handleLogout = (req, res) => {
   res.clearCookie('token');
   res.clearCookie('auth_token');
   res.json({ success: true, message: 'Logged out' });
-});
+};
+
+app.post('/api/auth/logout', handleLogout);
+app.post('/api/logout', handleLogout);
 
 // 4. Auth: Current User Info
 app.get('/api/auth/me', authenticateUser, async (req, res) => {
@@ -1483,7 +1499,7 @@ app.get('/api/auth/me', authenticateUser, async (req, res) => {
 });
 
 // 5. Profile: GET Logged-in User Profile (Full Details)
-app.get('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
+const handleGetProfile = async (req, res) => {
   try {
     const dbConn = await connectToDatabase();
     let user = null;
@@ -1501,12 +1517,15 @@ app.get('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
-});
+};
+
+app.get('/api/profile/me', authenticateUser, requireAuth, handleGetProfile);
+app.get('/api/profile', authenticateUser, requireAuth, handleGetProfile);
 
 // 6. Profile: PUT Update Logged-in User Profile
-app.put('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
+const handleUpdateProfile = async (req, res) => {
   try {
-    const { name, mobile, photo, bio, sport, branch, year, position, jerseyNo, height, achievements } = req.body;
+    const { name, mobile, photo, bio, sport, branch, year, position, jerseyNo, height, achievements, clubs } = req.body;
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
@@ -1523,6 +1542,7 @@ app.put('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
       if (jerseyNo !== undefined) u.jerseyNo = String(jerseyNo).trim();
       if (height !== undefined) u.height = String(height).trim();
       if (Array.isArray(achievements)) u.achievements = achievements;
+      if (Array.isArray(clubs)) u.clubs = clubs.map(c => String(c).toLowerCase().trim());
 
       const safe = Object.assign({}, u);
       delete safe.passwordHash;
@@ -1542,6 +1562,7 @@ app.put('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
     if (jerseyNo !== undefined) u.jerseyNo = String(jerseyNo).trim();
     if (height !== undefined) u.height = String(height).trim();
     if (Array.isArray(achievements)) u.achievements = achievements;
+    if (Array.isArray(clubs)) u.clubs = clubs.map(c => String(c).toLowerCase().trim());
 
     await u.save();
     const safe = u.toObject();
@@ -1550,7 +1571,10 @@ app.put('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
-});
+};
+
+app.put('/api/profile/me', authenticateUser, requireAuth, handleUpdateProfile);
+app.put('/api/profile', authenticateUser, requireAuth, handleUpdateProfile);
 
 // 7. Profile: POST Follow/Join Club
 app.post('/api/profile/clubs/join', authenticateUser, requireAuth, async (req, res) => {
@@ -1641,7 +1665,7 @@ app.get('/api/users/profile/:username', async (req, res) => {
       position: user.position || (user.sport ? `${user.sport} Player` : 'Athlete'),
       jerseyNo: user.jerseyNo || '',
       height: user.height || '',
-      clubs: user.clubs || (user.clubId && user.clubId !== 'ALL' ? [user.clubId] : ['aceit-spikers']),
+      clubs: user.clubs || (user.clubId && user.clubId !== 'ALL' ? [user.clubId] : ['spikers']),
       bio: user.bio || '',
       sport: user.sport || 'Volleyball',
       achievements: user.achievements || [],
