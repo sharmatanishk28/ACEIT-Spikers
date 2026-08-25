@@ -1799,6 +1799,149 @@
       transform: translateY(-4px);
     }
 
+    /* ---------- Hero Slideshow ---------- */
+    .hero-slideshow-section {
+      width: 100%;
+      padding: var(--space-4) 0;
+      background: var(--cream-1);
+    }
+    .slideshow-container {
+      position: relative;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 440px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+      background: #111;
+    }
+    @media (max-width: 768px) {
+      .slideshow-container {
+        height: 280px;
+        border-radius: var(--radius-md);
+      }
+    }
+    .slide-item {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.7s ease, transform 0.7s ease;
+      transform: scale(1.03);
+    }
+    .slide-item.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1);
+      z-index: 1;
+    }
+    .slide-bg {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .slide-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: var(--space-5) var(--space-6);
+      color: #fff;
+    }
+    @media (max-width: 768px) {
+      .slide-overlay {
+        padding: var(--space-3) var(--space-4);
+      }
+    }
+    .slide-badge {
+      align-self: flex-start;
+      background: var(--orange);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 10px rgba(255, 107, 0, 0.3);
+    }
+    .slide-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      margin: 0 0 10px 0;
+      line-height: 1.2;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+    @media (max-width: 768px) {
+      .slide-title {
+        font-size: 18px;
+        margin-bottom: 6px;
+      }
+    }
+    .slide-btn {
+      align-self: flex-start;
+      margin-top: 4px;
+    }
+    .slideshow-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .slideshow-arrow:hover {
+      background: var(--orange);
+      color: #fff;
+      border-color: var(--orange);
+      transform: translateY(-50%) scale(1.08);
+    }
+    .slideshow-arrow.prev { left: 16px; }
+    .slideshow-arrow.next { right: 16px; }
+    @media (max-width: 768px) {
+      .slideshow-arrow { width: 34px; height: 34px; font-size: 16px; }
+      .slideshow-arrow.prev { left: 8px; }
+      .slideshow-arrow.next { right: 8px; }
+    }
+    .slideshow-dots {
+      position: absolute;
+      bottom: 16px;
+      right: 24px;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+    }
+    .slide-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      transition: background 0.3s, width 0.3s;
+    }
+    .slide-dot.active {
+      background: var(--orange);
+      width: 24px;
+      border-radius: 10px;
+    }
+
     /* ---------- Footer ---------- */
     footer {
       background: var(--navy);
@@ -3160,6 +3303,15 @@
     <div class="hero-scroll"><span>SCROLL</span><span class="scroll-line"></span></div>
   </header>
 
+  <!-- ============ HERO SLIDESHOW ============ -->
+  <section id="hero-slideshow" class="hero-slideshow-section">
+    <div class="container">
+      <div class="slideshow-container" id="slideshowContainer">
+        <!-- Slides dynamically rendered by JS -->
+      </div>
+    </div>
+  </section>
+
   <!-- ============ ABOUT ============ -->
   <section id="about">
     <div class="container">
@@ -3552,6 +3704,7 @@
     <div class="admin-body">
       <div class="admin-sidebar" id="adminSidebar">
         <button class="admin-tab active" data-tab="team">Players</button>
+        <button class="admin-tab" data-tab="slideshow">Hero Slideshow</button>
         <button class="admin-tab" data-tab="matches">Matches</button>
         <button class="admin-tab" data-tab="training" id="tabBtnTraining">Training</button>
         <button class="admin-tab" data-tab="news">News</button>
@@ -3762,7 +3915,25 @@
             fb: '#',
             yt: '#',
             wa: '#'
-          }
+          },
+          slideshow: [
+            {
+              id: 'slide_1',
+              title: 'Championship Season 2026',
+              date: 'Upcoming Tournament · 15 Sept 2026',
+              image: 'banner1.jpg',
+              link: '#matches',
+              btnText: 'View Match Schedule'
+            },
+            {
+              id: 'slide_2',
+              title: 'Intense Team Training & Practice',
+              date: 'Daily Practice · Arya Campus Grounds',
+              image: 'banner2.jpg',
+              link: '#training',
+              btnText: 'View Timetable'
+            }
+          ]
         };
       }
 
@@ -3773,7 +3944,7 @@
           if (raw) {
             var parsed = JSON.parse(raw);
             if (parsed && typeof parsed === 'object') {
-              var keys = ['training', 'team', 'gallery', 'matches', 'news', 'sponsors', 'testimonials', 'stats', 'events'];
+              var keys = ['training', 'team', 'gallery', 'matches', 'news', 'sponsors', 'testimonials', 'stats', 'events', 'slideshow'];
               var anyData = false;
               keys.forEach(function (k) {
                 if (Array.isArray(parsed[k]) && parsed[k].length) { anyData = true; }
@@ -4386,6 +4557,120 @@
         grid.innerHTML = html;
       }
 
+      var slideshowTimer = null;
+      var currentSlideIndex = 0;
+
+      function renderSlideshowPublic() {
+        var container = document.getElementById('slideshowContainer');
+        var section = document.getElementById('hero-slideshow');
+        if (!container || !section) return;
+
+        if (slideshowTimer) {
+          clearInterval(slideshowTimer);
+          slideshowTimer = null;
+        }
+
+        var items = DB.slideshow || [];
+        if (!items.length) {
+          section.style.display = 'none';
+          return;
+        }
+        section.style.display = 'block';
+
+        if (currentSlideIndex >= items.length) {
+          currentSlideIndex = 0;
+        }
+
+        var html = '';
+        items.forEach(function (slide, idx) {
+          var isActive = (idx === currentSlideIndex) ? ' active' : '';
+          html += '<div class="slide-item' + isActive + '" data-slide-index="' + idx + '">' +
+            (slide.image ? '<img class="slide-bg" src="' + esc(slide.image) + '" alt="' + esc(slide.title || 'Slide') + '">' : '') +
+            '<div class="slide-overlay">' +
+            (slide.date ? '<span class="slide-badge">' + esc(slide.date) + '</span>' : '') +
+            (slide.title ? '<h2 class="slide-title">' + esc(slide.title) + '</h2>' : '') +
+            (slide.link ? '<a href="' + esc(slide.link) + '" class="btn btn-primary slide-btn">' + esc(slide.btnText || 'Learn More') + '</a>' : '') +
+            '</div>' +
+            '</div>';
+        });
+
+        if (items.length > 1) {
+          html += '<button class="slideshow-arrow prev" id="slidePrevBtn" aria-label="Previous Slide">‹</button>';
+          html += '<button class="slideshow-arrow next" id="slideNextBtn" aria-label="Next Slide">›</button>';
+          html += '<div class="slideshow-dots">';
+          items.forEach(function (_, idx) {
+            var isActive = (idx === currentSlideIndex) ? ' active' : '';
+            html += '<span class="slide-dot' + isActive + '" data-goto="' + idx + '"></span>';
+          });
+          html += '</div>';
+        }
+
+        container.innerHTML = html;
+
+        function goToSlide(idx) {
+          if (idx < 0) idx = items.length - 1;
+          if (idx >= items.length) idx = 0;
+          currentSlideIndex = idx;
+
+          var slides = container.querySelectorAll('.slide-item');
+          var dots = container.querySelectorAll('.slide-dot');
+
+          slides.forEach(function (s, i) {
+            s.classList.toggle('active', i === currentSlideIndex);
+          });
+          dots.forEach(function (d, i) {
+            d.classList.toggle('active', i === currentSlideIndex);
+          });
+        }
+
+        var prevBtn = document.getElementById('slidePrevBtn');
+        var nextBtn = document.getElementById('slideNextBtn');
+        if (prevBtn) {
+          prevBtn.addEventListener('click', function () {
+            goToSlide(currentSlideIndex - 1);
+            resetTimer();
+          });
+        }
+        if (nextBtn) {
+          nextBtn.addEventListener('click', function () {
+            goToSlide(currentSlideIndex + 1);
+            resetTimer();
+          });
+        }
+
+        container.querySelectorAll('.slide-dot').forEach(function (dot) {
+          dot.addEventListener('click', function () {
+            var g = parseInt(dot.getAttribute('data-goto'), 10);
+            if (!isNaN(g)) {
+              goToSlide(g);
+              resetTimer();
+            }
+          });
+        });
+
+        function startTimer() {
+          if (items.length > 1) {
+            slideshowTimer = setInterval(function () {
+              goToSlide(currentSlideIndex + 1);
+            }, 5000);
+          }
+        }
+
+        function resetTimer() {
+          if (slideshowTimer) clearInterval(slideshowTimer);
+          startTimer();
+        }
+
+        container.addEventListener('mouseenter', function () {
+          if (slideshowTimer) clearInterval(slideshowTimer);
+        });
+        container.addEventListener('mouseleave', function () {
+          resetTimer();
+        });
+
+        startTimer();
+      }
+
       function renderAllPublic() {
         renderTrainingPublic();
         renderEventsPublic();
@@ -4398,6 +4683,7 @@
         renderSponsorsPublic();
         renderTestimonialsPublic();
         renderStatsPublic();
+        renderSlideshowPublic();
       }
       renderAllPublic();
       syncDBOnline(function () {
@@ -4715,7 +5001,8 @@
             contact: 'contact',
             applications: 'applications',
             users: 'users',
-            clubs: 'clubs'
+            clubs: 'clubs',
+            slideshow: 'slideshow'
           };
 
           Object.keys(tabMap).forEach(function (tabKey) {
@@ -4784,6 +5071,19 @@
 
       /* Field schemas per section, used to auto-build add/edit forms */
       var SCHEMAS = {
+        slideshow: {
+          title: 'Hero Slideshow', label: 'Slide',
+          fields: [
+            { key: 'image', label: 'Slide Image', type: 'image', full: true },
+            { key: 'title', label: 'Slide Title / Headline', type: 'text', full: true },
+            { key: 'date', label: 'Subtitle / Date Tag (e.g. Tournament 2026)', type: 'text' },
+            { key: 'link', label: 'Button Link URL (Optional, e.g. #matches)', type: 'text', full: true },
+            { key: 'btnText', label: 'Button Label Text (Optional, e.g. View Schedule)', type: 'text' }
+          ],
+          summary: function (it) {
+            return { title: it.title || 'Slide Image', sub: (it.date || 'No tag') + (it.link ? ' &middot; Has Link' : ''), photo: it.image };
+          }
+        },
         team: {
           title: 'Players', label: 'Player',
           fields: [
@@ -4937,10 +5237,11 @@
         items.forEach(function (it) {
           var s = schema.summary(it);
           var searchText = (String(s.title) + ' ' + String(s.sub || '')).replace(/&amp;/g, '&').replace(/&middot;|&mdash;/g, '').toLowerCase();
+          var moveBtns = tab === 'slideshow' ? '<button class="admin-btn" data-move-up="' + it.id + '">↑</button><button class="admin-btn" data-move-down="' + it.id + '">↓</button>' : '';
           html += '<div class="admin-item" data-search="' + esc(searchText) + '">' +
             (s.photo ? '<img src="' + s.photo + '" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;margin-right:12px;flex-shrink:0;">' : '') +
             '<div class="info"><b>' + s.title + '</b><span>' + (s.sub || '') + '</span></div>' +
-            '<div class="actions"><button class="admin-btn" data-edit="' + it.id + '">Edit</button><button class="admin-btn" data-dup="' + it.id + '">Duplicate</button><button class="admin-btn danger" data-del="' + it.id + '">Delete</button></div></div>';
+            '<div class="actions">' + moveBtns + '<button class="admin-btn" data-edit="' + it.id + '">Edit</button><button class="admin-btn" data-dup="' + it.id + '">Duplicate</button><button class="admin-btn danger" data-del="' + it.id + '">Delete</button></div></div>';
         });
         if (items.length === 0) { html += '<p style="color:var(--charcoal-soft);font-size:14px;">No items yet — click "+ Add ' + schema.label + '" to create one.</p>'; }
         html += '</div><div class="admin-form" id="adminForm"></div>';
@@ -4966,6 +5267,34 @@
         }
         adminContent.querySelectorAll('[data-edit]').forEach(function (b) {
           b.addEventListener('click', function () { openAdminForm(tab, b.getAttribute('data-edit')); });
+        });
+        adminContent.querySelectorAll('[data-move-up]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var id = b.getAttribute('data-move-up');
+            var idx = (DB.slideshow || []).findIndex(function (it) { return it.id === id; });
+            if (idx > 0) {
+              var temp = DB.slideshow[idx];
+              DB.slideshow[idx] = DB.slideshow[idx - 1];
+              DB.slideshow[idx - 1] = temp;
+              saveDB(DB);
+              renderSlideshowPublic();
+              renderAdminTab('slideshow');
+            }
+          });
+        });
+        adminContent.querySelectorAll('[data-move-down]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var id = b.getAttribute('data-move-down');
+            var idx = (DB.slideshow || []).findIndex(function (it) { return it.id === id; });
+            if (idx !== -1 && idx < DB.slideshow.length - 1) {
+              var temp = DB.slideshow[idx];
+              DB.slideshow[idx] = DB.slideshow[idx + 1];
+              DB.slideshow[idx + 1] = temp;
+              saveDB(DB);
+              renderSlideshowPublic();
+              renderAdminTab('slideshow');
+            }
+          });
         });
         adminContent.querySelectorAll('[data-dup]').forEach(function (b) {
           b.addEventListener('click', function () {
@@ -5384,6 +5713,7 @@
         else if (tab === 'events') renderEventsPublic();
         else if (tab === 'about') renderAboutPublic();
         else if (tab === 'contact') renderContactPublic();
+        else if (tab === 'slideshow') renderSlideshowPublic();
         else renderAllPublic();
       }
 

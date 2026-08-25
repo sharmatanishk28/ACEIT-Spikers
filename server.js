@@ -364,7 +364,7 @@ function readLocalFileDB() {
     }
   } catch (err) { }
   return {
-    team: [], matches: [], news: [], sponsors: [], testimonials: [], stats: [], gallery: [], events: [], training: [],
+    team: [], matches: [], news: [], sponsors: [], testimonials: [], stats: [], gallery: [], events: [], training: [], slideshow: [],
     about: {
       eyebrow: 'Who we are',
       title: 'Built on the court,\ndefined by character.',
@@ -454,6 +454,7 @@ async function saveDB(data) {
         gallery: data.gallery || [],
         events: data.events || [],
         training: data.training || [],
+        slideshow: data.slideshow || [],
         about: data.about || {},
         contact: data.contact || {}
       },
