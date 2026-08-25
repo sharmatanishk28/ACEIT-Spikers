@@ -455,5 +455,23 @@
       "time": "Tue / Thu 18:00",
       "desc": "Conditioning, jump strength, and injury-prevention work in the gym."
     }
+  ],
+  "slideshow": [
+    {
+      "id": "slide_1",
+      "title": "Championship Season 2026",
+      "date": "Upcoming Tournament · 15 Sept 2026",
+      "image": "banner1.jpg",
+      "link": "#matches",
+      "btnText": "View Match Schedule"
+    },
+    {
+      "id": "slide_2",
+      "title": "Intense Team Training & Practice",
+      "date": "Daily Practice · Arya Campus Grounds",
+      "image": "banner2.jpg",
+      "link": "#training",
+      "btnText": "View Timetable"
+    }
   ]
 }

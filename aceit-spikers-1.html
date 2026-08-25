@@ -4594,8 +4594,14 @@
         var html = '';
         items.forEach(function (slide, idx) {
           var isActive = (idx === currentSlideIndex) ? ' active' : '';
+          var fallbackImg = (idx % 2 === 0)
+            ? 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=1600&q=80'
+            : 'https://images.unsplash.com/photo-1592656094267-764a45160876?auto=format&fit=crop&w=1600&q=80';
+          var imgTag = slide.image
+            ? '<img class="slide-bg" src="' + esc(slide.image) + '" alt="' + esc(slide.title || 'Slide') + '" onerror="this.onerror=null;this.src=\'' + fallbackImg + '\';">'
+            : '<img class="slide-bg" src="' + fallbackImg + '" alt="' + esc(slide.title || 'Slide') + '">';
           html += '<div class="slide-item' + isActive + '" data-slide-index="' + idx + '">' +
-            (slide.image ? '<img class="slide-bg" src="' + esc(slide.image) + '" alt="' + esc(slide.title || 'Slide') + '">' : '') +
+            imgTag +
             '<div class="slide-overlay">' +
             (slide.date ? '<span class="slide-badge">' + esc(slide.date) + '</span>' : '') +
             (slide.title ? '<h2 class="slide-title">' + esc(slide.title) + '</h2>' : '') +

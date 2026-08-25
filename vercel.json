@@ -8,12 +8,28 @@
     {
       "src": "aceit-spikers-1.html",
       "use": "@vercel/static"
+    },
+    {
+      "src": "banner1.jpg",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "banner2.jpg",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "server.js"
+    },
+    {
+      "src": "/banner1.jpg",
+      "dest": "/banner1.jpg"
+    },
+    {
+      "src": "/banner2.jpg",
+      "dest": "/banner2.jpg"
     },
     {
       "src": "/(.*)",
