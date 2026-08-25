@@ -66,6 +66,20 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(__dirname));
 
+// Dynamic Public Club Page Route Handlers
+app.get('/club/:clubId', (req, res) => {
+  res.sendFile(path.join(__dirname, 'aceit-spikers-1.html'));
+});
+app.get('/clubs/:clubId', (req, res) => {
+  res.sendFile(path.join(__dirname, 'aceit-spikers-1.html'));
+});
+app.get('/club.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'aceit-spikers-1.html'));
+});
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'aceit-spikers-1.html'));
+});
+
 // ==========================================
 // MONGODB CONNECTION & SERVERLESS CACHING
 // ==========================================

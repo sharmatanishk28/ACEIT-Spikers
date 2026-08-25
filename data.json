@@ -178,6 +178,26 @@
       "sport": "Football",
       "clubId": "strikers",
       "id": "id_mt8zu4c21wi7z"
+    },
+    {
+      "n": "Lakshya Sen (Student)",
+      "num": 7,
+      "pos": "Men's Singles",
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "id": "id_mt9098bz4iiul",
+      "clubId": "smashers"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt9099zog9i9n"
     }
   ],
   "gallery": [
@@ -403,6 +423,31 @@
       "status": "Upcoming",
       "clubId": "strikers",
       "id": "id_mt8zu4c620h9x"
+    },
+    {
+      "opp": "MNIT Shuttlers",
+      "date": "2026-09-15",
+      "time": "11:00",
+      "venue": "ACEIT Indoor Badminton Arena",
+      "cat": "Inter-College Cup",
+      "status": "UPCOMING",
+      "id": "id_mt9098c3conpp",
+      "clubId": "smashers",
+      "team1": "Home Team",
+      "team2": "MNIT Shuttlers",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9099zshv0jd"
     }
   ],
   "news": [
@@ -522,6 +567,20 @@
     }
   ],
   "events": [
+    {
+      "id": "id_mt9099zw625gb",
+      "clubId": "strikers",
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "date": "2026-10-05",
+      "time": "",
+      "venue": "ACEIT Football Stadium",
+      "poster": "",
+      "regBtnText": "Register Now",
+      "regUrl": "",
+      "regEnabled": true,
+      "createdAt": "2026-08-25T18:35:26.300Z"
+    },
     {
       "id": "id_mt8zu4c9ul66l",
       "clubId": "strikers",
