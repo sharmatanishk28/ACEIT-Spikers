@@ -32,6 +32,7 @@
       --gold: #F5A623;
       --ember: #FF5A1F;
       --white: #FFFFFF;
+      --bg-card: #FFFFFF;
       --shadow-sm: 0 2px 8px rgba(23, 20, 16, 0.06);
       --shadow-md: 0 8px 30px rgba(23, 20, 16, 0.09);
       --shadow-lg: 0 20px 60px rgba(15, 27, 51, 0.18);
@@ -51,13 +52,15 @@
       --ease: cubic-bezier(.16, .84, .44, 1);
     }
 
-    [data-theme="dark"] {
+    [data-theme="dark"],
+    .dark {
       --cream: #0B0E14;
       --cream-2: #10141C;
       --charcoal: #F2EEE4;
       --charcoal-soft: #C9C2B2;
       --border: #242B38;
       --white: #141926;
+      --bg-card: #141926;
       --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
       --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.45);
       --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.55);
@@ -3516,30 +3519,193 @@
       background-position: center;
     }
     .profile-modal-box {
-      background: var(--bg-card);
+      background: var(--bg-card) !important;
+      color: var(--charcoal);
       border: 1.5px solid var(--border);
-      border-radius: 16px;
+      border-radius: 18px;
       width: 100%;
       max-width: 680px;
       max-height: 90vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
       position: relative;
     }
     .profile-modal-header {
-      padding: 20px 24px;
+      padding: 16px 22px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
       background: var(--cream-2);
+      color: var(--charcoal);
     }
     .profile-modal-body {
-      padding: 24px;
+      padding: 20px 24px;
       overflow-y: auto;
       flex: 1;
+      background: var(--bg-card);
+      color: var(--charcoal);
+    }
+
+    /* ============ ATHLETIC STUDENT PROFILE CARD SYSTEM ============ */
+    .ath-profile-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      text-align: center;
+      position: relative;
+    }
+    .ath-profile-banner {
+      height: 110px;
+      background: linear-gradient(135deg, #0F1B33 0%, #16264A 50%, #2980B9 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 8px 14px;
+    }
+    .ath-profile-banner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(245, 166, 35, 0.25), transparent 60%);
+    }
+    .ath-profile-watermark {
+      position: absolute;
+      right: 12px;
+      bottom: -15px;
+      font-size: 64px;
+      opacity: 0.15;
+      font-weight: 900;
+      color: #fff;
+      font-family: var(--font-display);
+      letter-spacing: 2px;
+      user-select: none;
+      text-transform: uppercase;
+    }
+    .ath-profile-avatar-wrap {
+      margin-top: -46px;
+      position: relative;
+      display: inline-block;
+      z-index: 2;
+    }
+    .ath-profile-avatar {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      border: 4px solid var(--bg-card);
+      background: var(--navy);
+      color: #FFFFFF;
+      font-size: 32px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    }
+    .ath-profile-body {
+      padding: 14px 20px 22px 20px;
+      color: var(--charcoal);
+    }
+    .ath-profile-name {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      color: var(--charcoal);
+      margin: 6px 0 2px 0;
+      text-transform: uppercase;
+    }
+    .ath-profile-handle {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--charcoal-soft);
+      margin-bottom: 8px;
+    }
+    .ath-spec-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 14px 0;
+      text-align: left;
+    }
+    @media (max-width: 520px) {
+      .ath-spec-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .ath-spec-item {
+      background: var(--cream-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+    .ath-spec-lbl {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--charcoal-soft);
+      display: block;
+      margin-bottom: 2px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .ath-spec-val {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--charcoal);
+      line-height: 1.2;
+    }
+    .ath-stats-band {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+      margin: 14px 0;
+      background: var(--cream-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 8px;
+    }
+    @media (max-width: 520px) {
+      .ath-stats-band {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    .ath-stat-cell {
+      text-align: center;
+    }
+    .ath-stat-num {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--charcoal);
+      line-height: 1;
+    }
+    .ath-stat-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      color: var(--charcoal-soft);
+      margin-top: 2px;
+    }
+    .ath-bio-quote {
+      background: var(--cream-2);
+      border-left: 3px solid var(--amber);
+      border-radius: 0 8px 8px 0;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-style: italic;
+      color: var(--charcoal);
+      margin: 12px 0;
+      text-align: left;
+      line-height: 1.45;
     }
     .profile-tab-bar {
       display: flex;
@@ -4348,6 +4514,32 @@
           </div>
         </div>
 
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <div>
+            <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Branch / Dept *</label>
+            <select id="signUpBranch" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font-body);background:var(--bg-card);color:var(--charcoal);font-size:12px;">
+              <option value="Computer Science & Engineering">Computer Science (CSE)</option>
+              <option value="AI & Data Science">AI &amp; Data Science (AI-DS)</option>
+              <option value="Information Technology">Information Technology (IT)</option>
+              <option value="Electronics & Communication">Electronics &amp; Comm. (ECE)</option>
+              <option value="Mechanical Engineering">Mechanical Engg. (ME)</option>
+              <option value="Civil Engineering">Civil Engg. (CE)</option>
+              <option value="Electrical Engineering">Electrical Engg. (EE)</option>
+              <option value="Applied Sciences & Humanities">Applied Sciences / 1st Year</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Academic Year *</label>
+            <select id="signUpYear" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font-body);background:var(--bg-card);color:var(--charcoal);font-size:12px;">
+              <option value="1st Year (Batch 2025-29)">1st Year (2025-29)</option>
+              <option value="2nd Year (Batch 2024-28)">2nd Year (2024-28)</option>
+              <option value="3rd Year (Batch 2023-27)" selected>3rd Year (2023-27)</option>
+              <option value="4th Year (Batch 2022-26)">4th Year (2022-26)</option>
+              <option value="Post-Graduate / Alumni">Post-Graduate / Alumni</option>
+            </select>
+          </div>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
           <div>
             <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Mobile (Optional)</label>
@@ -4411,12 +4603,55 @@
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
             <div class="admin-field">
-              <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Full Name</label>
+              <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Full Name *</label>
               <input type="text" id="spName" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);">
             </div>
             <div class="admin-field">
               <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Primary Sport</label>
               <input type="text" id="spSport" placeholder="e.g. Volleyball, Basketball" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);">
+            </div>
+          </div>
+
+          <!-- Academic Student Metadata: Branch & Academic Year -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div class="admin-field">
+              <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">🎓 College Branch / Dept</label>
+              <select id="spBranch" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);font-size:12px;">
+                <option value="Computer Science & Engineering">Computer Science &amp; Engg. (CSE)</option>
+                <option value="AI & Data Science">AI &amp; Data Science (AI-DS)</option>
+                <option value="Information Technology">Information Technology (IT)</option>
+                <option value="Electronics & Communication">Electronics &amp; Comm. (ECE)</option>
+                <option value="Mechanical Engineering">Mechanical Engg. (ME)</option>
+                <option value="Civil Engineering">Civil Engg. (CE)</option>
+                <option value="Electrical Engineering">Electrical Engg. (EE)</option>
+                <option value="Applied Sciences & Humanities">Applied Sciences / 1st Year</option>
+              </select>
+            </div>
+            <div class="admin-field">
+              <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">📅 Academic Year / Batch</label>
+              <select id="spYear" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);font-size:12px;">
+                <option value="1st Year (Batch 2025-29)">1st Year (Batch 2025-29)</option>
+                <option value="2nd Year (Batch 2024-28)">2nd Year (Batch 2024-28)</option>
+                <option value="3rd Year (Batch 2023-27)">3rd Year (Batch 2023-27)</option>
+                <option value="4th Year (Batch 2022-26)">4th Year (Batch 2022-26)</option>
+                <option value="Post-Graduate / Alumni">Post-Graduate / Alumni</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Athletic Specs: Position, Jersey No, Height -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+            <div class="admin-field">
+              <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">🏐 Position / Role</label>
+              <input type="text" id="spPosition" placeholder="e.g. Outside Hitter, Libero, Setter" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);font-size:12px;">
+            </div>
+            <div class="admin-field">
+              <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">🔢 Jersey Number</label>
+              <input type="text" id="spJerseyNo" placeholder="e.g. 7, 24, 99" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);font-size:12px;">
+            </div>
+            <div class="admin-field">
+              <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">📏 Height</label>
+              <input type="text" id="spHeight" placeholder="e.g. 6'1&quot; (185 cm)" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--charcoal);font-size:12px;">
             </div>
           </div>
 
@@ -4557,12 +4792,12 @@
 
   <!-- ============ PUBLIC USER PROFILE MODAL ============ -->
   <div class="custom-modal-overlay" id="publicProfileModal" style="display:none;z-index:9999;">
-    <div class="profile-modal-box" style="max-width:480px;">
-      <div class="profile-modal-header" style="background:var(--cream-2);">
-        <h4 style="margin:0;font-size:16px;">Student Sports Profile</h4>
+    <div class="profile-modal-box" style="max-width:540px;background:var(--bg-card) !important;box-shadow:0 24px 70px rgba(0,0,0,0.55);">
+      <div class="profile-modal-header" style="background:var(--cream-2);border-bottom:1px solid var(--border);">
+        <h4 style="margin:0;font-size:16px;font-family:var(--font-display);letter-spacing:0.5px;color:var(--charcoal);">STUDENT SPORTS PROFILE</h4>
         <button id="pubProfileCloseBtn" style="background:none;border:none;font-size:22px;color:var(--charcoal-soft);cursor:pointer;padding:4px 8px;">&times;</button>
       </div>
-      <div class="profile-modal-body" id="pubProfileContent" style="padding:24px;text-align:center;"></div>
+      <div class="profile-modal-body" id="pubProfileContent" style="padding:16px;background:var(--bg-card);"></div>
     </div>
   </div>
 
@@ -6111,6 +6346,9 @@
           return;
         }
 
+        var branch = (document.getElementById('signUpBranch') ? document.getElementById('signUpBranch').value : 'Computer Science & Engineering');
+        var year = (document.getElementById('signUpYear') ? document.getElementById('signUpYear').value : '3rd Year');
+
         msgEl.innerHTML = '<span style="color:var(--amber);">Creating account...</span>';
 
         authFetch(API_BASE + '/auth/signup', {
@@ -6123,7 +6361,9 @@
             email: email,
             mobile: mobile,
             password: password,
-            photo: photo
+            photo: photo,
+            branch: branch,
+            year: year
           })
         })
           .then(function (r) { return r.json(); })
@@ -6317,6 +6557,11 @@
 
         document.getElementById('spName').value = p.name || '';
         document.getElementById('spSport').value = p.sport || '';
+        if (document.getElementById('spBranch')) document.getElementById('spBranch').value = p.branch || 'Computer Science & Engineering';
+        if (document.getElementById('spYear')) document.getElementById('spYear').value = p.year || '3rd Year (Batch 2023-27)';
+        if (document.getElementById('spPosition')) document.getElementById('spPosition').value = p.position || 'Outside Hitter';
+        if (document.getElementById('spJerseyNo')) document.getElementById('spJerseyNo').value = p.jerseyNo || '';
+        if (document.getElementById('spHeight')) document.getElementById('spHeight').value = p.height || '';
         document.getElementById('spRollNo').value = p.rtuRollNo || 'Not provided';
         document.getElementById('spEmail').value = p.email || '';
         document.getElementById('spMobile').value = p.mobile || '';
@@ -6508,115 +6753,115 @@
           });
       }
 
-      // Public Preview Card
-      function renderSpPublicPreview(p) {
-        var card = document.getElementById('spPublicPreviewCard');
-        if (!card) return;
-
-        var name = p.name || p.username || 'Student';
+      // Athletic Student Profile Card Builder (Used by both Public Profile Modal & Public Preview tab)
+      function buildAthleticProfileCardHtml(p) {
+        if (!p) return '<p style="color:var(--charcoal-soft);font-size:13px;padding:16px;">No profile data available.</p>';
+        var name = p.name || p.username || 'Student Athlete';
+        var username = p.username || '';
         var initial = name.charAt(0).toUpperCase();
         var avatarStyle = p.photo ? 'background-image:url(\'' + p.photo + '\');' : '';
         var avatarContent = p.photo ? '' : initial;
         var roleBadgeHtml = getRoleBadgeHtml(p.role, p);
 
-        var clubsList = (p.clubs || ['aceit-spikers']).map(function (c) {
-          return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;background:var(--cream-2);border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--charcoal);">' + esc(c) + '</span>';
-        }).join(' ');
+        var branch = p.branch || 'Computer Science & Engineering';
+        var year = p.year || '3rd Year';
+        var position = p.position || 'Outside Hitter';
+        var jersey = p.jerseyNo ? ('#' + p.jerseyNo) : 'Not assigned';
+        var height = p.height || 'N/A';
+        var sport = p.sport || 'Volleyball';
+
+        var st = p.stats || {};
+        var mvpPts = (st.mvpPoints !== undefined) ? st.mvpPoints : ((st.mvpAwards || 0) * 15 + (st.points || 0) + (st.spikes || 0) * 2 + (st.blocks || 0) * 3 + (st.aces || 0) * 2);
 
         var badgesHtml = '';
         if (p.badges && p.badges.length > 0) {
-          badgesHtml = '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:8px 0;">' +
+          badgesHtml = '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:12px 0 6px 0;">' +
             p.badges.map(function (b) { return getPerfBadgeHtml(b); }).join('') + '</div>';
         }
 
-        var st = p.stats || {};
-        var statsSnippet = '<div style="display:flex;justify-content:center;gap:12px;margin:10px 0;background:var(--cream-2);padding:8px 12px;border-radius:8px;font-size:12px;">' +
-          '<span>Matches: <b>' + (st.matchesPlayed || 0) + '</b></span>' +
-          '<span>Points: <b>' + (st.points || 0) + '</b></span>' +
-          '<span>MVP: <b>' + (st.mvpAwards || 0) + '</b></span>' +
-          '</div>';
+        var clubsList = (p.clubs || ['aceit-spikers']).map(function (c) {
+          return '<span style="display:inline-block;padding:3px 10px;border-radius:12px;background:var(--cream-2);border:1px solid var(--border);font-size:11px;font-weight:700;color:var(--charcoal);">' + esc(c) + '</span>';
+        }).join(' ');
 
         var achsHtml = '';
         if (p.achievements && p.achievements.length > 0) {
           achsHtml = '<div style="margin-top:14px;text-align:left;border-top:1px solid var(--border);padding-top:10px;">' +
-            '<b style="font-size:12px;text-transform:uppercase;color:var(--charcoal-soft);letter-spacing:0.5px;">Achievements</b>' +
-            '<ul style="margin:6px 0 0 0;padding-left:18px;font-size:12px;color:var(--charcoal);">' +
-            p.achievements.map(function (a) { return '<li><b>' + esc(a.title || '') + '</b>' + (a.year ? ' (' + esc(a.year) + ')' : '') + '</li>'; }).join('') +
+            '<span class="ath-spec-lbl" style="margin-bottom:6px;">🏆 Sports Achievements &amp; Medals</span>' +
+            '<ul style="margin:4px 0 0 0;padding-left:18px;font-size:12px;color:var(--charcoal);line-height:1.6;">' +
+            p.achievements.map(function (a) { return '<li><b>' + esc(a.title || '') + '</b>' + (a.year ? ' <span style="color:var(--charcoal-soft);font-size:11px;">(' + esc(a.year) + ')</span>' : '') + '</li>'; }).join('') +
             '</ul></div>';
         }
 
-        card.innerHTML = '<div style="width:72px;height:72px;border-radius:50%;background:var(--amber);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin-bottom:10px;background-size:cover;background-position:center;' + avatarStyle + '">' + avatarContent + '</div>' +
-          '<h3 style="font-size:20px;margin:0 0 4px 0;color:var(--charcoal);">' + esc(name) + '</h3>' +
-          '<div style="margin-bottom:6px;">' + roleBadgeHtml + '</div>' +
+        var bioHtml = p.bio ? '<div class="ath-bio-quote">"' + esc(p.bio) + '"</div>' : '';
+
+        return '<div class="ath-profile-card">' +
+          '<div class="ath-profile-banner">' +
+          '<div class="ath-profile-watermark">' + esc(sport.toUpperCase()) + '</div>' +
+          '</div>' +
+          '<div class="ath-profile-avatar-wrap">' +
+          '<div class="ath-profile-avatar"' + (p.photo ? (' style="' + avatarStyle + '"') : '') + '>' + avatarContent + '</div>' +
+          '</div>' +
+          '<div class="ath-profile-body">' +
+          '<h3 class="ath-profile-name">' + esc(name) + '</h3>' +
+          '<div class="ath-profile-handle">@' + esc(username) + ' &bull; <span style="color:var(--amber);font-weight:700;">' + esc(sport) + '</span></div>' +
+          '<div style="display:flex;justify-content:center;margin-bottom:12px;">' + roleBadgeHtml + '</div>' +
+
+          // Collegiate Academic & Athletic Specs Grid
+          '<div class="ath-spec-grid">' +
+          '<div class="ath-spec-item"><span class="ath-spec-lbl">🎓 Branch</span><span class="ath-spec-val">' + esc(branch) + '</span></div>' +
+          '<div class="ath-spec-item"><span class="ath-spec-lbl">📅 Academic Year</span><span class="ath-spec-val">' + esc(year) + '</span></div>' +
+          '<div class="ath-spec-item"><span class="ath-spec-lbl">🏐 Position</span><span class="ath-spec-val">' + esc(position) + '</span></div>' +
+          '<div class="ath-spec-item"><span class="ath-spec-lbl">🔢 Jersey No.</span><span class="ath-spec-val">' + esc(jersey) + '</span></div>' +
+          '<div class="ath-spec-item"><span class="ath-spec-lbl">📏 Height</span><span class="ath-spec-val">' + esc(height) + '</span></div>' +
+          '<div class="ath-spec-item" style="border-color:rgba(241,196,15,0.4);background:rgba(241,196,15,0.06);"><span class="ath-spec-lbl" style="color:#D4AC0D;">⭐ MVP Points</span><span class="ath-spec-val" style="color:#D4AC0D;font-size:13px;">' + mvpPts + ' Pts</span></div>' +
+          '</div>' +
+
+          // Match stats band
+          '<div class="ath-stats-band">' +
+          '<div class="ath-stat-cell"><div class="ath-stat-num">' + (st.matchesPlayed || 0) + '</div><div class="ath-stat-tag">Matches</div></div>' +
+          '<div class="ath-stat-cell"><div class="ath-stat-num">' + (st.points || 0) + '</div><div class="ath-stat-tag">Points</div></div>' +
+          '<div class="ath-stat-cell"><div class="ath-stat-num">' + (st.spikes || 0) + '</div><div class="ath-stat-tag">Spikes</div></div>' +
+          '<div class="ath-stat-cell"><div class="ath-stat-num">' + (st.blocks || 0) + '</div><div class="ath-stat-tag">Blocks</div></div>' +
+          '<div class="ath-stat-cell"><div class="ath-stat-num">' + (st.aces || 0) + '</div><div class="ath-stat-tag">Aces</div></div>' +
+          '<div class="ath-stat-cell"><div class="ath-stat-num" style="color:#D4AC0D;">' + (st.mvpAwards || 0) + '</div><div class="ath-stat-tag" style="color:#D4AC0D;font-weight:700;">MVP</div></div>' +
+          '</div>' +
+
           badgesHtml +
-          '<div style="font-size:13px;color:var(--charcoal-soft);margin-bottom:10px;">@' + esc(p.username || '') + ' &middot; <span style="color:var(--amber);font-weight:600;">' + esc(p.sport || 'Athlete') + '</span></div>' +
-          statsSnippet +
-          (p.bio ? '<p style="font-size:13px;color:var(--charcoal);margin:0 0 12px 0;font-style:italic;">"' + esc(p.bio) + '"</p>' : '') +
-          '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">' + clubsList + '</div>' +
-          achsHtml;
+          bioHtml +
+          '<div style="margin-top:12px;text-align:left;">' +
+          '<span class="ath-spec-lbl" style="margin-bottom:6px;">🏟️ Affiliated Clubs</span>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + clubsList + '</div>' +
+          '</div>' +
+          achsHtml +
+          '</div>' +
+          '</div>';
+      }
+
+      // Public Preview Card
+      function renderSpPublicPreview(p) {
+        var card = document.getElementById('spPublicPreviewCard');
+        if (!card) return;
+        card.innerHTML = buildAthleticProfileCardHtml(p);
       }
 
       // Public Profile Modal View (for viewing any student by username)
       function openPublicProfileModal(username) {
         if (!publicProfileModal) return;
         var content = document.getElementById('pubProfileContent');
-        content.innerHTML = '<p style="color:var(--charcoal-soft);font-size:13px;">Loading profile...</p>';
+        content.innerHTML = '<p style="color:var(--charcoal-soft);font-size:13px;padding:20px;text-align:center;">Loading athlete profile...</p>';
         publicProfileModal.style.display = 'flex';
 
         fetch(API_BASE + '/users/profile/' + encodeURIComponent(username))
           .then(function (r) { return r.json(); })
           .then(function (res) {
             if (res && res.success && res.profile) {
-              var p = res.profile;
-              var name = p.name || p.username || 'Student';
-              var initial = name.charAt(0).toUpperCase();
-              var avatarStyle = p.photo ? 'background-image:url(\'' + p.photo + '\');' : '';
-              var avatarContent = p.photo ? '' : initial;
-              var roleBadgeHtml = getRoleBadgeHtml(p.role, p);
-
-              var clubsList = (p.clubs || ['aceit-spikers']).map(function (c) {
-                return '<span style="display:inline-block;padding:3px 10px;border-radius:12px;background:var(--cream-2);border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--charcoal);">' + esc(c) + '</span>';
-              }).join(' ');
-
-              var badgesHtml = '';
-              if (p.badges && p.badges.length > 0) {
-                badgesHtml = '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:10px 0;">' +
-                  p.badges.map(function (b) { return getPerfBadgeHtml(b); }).join('') + '</div>';
-              }
-
-              var st = p.stats || {};
-              var statsSnippet = '<div style="display:flex;justify-content:center;gap:12px;margin:12px 0;background:var(--cream-2);padding:10px 14px;border-radius:10px;font-size:12px;">' +
-                '<span>Matches: <b>' + (st.matchesPlayed || 0) + '</b></span>' +
-                '<span>Points: <b>' + (st.points || 0) + '</b></span>' +
-                '<span>Spikes: <b>' + (st.spikes || 0) + '</b></span>' +
-                '<span>Blocks: <b>' + (st.blocks || 0) + '</b></span>' +
-                '<span>MVP: <b>' + (st.mvpAwards || 0) + '</b></span>' +
-                '</div>';
-
-              var achsHtml = '';
-              if (p.achievements && p.achievements.length > 0) {
-                achsHtml = '<div style="margin-top:16px;text-align:left;border-top:1px solid var(--border);padding-top:12px;">' +
-                  '<b style="font-size:12px;text-transform:uppercase;color:var(--charcoal-soft);letter-spacing:0.5px;">Achievements</b>' +
-                  '<ul style="margin:6px 0 0 0;padding-left:18px;font-size:12px;color:var(--charcoal);">' +
-                  p.achievements.map(function (a) { return '<li><b>' + esc(a.title || '') + '</b>' + (a.year ? ' (' + esc(a.year) + ')' : '') + '</li>'; }).join('') +
-                  '</ul></div>';
-              }
-
-              content.innerHTML = '<div style="width:80px;height:80px;border-radius:50%;background:var(--amber);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;margin-bottom:12px;background-size:cover;background-position:center;' + avatarStyle + '">' + avatarContent + '</div>' +
-                '<h3 style="font-size:22px;margin:0 0 4px 0;color:var(--charcoal);">' + esc(name) + '</h3>' +
-                '<div style="margin-bottom:6px;">' + roleBadgeHtml + '</div>' +
-                badgesHtml +
-                '<div style="font-size:13px;color:var(--charcoal-soft);margin-bottom:10px;">@' + esc(p.username || '') + ' &middot; <span style="color:var(--amber);font-weight:600;">' + esc(p.sport || 'Sports Enthusiast') + '</span></div>' +
-                statsSnippet +
-                (p.bio ? '<p style="font-size:13px;color:var(--charcoal);margin:0 0 14px 0;font-style:italic;line-height:1.5;">"' + esc(p.bio) + '"</p>' : '') +
-                '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' + clubsList + '</div>' +
-                achsHtml;
+              content.innerHTML = buildAthleticProfileCardHtml(res.profile);
             } else {
-              content.innerHTML = '<p style="color:#C0392B;font-size:13px;">' + (res && res.message ? res.message : 'User profile not found.') + '</p>';
+              content.innerHTML = '<p style="color:#C0392B;font-size:13px;padding:20px;text-align:center;">' + (res && res.message ? res.message : 'User profile not found.') + '</p>';
             }
           })
           .catch(function () {
-            content.innerHTML = '<p style="color:#C0392B;font-size:13px;">Network error loading profile.</p>';
+            content.innerHTML = '<p style="color:#C0392B;font-size:13px;padding:20px;text-align:center;">Network error loading profile.</p>';
           });
       }
 
@@ -6825,6 +7070,11 @@
         spSaveBtn.addEventListener('click', function () {
           var name = (document.getElementById('spName').value || '').trim();
           var sport = (document.getElementById('spSport').value || '').trim();
+          var branch = (document.getElementById('spBranch') ? document.getElementById('spBranch').value : 'Computer Science & Engineering').trim();
+          var year = (document.getElementById('spYear') ? document.getElementById('spYear').value : '3rd Year').trim();
+          var position = (document.getElementById('spPosition') ? document.getElementById('spPosition').value : 'Outside Hitter').trim();
+          var jerseyNo = (document.getElementById('spJerseyNo') ? document.getElementById('spJerseyNo').value : '').trim();
+          var height = (document.getElementById('spHeight') ? document.getElementById('spHeight').value : '').trim();
           var mobile = (document.getElementById('spMobile').value || '').trim();
           var bio = (document.getElementById('spBio').value || '').trim();
           var photo = document.getElementById('spPhotoData').value;
@@ -6845,6 +7095,11 @@
             body: JSON.stringify({
               name: name,
               sport: sport,
+              branch: branch,
+              year: year,
+              position: position,
+              jerseyNo: jerseyNo,
+              height: height,
               mobile: mobile,
               bio: bio,
               photo: photo,
@@ -8547,6 +8802,11 @@
           '<div class="admin-field"><label>Username *</label><input type="text" id="uModalUsername" value="' + esc(user ? user.username : '') + '"' + (user ? ' readonly style="background:#eee;"' : '') + '></div>' +
           '<div class="admin-field"><label>Email Address</label><input type="email" id="uModalEmail" value="' + esc(user ? (user.email || '') : '') + '"></div>' +
           '<div class="admin-field"><label>RTU Roll No.</label><input type="text" id="uModalRollNo" placeholder="e.g. 22EATCS089" value="' + esc(user ? (user.rtuRollNo || '') : '') + '"></div>' +
+          '<div class="admin-field"><label>College Branch</label><input type="text" id="uModalBranch" placeholder="e.g. Computer Science & Engineering" value="' + esc(user ? (user.branch || '') : '') + '"></div>' +
+          '<div class="admin-field"><label>Academic Year</label><input type="text" id="uModalYear" placeholder="e.g. 3rd Year (Batch 2023-27)" value="' + esc(user ? (user.year || '') : '') + '"></div>' +
+          '<div class="admin-field"><label>Playing Position</label><input type="text" id="uModalPosition" placeholder="e.g. Outside Hitter, Setter" value="' + esc(user ? (user.position || '') : '') + '"></div>' +
+          '<div class="admin-field"><label>Jersey Number</label><input type="text" id="uModalJerseyNo" placeholder="e.g. 7, 24" value="' + esc(user ? (user.jerseyNo || '') : '') + '"></div>' +
+          '<div class="admin-field"><label>Height</label><input type="text" id="uModalHeight" placeholder="e.g. 6\'1&quot; (185 cm)" value="' + esc(user ? (user.height || '') : '') + '"></div>' +
           '<div class="admin-field"><label>Mobile Number</label><input type="tel" id="uModalMobile" placeholder="e.g. 9876543210" value="' + esc(user ? (user.mobile || '') : '') + '"></div>' +
           '<div class="admin-field"><label>Primary Sport</label><input type="text" id="uModalSport" placeholder="e.g. Volleyball" value="' + esc(user ? (user.sport || '') : '') + '"></div>' +
           '<div class="admin-field"><label>Password ' + (user ? '(leave blank to keep unchanged)' : '*') + '</label><input type="password" id="uModalPassword" placeholder="' + (user ? '••••••••' : 'Password') + '"></div>' +
@@ -8600,6 +8860,11 @@
           var username = (document.getElementById('uModalUsername').value || '').trim();
           var email = (document.getElementById('uModalEmail').value || '').trim();
           var rollNo = (document.getElementById('uModalRollNo').value || '').trim();
+          var branch = (document.getElementById('uModalBranch').value || '').trim();
+          var year = (document.getElementById('uModalYear').value || '').trim();
+          var position = (document.getElementById('uModalPosition').value || '').trim();
+          var jerseyNo = (document.getElementById('uModalJerseyNo').value || '').trim();
+          var height = (document.getElementById('uModalHeight').value || '').trim();
           var mobile = (document.getElementById('uModalMobile').value || '').trim();
           var sport = (document.getElementById('uModalSport').value || '').trim();
           var bio = (document.getElementById('uModalBio').value || '').trim();
@@ -8638,6 +8903,11 @@
             username: username,
             email: email,
             rtuRollNo: rollNo,
+            branch: branch,
+            year: year,
+            position: position,
+            jerseyNo: jerseyNo,
+            height: height,
             mobile: mobile,
             sport: sport,
             bio: bio,

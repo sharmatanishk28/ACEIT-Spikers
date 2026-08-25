@@ -208,6 +208,11 @@ const userSchema = new mongoose.Schema({
   clubs: { type: [String], default: ['aceit-spikers'] },
   bio: { type: String, default: '' },
   sport: { type: String, default: '' },
+  branch: { type: String, default: 'Computer Science & Engineering', trim: true },
+  year: { type: String, default: '3rd Year', trim: true },
+  position: { type: String, default: 'Outside Hitter', trim: true },
+  jerseyNo: { type: String, default: '', trim: true },
+  height: { type: String, default: '', trim: true },
   achievements: { type: Array, default: [] },
   stats: {
     matchesPlayed: { type: Number, default: 0 },
@@ -974,7 +979,7 @@ app.post('/api/pin', authenticateUser, requireAuth, requirePermission('settings.
 // 1. Auth: Student Signup
 app.post('/api/auth/signup', async (req, res) => {
   try {
-    const { name, username, rtuRollNo, email, mobile, password, photo } = req.body;
+    const { name, username, rtuRollNo, email, mobile, password, photo, branch, year, position, jerseyNo, height, sport } = req.body;
     if (!name || !username || !rtuRollNo || !email || !password) {
       return res.status(400).json({ success: false, message: 'Full Name, Username, RTU Roll No., Email, and Password are required.' });
     }
@@ -984,6 +989,12 @@ app.post('/api/auth/signup', async (req, res) => {
     const cleanEmail = String(email).toLowerCase().trim();
     const cleanRollNo = String(rtuRollNo).trim();
     const cleanMobile = mobile ? String(mobile).trim() : '';
+    const cleanBranch = branch ? String(branch).trim() : 'Computer Science & Engineering';
+    const cleanYear = year ? String(year).trim() : '3rd Year';
+    const cleanPosition = position ? String(position).trim() : 'Outside Hitter';
+    const cleanJersey = jerseyNo ? String(jerseyNo).trim() : '';
+    const cleanHeight = height ? String(height).trim() : '';
+    const cleanSport = sport ? String(sport).trim() : 'Volleyball';
 
     if (cleanUsername.length < 3) {
       return res.status(400).json({ success: false, message: 'Username must be at least 3 characters long.' });
@@ -1023,7 +1034,12 @@ app.post('/api/auth/signup', async (req, res) => {
         clubId: 'aceit-spikers',
         clubs: ['aceit-spikers'],
         bio: '',
-        sport: 'Volleyball',
+        sport: cleanSport,
+        branch: cleanBranch,
+        year: cleanYear,
+        position: cleanPosition,
+        jerseyNo: cleanJersey,
+        height: cleanHeight,
         achievements: [],
         permissions: ['profile.view', 'profile.edit', 'clubs.join'],
         active: true,
@@ -1067,7 +1083,12 @@ app.post('/api/auth/signup', async (req, res) => {
       clubId: 'aceit-spikers',
       clubs: ['aceit-spikers'],
       bio: '',
-      sport: 'Volleyball',
+      sport: cleanSport,
+      branch: cleanBranch,
+      year: cleanYear,
+      position: cleanPosition,
+      jerseyNo: cleanJersey,
+      height: cleanHeight,
       achievements: [],
       permissions: ['profile.view', 'profile.edit', 'clubs.join'],
       active: true,
@@ -1214,7 +1235,7 @@ app.get('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
 // 6. Profile: PUT Update Logged-in User Profile
 app.put('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
   try {
-    const { name, mobile, photo, bio, sport, achievements } = req.body;
+    const { name, mobile, photo, bio, sport, branch, year, position, jerseyNo, height, achievements } = req.body;
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
@@ -1225,6 +1246,11 @@ app.put('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
       if (photo !== undefined) u.photo = photo;
       if (bio !== undefined) u.bio = String(bio).trim();
       if (sport !== undefined) u.sport = String(sport).trim();
+      if (branch !== undefined) u.branch = String(branch).trim();
+      if (year !== undefined) u.year = String(year).trim();
+      if (position !== undefined) u.position = String(position).trim();
+      if (jerseyNo !== undefined) u.jerseyNo = String(jerseyNo).trim();
+      if (height !== undefined) u.height = String(height).trim();
       if (Array.isArray(achievements)) u.achievements = achievements;
 
       const safe = Object.assign({}, u);
@@ -1239,6 +1265,11 @@ app.put('/api/profile/me', authenticateUser, requireAuth, async (req, res) => {
     if (photo !== undefined) u.photo = photo;
     if (bio !== undefined) u.bio = String(bio).trim();
     if (sport !== undefined) u.sport = String(sport).trim();
+    if (branch !== undefined) u.branch = String(branch).trim();
+    if (year !== undefined) u.year = String(year).trim();
+    if (position !== undefined) u.position = String(position).trim();
+    if (jerseyNo !== undefined) u.jerseyNo = String(jerseyNo).trim();
+    if (height !== undefined) u.height = String(height).trim();
     if (Array.isArray(achievements)) u.achievements = achievements;
 
     await u.save();
@@ -1334,6 +1365,11 @@ app.get('/api/users/profile/:username', async (req, res) => {
       badgeBg: roleMeta.badgeBg,
       badgeText: roleMeta.badgeText,
       badgeGlow: roleMeta.badgeGlow,
+      branch: user.branch || 'Computer Science & Engineering',
+      year: user.year || '3rd Year',
+      position: user.position || (user.sport ? `${user.sport} Player` : 'Athlete'),
+      jerseyNo: user.jerseyNo || '',
+      height: user.height || '',
       clubs: user.clubs || (user.clubId && user.clubId !== 'ALL' ? [user.clubId] : ['aceit-spikers']),
       bio: user.bio || '',
       sport: user.sport || 'Volleyball',
@@ -1695,15 +1731,20 @@ app.get('/api/users', authenticateUser, requireAuth, requirePermission('users.vi
 // 9. Users: POST Create
 app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.create'), async (req, res) => {
   try {
-    const { name, username, rtuRollNo, email, mobile, password, role, clubId, clubs, permissions, active, photo, bio, sport, achievements } = req.body;
+    const { name, username, rtuRollNo, email, mobile, password, role, clubId, clubs, permissions, active, photo, bio, sport, branch, year, position, jerseyNo, height, achievements } = req.body;
     if (!name || !username || !password) {
-      return res.status(400).json({ success: false, message: 'Name, username, and password are required' });
+      return res.status(400).json({ success: false, message: 'Name, Username, and Password are required.' });
     }
 
     const cleanUsername = String(username).toLowerCase().trim();
     const cleanEmail = email ? String(email).toLowerCase().trim() : '';
     const cleanRollNo = rtuRollNo ? String(rtuRollNo).trim() : '';
     const cleanMobile = mobile ? String(mobile).trim() : '';
+    const cleanBranch = branch ? String(branch).trim() : 'Computer Science & Engineering';
+    const cleanYear = year ? String(year).trim() : '3rd Year';
+    const cleanPosition = position ? String(position).trim() : 'Outside Hitter';
+    const cleanJersey = jerseyNo ? String(jerseyNo).trim() : '';
+    const cleanHeight = height ? String(height).trim() : '';
 
     const dbConn = await connectToDatabase();
     const salt = bcrypt.genSaltSync(10);
@@ -1741,6 +1782,11 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
         clubs: Array.isArray(clubs) ? clubs : (userClubId && userClubId !== 'ALL' ? [userClubId] : ['aceit-spikers']),
         bio: bio || '',
         sport: sport || 'Volleyball',
+        branch: cleanBranch,
+        year: cleanYear,
+        position: cleanPosition,
+        jerseyNo: cleanJersey,
+        height: cleanHeight,
         achievements: Array.isArray(achievements) ? achievements : [],
         permissions: userPerms,
         active: active !== undefined ? active : true,
@@ -1776,6 +1822,11 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
       clubs: Array.isArray(clubs) ? clubs : (userClubId && userClubId !== 'ALL' ? [userClubId] : ['aceit-spikers']),
       bio: bio || '',
       sport: sport || 'Volleyball',
+      branch: cleanBranch,
+      year: cleanYear,
+      position: cleanPosition,
+      jerseyNo: cleanJersey,
+      height: cleanHeight,
       achievements: Array.isArray(achievements) ? achievements : [],
       permissions: userPerms,
       active: active !== undefined ? active : true
@@ -1794,7 +1845,7 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
 app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('users.edit'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, username, rtuRollNo, email, mobile, password, role, clubId, clubs, permissions, active, photo, bio, sport, achievements } = req.body;
+    const { name, username, rtuRollNo, email, mobile, password, role, clubId, clubs, permissions, active, photo, bio, sport, branch, year, position, jerseyNo, height, achievements } = req.body;
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
@@ -1822,6 +1873,11 @@ app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('user
       if (photo !== undefined) targetUser.photo = photo;
       if (bio !== undefined) targetUser.bio = String(bio).trim();
       if (sport !== undefined) targetUser.sport = String(sport).trim();
+      if (branch !== undefined) targetUser.branch = String(branch).trim();
+      if (year !== undefined) targetUser.year = String(year).trim();
+      if (position !== undefined) targetUser.position = String(position).trim();
+      if (jerseyNo !== undefined) targetUser.jerseyNo = String(jerseyNo).trim();
+      if (height !== undefined) targetUser.height = String(height).trim();
       if (Array.isArray(achievements)) targetUser.achievements = achievements;
       if (Array.isArray(clubs)) targetUser.clubs = clubs;
 
@@ -1894,6 +1950,11 @@ app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('user
     if (photo !== undefined) targetUser.photo = photo;
     if (bio !== undefined) targetUser.bio = String(bio).trim();
     if (sport !== undefined) targetUser.sport = String(sport).trim();
+    if (branch !== undefined) targetUser.branch = String(branch).trim();
+    if (year !== undefined) targetUser.year = String(year).trim();
+    if (position !== undefined) targetUser.position = String(position).trim();
+    if (jerseyNo !== undefined) targetUser.jerseyNo = String(jerseyNo).trim();
+    if (height !== undefined) targetUser.height = String(height).trim();
     if (Array.isArray(achievements)) targetUser.achievements = achievements;
     if (Array.isArray(clubs)) targetUser.clubs = clubs;
 
@@ -1920,7 +1981,6 @@ app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('user
     await targetUser.save();
     const userObj = targetUser.toObject();
     delete userObj.passwordHash;
-
     res.json({ success: true, user: userObj, message: 'User updated successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
