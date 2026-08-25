@@ -209,6 +209,16 @@ const userSchema = new mongoose.Schema({
   bio: { type: String, default: '' },
   sport: { type: String, default: '' },
   achievements: { type: Array, default: [] },
+  stats: {
+    matchesPlayed: { type: Number, default: 0 },
+    points: { type: Number, default: 0 },
+    spikes: { type: Number, default: 0 },
+    blocks: { type: Number, default: 0 },
+    aces: { type: Number, default: 0 },
+    mvpAwards: { type: Number, default: 0 },
+    mvpPoints: { type: Number, default: 0 }
+  },
+  badges: { type: Array, default: [] },
   permissions: { type: [String], default: [] },
   active: { type: Boolean, default: true },
   lastLoginAt: { type: Date }
@@ -235,6 +245,47 @@ const applicationSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const ApplicationDoc = mongoose.models.ApplicationDoc || mongoose.model('ApplicationDoc', applicationSchema);
+
+// Event RSVP & Tournament Registration Model
+const eventRsvpSchema = new mongoose.Schema({
+  eventId: { type: String, required: true },
+  eventTitle: { type: String, default: '' },
+  userId: { type: String, default: null },
+  username: { type: String, default: null },
+  name: { type: String, required: true },
+  email: { type: String, default: '' },
+  rollNo: { type: String, default: '' },
+  teamName: { type: String, default: '' },
+  status: { type: String, default: 'Registered' } // 'Registered', 'Attending', 'Cancelled'
+}, { timestamps: true });
+
+const EventRsvp = mongoose.models.EventRsvp || mongoose.model('EventRsvp', eventRsvpSchema);
+
+// Match Squad Lineup & Player Availability Model
+const matchAvailabilitySchema = new mongoose.Schema({
+  matchId: { type: String, required: true },
+  userId: { type: String, default: null },
+  username: { type: String, default: null },
+  name: { type: String, required: true },
+  availability: { type: String, default: 'Available' }, // 'Available', 'Tentative', 'Unavailable'
+  note: { type: String, default: '' },
+  isStartingLineup: { type: Boolean, default: false },
+  position: { type: String, default: '' }
+}, { timestamps: true });
+
+const MatchAvailability = mongoose.models.MatchAvailability || mongoose.model('MatchAvailability', matchAvailabilitySchema);
+
+// Fallback Stores for Phase 3
+let localEventRsvps = [];
+let localMatchAvailability = [];
+
+const DEFAULT_PERF_BADGES = [
+  { badgeKey: 'MVP_GOLD', title: 'MVP of the Match', icon: '🏆', glow: 'rgba(241, 196, 15, 0.95)', bg: '#F1C40F', text: '#000000', description: 'Awarded MVP in collegiate matches' },
+  { badgeKey: 'TOP_SPIKER', title: 'Top Spiker', icon: '⚡', glow: 'rgba(230, 126, 34, 0.9)', bg: '#E67E22', text: '#FFFFFF', description: '10+ winning spikes and attack points' },
+  { badgeKey: 'WALL_OF_ACE', title: 'Wall of ACEIT (Best Blocker)', icon: '🛡️', glow: 'rgba(52, 152, 219, 0.9)', bg: '#2980B9', text: '#FFFFFF', description: 'Defensive wall and block leader' },
+  { badgeKey: 'ACE_SERVER', title: 'Ace Server', icon: '🎯', glow: 'rgba(155, 89, 182, 0.9)', bg: '#8E44AD', text: '#FFFFFF', description: 'Service ace specialist' },
+  { badgeKey: 'IRON_DEFENDER', title: 'Iron Defender (Best Libero)', icon: '🧤', glow: 'rgba(46, 204, 113, 0.9)', bg: '#27AE60', text: '#FFFFFF', description: 'Spectacular digs & reception' }
+];
 
 // Helper: Get Role Styling Metadata (Colors, Glow, Title)
 async function getRoleMetadata(roleName) {
@@ -1287,6 +1338,8 @@ app.get('/api/users/profile/:username', async (req, res) => {
       bio: user.bio || '',
       sport: user.sport || 'Volleyball',
       achievements: user.achievements || [],
+      stats: user.stats || { matchesPlayed: 0, points: 0, spikes: 0, blocks: 0, aces: 0, mvpAwards: 0, mvpPoints: 0 },
+      badges: user.badges || [],
       memberSince: user.createdAt
     };
 
@@ -2398,6 +2451,545 @@ app.delete('/api/training/:id', authenticateUser, requireAuth, requirePermission
     dbData.training = filtered;
     await saveDB(dbData);
     res.json({ success: true, message: 'Training session deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==========================================
+// PHASE 3: EVENT RSVPs & REGISTRATIONS
+// ==========================================
+
+// GET /api/events/rsvp-counts: Map of eventId -> attendee count
+app.get('/api/events/rsvp-counts', async (req, res) => {
+  try {
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      const rsvps = await EventRsvp.find({ status: { $ne: 'Cancelled' } });
+      const counts = {};
+      rsvps.forEach(r => {
+        counts[r.eventId] = (counts[r.eventId] || 0) + 1;
+      });
+      return res.json({ success: true, counts });
+    }
+    const counts = {};
+    localEventRsvps.filter(r => r.status !== 'Cancelled').forEach(r => {
+      counts[r.eventId] = (counts[r.eventId] || 0) + 1;
+    });
+    res.json({ success: true, counts });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/events/:eventId/rsvp: Authenticated student RSVPs to an event
+app.post('/api/events/:eventId/rsvp', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { eventTitle, teamName } = req.body;
+    const userId = String(req.user._id || req.user.id);
+    const username = req.user.username;
+    const name = req.user.name || username;
+    const email = req.user.email || '';
+    const rollNo = req.user.rtuRollNo || '';
+
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      let rsvp = await EventRsvp.findOne({ eventId, $or: [{ userId }, { username }] });
+      if (rsvp) {
+        rsvp.status = 'Registered';
+        if (eventTitle) rsvp.eventTitle = eventTitle;
+        if (teamName) rsvp.teamName = teamName;
+        await rsvp.save();
+      } else {
+        rsvp = await EventRsvp.create({
+          eventId,
+          eventTitle: eventTitle || '',
+          userId,
+          username,
+          name,
+          email,
+          rollNo,
+          teamName: teamName || '',
+          status: 'Registered'
+        });
+      }
+      return res.json({ success: true, rsvp, message: 'Successfully registered for this event!' });
+    }
+
+    let rsvp = localEventRsvps.find(r => r.eventId === eventId && (r.userId === userId || r.username === username));
+    if (rsvp) {
+      rsvp.status = 'Registered';
+      if (eventTitle) rsvp.eventTitle = eventTitle;
+      if (teamName) rsvp.teamName = teamName;
+    } else {
+      rsvp = {
+        _id: 'rsvp_' + Date.now(),
+        eventId,
+        eventTitle: eventTitle || '',
+        userId,
+        username,
+        name,
+        email,
+        rollNo,
+        teamName: teamName || '',
+        status: 'Registered',
+        createdAt: new Date()
+      };
+      localEventRsvps.push(rsvp);
+    }
+    res.json({ success: true, rsvp, message: 'Successfully registered for this event!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/events/:eventId/rsvp: Cancel RSVP
+app.delete('/api/events/:eventId/rsvp', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = String(req.user._id || req.user.id);
+    const username = req.user.username;
+
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      await EventRsvp.findOneAndUpdate(
+        { eventId, $or: [{ userId }, { username }] },
+        { status: 'Cancelled' }
+      );
+      return res.json({ success: true, message: 'Registration cancelled.' });
+    }
+
+    const item = localEventRsvps.find(r => r.eventId === eventId && (r.userId === userId || r.username === username));
+    if (item) item.status = 'Cancelled';
+    res.json({ success: true, message: 'Registration cancelled.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/profile/rsvps: Authenticated student views all their event RSVPs
+app.get('/api/profile/rsvps', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const userId = String(req.user._id || req.user.id);
+    const username = req.user.username;
+
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      const rsvps = await EventRsvp.find({
+        $or: [{ userId }, { username }],
+        status: { $ne: 'Cancelled' }
+      }).sort({ createdAt: -1 });
+      return res.json({ success: true, rsvps });
+    }
+
+    const rsvps = localEventRsvps.filter(r => (r.userId === userId || r.username === username) && r.status !== 'Cancelled');
+    res.json({ success: true, rsvps });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/events/:eventId/attendees: Admin / Coordinator views attendees
+app.get('/api/events/:eventId/attendees', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      const attendees = await EventRsvp.find({ eventId, status: { $ne: 'Cancelled' } }).sort({ createdAt: 1 });
+      return res.json({ success: true, attendees });
+    }
+    const attendees = localEventRsvps.filter(r => r.eventId === eventId && r.status !== 'Cancelled');
+    res.json({ success: true, attendees });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==========================================
+// PHASE 3: MATCH SQUAD LINEUP & AVAILABILITY TRACKER
+// ==========================================
+
+// POST /api/matches/:matchId/availability: Student marks match availability
+app.post('/api/matches/:matchId/availability', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    const { availability, note } = req.body;
+    const cleanAvail = ['Available', 'Tentative', 'Unavailable'].includes(availability) ? availability : 'Available';
+    const userId = String(req.user._id || req.user.id);
+    const username = req.user.username;
+    const name = req.user.name || username;
+
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      let rec = await MatchAvailability.findOne({ matchId, $or: [{ userId }, { username }] });
+      if (rec) {
+        rec.availability = cleanAvail;
+        rec.note = note || '';
+        await rec.save();
+      } else {
+        rec = await MatchAvailability.create({
+          matchId,
+          userId,
+          username,
+          name,
+          availability: cleanAvail,
+          note: note || '',
+          isStartingLineup: false
+        });
+      }
+      return res.json({ success: true, availability: rec, message: 'Match availability updated!' });
+    }
+
+    let rec = localMatchAvailability.find(m => m.matchId === matchId && (m.userId === userId || m.username === username));
+    if (rec) {
+      rec.availability = cleanAvail;
+      rec.note = note || '';
+    } else {
+      rec = {
+        _id: 'ma_' + Date.now(),
+        matchId,
+        userId,
+        username,
+        name,
+        availability: cleanAvail,
+        note: note || '',
+        isStartingLineup: false,
+        createdAt: new Date()
+      };
+      localMatchAvailability.push(rec);
+    }
+    res.json({ success: true, availability: rec, message: 'Match availability updated!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/profile/match-availability: Student gets their match availability records
+app.get('/api/profile/match-availability', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const userId = String(req.user._id || req.user.id);
+    const username = req.user.username;
+
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      const records = await MatchAvailability.find({ $or: [{ userId }, { username }] });
+      return res.json({ success: true, records });
+    }
+    const records = localMatchAvailability.filter(m => m.userId === userId || m.username === username);
+    res.json({ success: true, records });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/matches/:matchId/lineup: View lineup & player availability for a match
+app.get('/api/matches/:matchId/lineup', async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      const responses = await MatchAvailability.find({ matchId });
+      const starters = responses.filter(r => r.isStartingLineup);
+      const available = responses.filter(r => r.availability === 'Available');
+      return res.json({ success: true, responses, starters, available });
+    }
+    const responses = localMatchAvailability.filter(m => m.matchId === matchId);
+    const starters = responses.filter(r => r.isStartingLineup);
+    const available = responses.filter(r => r.availability === 'Available');
+    res.json({ success: true, responses, starters, available });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/matches/:matchId/lineup: Captain / Coordinator / Admin sets Starting 6
+app.put('/api/matches/:matchId/lineup', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    const { starters } = req.body; // Array of { userId, username, name, position }
+    if (!Array.isArray(starters)) {
+      return res.status(400).json({ success: false, message: 'Starters array is required' });
+    }
+
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      // Reset all starters for this match
+      await MatchAvailability.updateMany({ matchId }, { isStartingLineup: false, position: '' });
+
+      for (const st of starters) {
+        const query = { matchId };
+        if (st.userId) query.userId = st.userId;
+        else if (st.username) query.username = st.username.toLowerCase();
+
+        await MatchAvailability.findOneAndUpdate(
+          query,
+          { isStartingLineup: true, position: st.position || 'Starter', name: st.name },
+          { upsert: true, new: true }
+        );
+      }
+      return res.json({ success: true, message: 'Starting lineup updated successfully!' });
+    }
+
+    localMatchAvailability.forEach(m => {
+      if (m.matchId === matchId) {
+        m.isStartingLineup = false;
+        m.position = '';
+      }
+    });
+
+    for (const st of starters) {
+      let item = localMatchAvailability.find(m => m.matchId === matchId && (m.userId === st.userId || m.username === st.username));
+      if (item) {
+        item.isStartingLineup = true;
+        item.position = st.position || 'Starter';
+      } else {
+        localMatchAvailability.push({
+          _id: 'ma_' + Date.now() + Math.random().toString(36).slice(2, 5),
+          matchId,
+          userId: st.userId || null,
+          username: st.username || null,
+          name: st.name || 'Player',
+          availability: 'Available',
+          note: '',
+          isStartingLineup: true,
+          position: st.position || 'Starter'
+        });
+      }
+    }
+
+    res.json({ success: true, message: 'Starting lineup updated successfully!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==========================================
+// PHASE 3: PLAYER STATS, MVP LEADERBOARDS & PERFORMANCE BADGES
+// ==========================================
+
+// Helper: Calculate MVP Points
+function calculateMvpPoints(stats) {
+  const s = stats || {};
+  const mvp = Number(s.mvpAwards || 0);
+  const pts = Number(s.points || 0);
+  const spk = Number(s.spikes || 0);
+  const blk = Number(s.blocks || 0);
+  const ace = Number(s.aces || 0);
+  return (mvp * 15) + (pts * 1) + (spk * 2) + (blk * 3) + (ace * 2);
+}
+
+// GET /api/leaderboard: Public College Athlete Leaderboard
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const dbConn = await connectToDatabase();
+    let athletes = [];
+
+    if (dbConn) {
+      athletes = await User.find({ active: true })
+        .select('name username photo sport clubs stats badges role')
+        .lean();
+    } else {
+      athletes = localUsers.filter(u => u.active !== false).map(u => ({
+        name: u.name,
+        username: u.username,
+        photo: u.photo || '',
+        sport: u.sport || 'Athlete',
+        clubs: u.clubs || ['aceit-spikers'],
+        stats: u.stats || { matchesPlayed: 0, points: 0, spikes: 0, blocks: 0, aces: 0, mvpAwards: 0, mvpPoints: 0 },
+        badges: u.badges || [],
+        role: u.role
+      }));
+    }
+
+    // Enrich with dynamic role styling and computed MVP points
+    const enriched = await Promise.all(athletes.map(async (a) => {
+      const rMeta = await getRoleMetadata(a.role);
+      const st = a.stats || { matchesPlayed: 0, points: 0, spikes: 0, blocks: 0, aces: 0, mvpAwards: 0 };
+      st.mvpPoints = calculateMvpPoints(st);
+      return {
+        name: a.name,
+        username: a.username,
+        photo: a.photo || '',
+        sport: a.sport || 'Athlete',
+        clubs: a.clubs || ['aceit-spikers'],
+        stats: st,
+        badges: a.badges || [],
+        role: a.role,
+        roleTitle: rMeta.roleTitle,
+        badgeBg: rMeta.badgeBg,
+        badgeText: rMeta.badgeText,
+        badgeGlow: rMeta.badgeGlow
+      };
+    }));
+
+    // Sort by MVP Points descending
+    enriched.sort((a, b) => (b.stats.mvpPoints || 0) - (a.stats.mvpPoints || 0));
+
+    res.json({
+      success: true,
+      leaderboard: enriched,
+      badgeDefs: DEFAULT_PERF_BADGES
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/users/:username/stats: Public player stats & badges
+app.get('/api/users/:username/stats', async (req, res) => {
+  try {
+    const uname = String(req.params.username || '').toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+    let user = null;
+
+    if (dbConn) {
+      user = await User.findOne({ username: uname });
+    } else {
+      user = localUsers.find(u => u.username === uname);
+    }
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Athlete not found' });
+    }
+
+    const st = user.stats || { matchesPlayed: 0, points: 0, spikes: 0, blocks: 0, aces: 0, mvpAwards: 0 };
+    st.mvpPoints = calculateMvpPoints(st);
+
+    res.json({
+      success: true,
+      username: user.username,
+      name: user.name,
+      sport: user.sport,
+      stats: st,
+      badges: user.badges || [],
+      badgeDefs: DEFAULT_PERF_BADGES
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/users/:username/stats: Admin/Coordinator/Captain updates player stats & awards performance badges
+app.put('/api/users/:username/stats', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const uname = String(req.params.username || '').toLowerCase().trim();
+    const { stats, badges, badgeToAdd, badgeToRemove } = req.body;
+
+    const dbConn = await connectToDatabase();
+    let user = null;
+
+    if (dbConn) {
+      user = await User.findOne({ username: uname });
+      if (!user) return res.status(404).json({ success: false, message: 'Athlete not found' });
+
+      if (stats) {
+        user.stats = {
+          matchesPlayed: Number(stats.matchesPlayed !== undefined ? stats.matchesPlayed : (user.stats?.matchesPlayed || 0)),
+          points: Number(stats.points !== undefined ? stats.points : (user.stats?.points || 0)),
+          spikes: Number(stats.spikes !== undefined ? stats.spikes : (user.stats?.spikes || 0)),
+          blocks: Number(stats.blocks !== undefined ? stats.blocks : (user.stats?.blocks || 0)),
+          aces: Number(stats.aces !== undefined ? stats.aces : (user.stats?.aces || 0)),
+          mvpAwards: Number(stats.mvpAwards !== undefined ? stats.mvpAwards : (user.stats?.mvpAwards || 0))
+        };
+        user.stats.mvpPoints = calculateMvpPoints(user.stats);
+      }
+
+      if (Array.isArray(badges)) {
+        user.badges = badges;
+      } else {
+        user.badges = user.badges || [];
+        if (badgeToAdd) {
+          const bDef = DEFAULT_PERF_BADGES.find(b => b.badgeKey === badgeToAdd) || {
+            badgeKey: badgeToAdd,
+            title: badgeToAdd,
+            icon: '⭐',
+            glow: 'rgba(241, 196, 15, 0.85)',
+            bg: '#F1C40F',
+            text: '#000000',
+            description: 'Special achievement badge'
+          };
+          if (!user.badges.some(b => b.badgeKey === badgeToAdd)) {
+            user.badges.push({ ...bDef, awardedAt: new Date() });
+          }
+        }
+
+        if (badgeToRemove) {
+          user.badges = user.badges.filter(b => b.badgeKey !== badgeToRemove);
+        }
+      }
+
+      await user.save();
+      return res.json({ success: true, stats: user.stats, badges: user.badges, message: 'Player stats and badges updated successfully!' });
+    }
+
+    user = localUsers.find(u => u.username === uname);
+    if (!user) return res.status(404).json({ success: false, message: 'Athlete not found' });
+
+    if (stats) {
+      user.stats = {
+        matchesPlayed: Number(stats.matchesPlayed !== undefined ? stats.matchesPlayed : (user.stats?.matchesPlayed || 0)),
+        points: Number(stats.points !== undefined ? stats.points : (user.stats?.points || 0)),
+        spikes: Number(stats.spikes !== undefined ? stats.spikes : (user.stats?.spikes || 0)),
+        blocks: Number(stats.blocks !== undefined ? stats.blocks : (user.stats?.blocks || 0)),
+        aces: Number(stats.aces !== undefined ? stats.aces : (user.stats?.aces || 0)),
+        mvpAwards: Number(stats.mvpAwards !== undefined ? stats.mvpAwards : (user.stats?.mvpAwards || 0))
+      };
+      user.stats.mvpPoints = calculateMvpPoints(user.stats);
+    }
+
+    if (Array.isArray(badges)) {
+      user.badges = badges;
+    } else {
+      user.badges = user.badges || [];
+      if (badgeToAdd) {
+        const bDef = DEFAULT_PERF_BADGES.find(b => b.badgeKey === badgeToAdd) || {
+          badgeKey: badgeToAdd,
+          title: badgeToAdd,
+          icon: '⭐',
+          glow: 'rgba(241, 196, 15, 0.85)',
+          bg: '#F1C40F',
+          text: '#000000',
+          description: 'Special achievement badge'
+        };
+        if (!user.badges.some(b => b.badgeKey === badgeToAdd)) {
+          user.badges.push({ ...bDef, awardedAt: new Date() });
+        }
+      }
+
+      if (badgeToRemove) {
+        user.badges = user.badges.filter(b => b.badgeKey !== badgeToRemove);
+      }
+    }
+
+    res.json({ success: true, stats: user.stats, badges: user.badges, message: 'Player stats and badges updated successfully!' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/profile/stats: Authenticated student views their stats
+app.get('/api/profile/stats', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const userId = String(req.user._id || req.user.id);
+    const dbConn = await connectToDatabase();
+    let user = null;
+
+    if (dbConn) {
+      user = await User.findById(userId);
+    } else {
+      user = localUsers.find(u => String(u._id) === userId);
+    }
+
+    const st = (user && user.stats) ? user.stats : { matchesPlayed: 0, points: 0, spikes: 0, blocks: 0, aces: 0, mvpAwards: 0 };
+    st.mvpPoints = calculateMvpPoints(st);
+
+    res.json({
+      success: true,
+      stats: st,
+      badges: (user && user.badges) ? user.badges : [],
+      badgeDefs: DEFAULT_PERF_BADGES
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

@@ -3657,6 +3657,136 @@
       font-size: 12px;
       cursor: pointer;
     }
+    /* Phase 3: Performance Badges, Podium & Leaderboards */
+    .perf-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      transition: all var(--trans-fast);
+      white-space: nowrap;
+    }
+    .perf-badge:hover {
+      transform: translateY(-1px) scale(1.03);
+    }
+    .lb-podium-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+      position: relative;
+      transition: all var(--trans-medium);
+      box-shadow: var(--shadow-sm);
+    }
+    .lb-podium-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+    .lb-podium-1 {
+      border-color: rgba(241, 196, 15, 0.6);
+      box-shadow: 0 8px 24px rgba(241, 196, 15, 0.2);
+    }
+    .lb-podium-2 {
+      border-color: rgba(189, 195, 199, 0.6);
+      box-shadow: 0 8px 24px rgba(189, 195, 199, 0.2);
+    }
+    .lb-podium-3 {
+      border-color: rgba(230, 126, 34, 0.6);
+      box-shadow: 0 8px 24px rgba(230, 126, 34, 0.2);
+    }
+    .lb-rank-crown {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #F1C40F;
+      color: #000000;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 10px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(241, 196, 15, 0.6);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .lb-row {
+      display: grid;
+      grid-template-columns: 48px 1fr 120px 100px 100px 100px;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--trans-fast);
+      font-size: 13px;
+    }
+    .lb-row:last-child {
+      border-bottom: none;
+    }
+    .lb-row:hover {
+      background: var(--cream-2);
+    }
+    @media (max-width: 768px) {
+      .lb-row {
+        grid-template-columns: 36px 1fr 80px;
+      }
+      .lb-hide-mobile {
+        display: none;
+      }
+    }
+    .rsvp-btn-state {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--trans-fast);
+    }
+    .rsvp-btn-registered {
+      background: rgba(39, 174, 96, 0.15);
+      color: #27AE60;
+      border: 1px solid #27AE60;
+    }
+    .lineup-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(41, 128, 185, 0.15);
+      color: #2980B9;
+      border: 1px solid rgba(41, 128, 185, 0.35);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .stat-card-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-card-box .stat-val {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--charcoal);
+      line-height: 1.1;
+      margin-bottom: 2px;
+    }
+    .stat-card-box .stat-lbl {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--charcoal-soft);
+    }
   </style>
 </head>
 
@@ -3677,6 +3807,7 @@
       <ul class="nav-links" id="navLinks">
         <li><a href="#about">About</a></li>
         <li><a href="#team">Team</a></li>
+        <li><a href="#leaderboard">Leaderboard</a></li>
         <li><a href="#achievements">Achievements</a></li>
         <li><a href="#gallery">Gallery</a></li>
         <li><a href="#matches">Matches</a></li>
@@ -3819,6 +3950,40 @@
       </div>
       <div class="team-filters reveal" id="teamFilters"></div>
       <div class="team-grid" id="teamGrid"></div>
+    </div>
+  </section>
+
+  <!-- ============ COLLEGE MVP LEADERBOARD ============ -->
+  <section id="leaderboard" style="padding:80px 0;">
+    <div class="container">
+      <div class="reveal" style="text-align:center;margin-bottom:32px;">
+        <span class="eyebrow">College Standings</span>
+        <h2 class="section-title">Athlete <span class="gradient-text">MVP Leaderboard</span></h2>
+        <p class="section-sub" style="margin:0 auto;max-width:640px;">Recognizing outstanding collegiate performers, match MVPs, spike masters, block leaders, and ace servers.</p>
+      </div>
+
+      <div class="leaderboard-filters" style="display:flex;justify-content:center;gap:10px;margin-bottom:28px;flex-wrap:wrap;">
+        <button class="filter-btn active" data-lbfilter="mvp">🏆 Overall MVP</button>
+        <button class="filter-btn" data-lbfilter="spikes">⚡ Top Spikers</button>
+        <button class="filter-btn" data-lbfilter="blocks">🛡️ Best Blockers</button>
+        <button class="filter-btn" data-lbfilter="aces">🎯 Ace Servers</button>
+      </div>
+
+      <!-- Top 3 Podium Cards -->
+      <div id="leaderboardPodium" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:20px;margin-bottom:32px;"></div>
+
+      <!-- Rest of Athletes Table / Grid -->
+      <div id="leaderboardTableWrapper" style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-sm);">
+        <div style="display:grid;grid-template-columns:48px 1fr 120px 100px 100px 100px;padding:10px 16px;background:var(--cream-2);font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);font-weight:700;border-bottom:1px solid var(--border);" class="lb-table-head">
+          <span>#</span>
+          <span>Athlete</span>
+          <span>Role</span>
+          <span style="text-align:center;">Matches</span>
+          <span style="text-align:center;">Stat Value</span>
+          <span style="text-align:center;">MVP Points</span>
+        </div>
+        <div id="leaderboardRows"></div>
+      </div>
     </div>
   </section>
 
@@ -4226,6 +4391,8 @@
         <button class="profile-tab-item active" id="spTabBtnProfile" data-sptab="profile">My Profile</button>
         <button class="profile-tab-item" id="spTabBtnClubs" data-sptab="clubs">My Clubs</button>
         <button class="profile-tab-item" id="spTabBtnApps" data-sptab="apps">My Applications</button>
+        <button class="profile-tab-item" id="spTabBtnSchedule" data-sptab="schedule">My Schedule &amp; RSVPs</button>
+        <button class="profile-tab-item" id="spTabBtnStats" data-sptab="stats">My Stats &amp; Badges</button>
         <button class="profile-tab-item" id="spTabBtnPreview" data-sptab="preview">Public Preview</button>
       </div>
 
@@ -4342,7 +4509,37 @@
           <div id="spAppsList" style="display:flex;flex-direction:column;gap:10px;"></div>
         </div>
 
-        <!-- Tab 4: Public Preview -->
+        <!-- Tab 4: My Schedule & RSVPs -->
+        <div id="spTabContentSchedule" style="display:none;">
+          <p style="font-size:13px;color:var(--charcoal-soft);margin-bottom:14px;">Manage your event registrations and squad availability for upcoming matches.</p>
+          <div style="margin-bottom:18px;">
+            <b style="display:block;font-size:13px;color:var(--charcoal);margin-bottom:8px;">🎟️ Registered Events &amp; Tournaments</b>
+            <div id="spRegisteredEventsList" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+          <div>
+            <b style="display:block;font-size:13px;color:var(--charcoal);margin-bottom:8px;">🏐 Upcoming Matches &amp; Availability Status</b>
+            <div id="spMatchAvailList" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
+
+        <!-- Tab 5: My Stats & Badges -->
+        <div id="spTabContentStats" style="display:none;">
+          <p style="font-size:13px;color:var(--charcoal-soft);margin-bottom:14px;">Your verified match stats, MVP awards, and earned glowing performance badges.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:10px;margin-bottom:18px;">
+            <div class="stat-card-box"><div class="stat-val" id="spStatMatches">0</div><div class="stat-lbl">Matches</div></div>
+            <div class="stat-card-box"><div class="stat-val" id="spStatPoints">0</div><div class="stat-lbl">Points</div></div>
+            <div class="stat-card-box"><div class="stat-val" id="spStatSpikes">0</div><div class="stat-lbl">Spikes</div></div>
+            <div class="stat-card-box"><div class="stat-val" id="spStatBlocks">0</div><div class="stat-lbl">Blocks</div></div>
+            <div class="stat-card-box"><div class="stat-val" id="spStatAces">0</div><div class="stat-lbl">Aces</div></div>
+            <div class="stat-card-box" style="border-color:#F1C40F;background:rgba(241,196,15,0.05);"><div class="stat-val" id="spStatMvp" style="color:#D4AC0D;">0</div><div class="stat-lbl">MVP Trophies</div></div>
+          </div>
+          <div style="margin-bottom:16px;background:var(--cream-2);border:1px solid var(--border);border-radius:12px;padding:14px;">
+            <b style="display:block;font-size:13px;color:var(--charcoal);margin-bottom:8px;">🎖️ Earned Performance Badges</b>
+            <div id="spEarnedBadgesList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          </div>
+        </div>
+
+        <!-- Tab 6: Public Preview -->
         <div id="spTabContentPreview" style="display:none;">
           <div style="background:var(--cream-2);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--charcoal-soft);margin-bottom:14px;border-left:3px solid var(--amber);">
             ℹ️ This is how your profile looks publicly to other visitors. Private information (RTU Roll No, Email, Mobile) is strictly hidden.
@@ -5271,6 +5468,7 @@
 
         var html = '';
         events.forEach(function (evt) {
+          var evId = evt.id || evt._id || ('ev_' + Math.random().toString(36).slice(2, 6));
           var posterHtml = '';
           if (evt.poster) {
             posterHtml = '<div class="event-poster-wrap"><img src="' + esc(evt.poster) + '" alt="' + esc(evt.title) + '" class="event-poster"></div>';
@@ -5281,8 +5479,11 @@
           var regBtn = '';
           if (evt.regEnabled !== false) {
             var url = evt.regUrl || '#';
-            var btnText = evt.regBtnText || 'Register Now';
-            regBtn = '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" class="btn btn-primary event-reg-btn">' + esc(btnText) + ' &rarr;</a>';
+            var btnText = evt.regBtnText || 'Register Online';
+            regBtn = '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">' +
+              '<button type="button" class="btn btn-primary event-reg-btn" data-student-rsvp="' + esc(evId) + '" data-ev-title="' + esc(evt.title) + '" style="font-size:12px;padding:6px 12px;">🎟️ RSVP / Join</button>' +
+              (url && url !== '#' ? '<a href="' + esc(url) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline" style="font-size:12px;padding:6px 12px;">' + esc(btnText) + ' &rarr;</a>' : '') +
+              '</div>';
           } else {
             regBtn = '<button class="btn btn-outline event-reg-btn-disabled" disabled style="opacity:0.6;cursor:not-allowed;">Registration Closed</button>';
           }
@@ -5290,9 +5491,10 @@
           html += '<div class="event-card card reveal visible">' +
             posterHtml +
             '<div class="event-card-body">' +
-            '<div class="event-meta">' +
+            '<div class="event-meta" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">' +
             (evt.date ? '<span class="event-tag badge">📅 ' + esc(evt.date) + '</span>' : '') +
             (evt.time ? '<span class="event-tag badge">⏰ ' + esc(evt.time) + '</span>' : '') +
+            '<span class="badge" style="background:rgba(39,174,96,0.15);color:#27AE60;border:1px solid rgba(39,174,96,0.35);">👥 <span data-ev-count="' + esc(evId) + '">0</span> Students RSVPed</span>' +
             '</div>' +
             '<h3 class="event-title">' + esc(evt.title) + '</h3>' +
             (evt.venue ? '<div class="event-venue">📍 ' + esc(evt.venue) + '</div>' : '') +
@@ -5303,6 +5505,58 @@
         });
 
         grid.innerHTML = html;
+
+        // Fetch live RSVP counts
+        fetch(API_BASE + '/events/rsvp-counts')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res && res.success && res.counts) {
+              Object.keys(res.counts).forEach(function (k) {
+                var el = grid.querySelector('[data-ev-count="' + k + '"]');
+                if (el) el.textContent = res.counts[k];
+              });
+            }
+          })
+          .catch(function () { });
+
+        // Bind Student RSVP trigger
+        grid.querySelectorAll('[data-student-rsvp]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var evId = btn.getAttribute('data-student-rsvp');
+            var evTitle = btn.getAttribute('data-ev-title');
+
+            if (!currentUser) {
+              openAuthModal('signin');
+              return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Registering...';
+
+            authFetch(API_BASE + '/events/' + encodeURIComponent(evId) + '/rsvp', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ eventTitle: evTitle })
+            })
+              .then(function (r) { return r.json(); })
+              .then(function (res) {
+                btn.disabled = false;
+                btn.textContent = '✓ Registered';
+                btn.classList.add('rsvp-btn-registered');
+                if (res && res.success) {
+                  showAlert('You have successfully RSVPed for "' + evTitle + '"! View your schedule anytime in your Student Profile.');
+                  renderEventsPublic();
+                } else {
+                  showAlert(res && res.message ? res.message : 'Could not complete RSVP.');
+                }
+              })
+              .catch(function () {
+                btn.disabled = false;
+                btn.textContent = '🎟️ RSVP / Join';
+                showAlert('Network error during RSVP.');
+              });
+          });
+        });
       }
 
       var showcasePlaying = true;
@@ -5468,6 +5722,7 @@
         renderAboutPublic();
         renderContactPublic();
         renderTeamPublic();
+        renderLeaderboard();
         renderGalleryPublic();
         renderMatchesPublic();
         renderNewsPublic();
@@ -6083,6 +6338,19 @@
         switchSpTab('profile');
       }
 
+      // Dynamic Performance Badges Helper
+      function getPerfBadgeHtml(b) {
+        if (!b) return '';
+        var glow = b.glow || 'rgba(241, 196, 15, 0.8)';
+        var bg = b.bg || '#F1C40F';
+        var text = b.text || '#000';
+        var icon = b.icon || '⭐';
+        var title = b.title || b.badgeKey || 'Badge';
+        return '<span class="perf-badge" style="background:' + esc(bg) + ';color:' + esc(text) + ';box-shadow:0 0 10px ' + esc(glow) + ', 0 0 2px ' + esc(glow) + ';" title="' + esc(b.description || '') + '">' +
+          '<span style="font-size:13px;">' + esc(icon) + '</span> ' + esc(title) +
+          '</span>';
+      }
+
       function switchSpTab(tabKey) {
         activeSpTab = tabKey;
         document.querySelectorAll('.profile-tab-item').forEach(function (btn) {
@@ -6092,14 +6360,377 @@
         document.getElementById('spTabContentClubs').style.display = tabKey === 'clubs' ? 'block' : 'none';
         var appsTab = document.getElementById('spTabContentApps');
         if (appsTab) appsTab.style.display = tabKey === 'apps' ? 'block' : 'none';
+        var schedTab = document.getElementById('spTabContentSchedule');
+        if (schedTab) schedTab.style.display = tabKey === 'schedule' ? 'block' : 'none';
+        var statsTab = document.getElementById('spTabContentStats');
+        if (statsTab) statsTab.style.display = tabKey === 'stats' ? 'block' : 'none';
         document.getElementById('spTabContentPreview').style.display = tabKey === 'preview' ? 'block' : 'none';
 
         if (tabKey === 'apps') {
           renderSpAppsTab();
+        } else if (tabKey === 'schedule') {
+          renderSpScheduleTab();
+        } else if (tabKey === 'stats') {
+          renderSpStatsTab();
         } else if (tabKey === 'preview' && currentStudentProfile) {
           renderSpPublicPreview(currentStudentProfile);
         }
       }
+
+      // Schedule & RSVPs Tab for Students
+      function renderSpScheduleTab() {
+        var evContainer = document.getElementById('spRegisteredEventsList');
+        var matchContainer = document.getElementById('spMatchAvailList');
+        if (!evContainer || !matchContainer) return;
+
+        evContainer.innerHTML = '<p style="color:var(--charcoal-soft);font-size:12px;">Loading registered events...</p>';
+        matchContainer.innerHTML = '<p style="color:var(--charcoal-soft);font-size:12px;">Loading match availability...</p>';
+
+        authFetch(API_BASE + '/profile/rsvps')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            evContainer.innerHTML = '';
+            var rsvps = (res && res.success && Array.isArray(res.rsvps)) ? res.rsvps : [];
+            if (rsvps.length === 0) {
+              evContainer.innerHTML = '<p style="font-size:12px;color:var(--charcoal-soft);margin:4px 0;">You have not registered for any upcoming events yet. Explore the Events section to RSVP!</p>';
+            } else {
+              rsvps.forEach(function (r) {
+                var item = document.createElement('div');
+                item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;';
+                item.innerHTML = '<div><b style="font-size:13px;color:var(--charcoal);display:block;">' + esc(r.eventTitle || 'College Tournament') + '</b>' +
+                  '<span style="font-size:11px;color:var(--charcoal-soft);">Status: <span style="color:#27AE60;font-weight:700;">' + esc(r.status) + '</span>' + (r.teamName ? ' &middot; Team: ' + esc(r.teamName) : '') + '</span></div>' +
+                  '<button class="admin-btn danger" data-cancel-rsvp="' + esc(r.eventId) + '" style="font-size:11px;padding:4px 10px;">Cancel RSVP</button>';
+                evContainer.appendChild(item);
+              });
+
+              evContainer.querySelectorAll('[data-cancel-rsvp]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                  var evId = btn.getAttribute('data-cancel-rsvp');
+                  showConfirm('Cancel your registration for this event?', function () {
+                    authFetch(API_BASE + '/events/' + encodeURIComponent(evId) + '/rsvp', { method: 'DELETE' })
+                      .then(function (r) { return r.json(); })
+                      .then(function (res) {
+                        showAlert(res && res.message ? res.message : 'Registration cancelled.');
+                        renderSpScheduleTab();
+                      });
+                  });
+                });
+              });
+            }
+          });
+
+        authFetch(API_BASE + '/profile/match-availability')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            matchContainer.innerHTML = '';
+            var availMap = {};
+            if (res && res.success && Array.isArray(res.records)) {
+              res.records.forEach(function (rec) {
+                availMap[rec.matchId] = rec;
+              });
+            }
+
+            var matches = (DB && Array.isArray(DB.matches)) ? DB.matches : [];
+            if (matches.length === 0) {
+              matchContainer.innerHTML = '<p style="font-size:12px;color:var(--charcoal-soft);margin:4px 0;">No upcoming matches scheduled currently.</p>';
+              return;
+            }
+
+            matches.forEach(function (m) {
+              var mId = m.id || m._id;
+              var myRec = availMap[mId] || { availability: 'Not Set' };
+              var item = document.createElement('div');
+              item.style.cssText = 'background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;';
+              item.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">' +
+                '<div><b style="font-size:13px;color:var(--charcoal);">' + esc(m.title || 'Match vs Opponent') + '</b>' +
+                '<span style="font-size:11px;color:var(--charcoal-soft);display:block;">' + esc(m.date || '') + ' ' + esc(m.time || '') + ' @ ' + esc(m.venue || 'Sports Complex') + '</span></div>' +
+                (myRec.isStartingLineup ? '<span class="lineup-pill">⭐ Starting 6: ' + esc(myRec.position || 'Starter') + '</span>' : '') +
+                '</div>' +
+                '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
+                '<span style="font-size:11px;font-family:var(--font-mono);color:var(--charcoal-soft);margin-right:4px;">My Status:</span>' +
+                '<button class="admin-btn ' + (myRec.availability === 'Available' ? 'primary' : '') + '" data-set-avail="' + esc(mId) + '" data-val="Available" style="font-size:11px;padding:3px 10px;">✓ Available</button>' +
+                '<button class="admin-btn ' + (myRec.availability === 'Tentative' ? 'primary' : '') + '" data-set-avail="' + esc(mId) + '" data-val="Tentative" style="font-size:11px;padding:3px 10px;">? Tentative</button>' +
+                '<button class="admin-btn ' + (myRec.availability === 'Unavailable' ? 'danger' : '') + '" data-set-avail="' + esc(mId) + '" data-val="Unavailable" style="font-size:11px;padding:3px 10px;">✗ Unavailable</button>' +
+                '</div>';
+              matchContainer.appendChild(item);
+            });
+
+            matchContainer.querySelectorAll('[data-set-avail]').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var mId = btn.getAttribute('data-set-avail');
+                var val = btn.getAttribute('data-val');
+                authFetch(API_BASE + '/matches/' + encodeURIComponent(mId) + '/availability', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ availability: val })
+                })
+                  .then(function (r) { return r.json(); })
+                  .then(function (res) {
+                    showAlert(res && res.message ? res.message : 'Availability updated!');
+                    renderSpScheduleTab();
+                  });
+              });
+            });
+          });
+      }
+
+      // Stats & Badges Tab for Students
+      function renderSpStatsTab() {
+        authFetch(API_BASE + '/profile/stats')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            var st = (res && res.stats) ? res.stats : {};
+            var mEl = document.getElementById('spStatMatches');
+            if (mEl) mEl.textContent = st.matchesPlayed || 0;
+            var ptsEl = document.getElementById('spStatPoints');
+            if (ptsEl) ptsEl.textContent = st.points || 0;
+            var spkEl = document.getElementById('spStatSpikes');
+            if (spkEl) spkEl.textContent = st.spikes || 0;
+            var blkEl = document.getElementById('spStatBlocks');
+            if (blkEl) blkEl.textContent = st.blocks || 0;
+            var aceEl = document.getElementById('spStatAces');
+            if (aceEl) aceEl.textContent = st.aces || 0;
+            var mvpEl = document.getElementById('spStatMvp');
+            if (mvpEl) mvpEl.textContent = st.mvpAwards || 0;
+
+            var badgesList = document.getElementById('spEarnedBadgesList');
+            if (badgesList) {
+              badgesList.innerHTML = '';
+              var badges = (res && Array.isArray(res.badges)) ? res.badges : [];
+              if (badges.length === 0) {
+                badgesList.innerHTML = '<span style="font-size:12px;color:var(--charcoal-soft);font-style:italic;">No performance badges awarded yet. Outstanding match contributions will earn you glowing accolades here!</span>';
+              } else {
+                badges.forEach(function (b) {
+                  badgesList.innerHTML += getPerfBadgeHtml(b);
+                });
+              }
+            }
+          });
+      }
+
+      // Public Preview Card
+      function renderSpPublicPreview(p) {
+        var card = document.getElementById('spPublicPreviewCard');
+        if (!card) return;
+
+        var name = p.name || p.username || 'Student';
+        var initial = name.charAt(0).toUpperCase();
+        var avatarStyle = p.photo ? 'background-image:url(\'' + p.photo + '\');' : '';
+        var avatarContent = p.photo ? '' : initial;
+        var roleBadgeHtml = getRoleBadgeHtml(p.role, p);
+
+        var clubsList = (p.clubs || ['aceit-spikers']).map(function (c) {
+          return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;background:var(--cream-2);border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--charcoal);">' + esc(c) + '</span>';
+        }).join(' ');
+
+        var badgesHtml = '';
+        if (p.badges && p.badges.length > 0) {
+          badgesHtml = '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:8px 0;">' +
+            p.badges.map(function (b) { return getPerfBadgeHtml(b); }).join('') + '</div>';
+        }
+
+        var st = p.stats || {};
+        var statsSnippet = '<div style="display:flex;justify-content:center;gap:12px;margin:10px 0;background:var(--cream-2);padding:8px 12px;border-radius:8px;font-size:12px;">' +
+          '<span>Matches: <b>' + (st.matchesPlayed || 0) + '</b></span>' +
+          '<span>Points: <b>' + (st.points || 0) + '</b></span>' +
+          '<span>MVP: <b>' + (st.mvpAwards || 0) + '</b></span>' +
+          '</div>';
+
+        var achsHtml = '';
+        if (p.achievements && p.achievements.length > 0) {
+          achsHtml = '<div style="margin-top:14px;text-align:left;border-top:1px solid var(--border);padding-top:10px;">' +
+            '<b style="font-size:12px;text-transform:uppercase;color:var(--charcoal-soft);letter-spacing:0.5px;">Achievements</b>' +
+            '<ul style="margin:6px 0 0 0;padding-left:18px;font-size:12px;color:var(--charcoal);">' +
+            p.achievements.map(function (a) { return '<li><b>' + esc(a.title || '') + '</b>' + (a.year ? ' (' + esc(a.year) + ')' : '') + '</li>'; }).join('') +
+            '</ul></div>';
+        }
+
+        card.innerHTML = '<div style="width:72px;height:72px;border-radius:50%;background:var(--amber);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin-bottom:10px;background-size:cover;background-position:center;' + avatarStyle + '">' + avatarContent + '</div>' +
+          '<h3 style="font-size:20px;margin:0 0 4px 0;color:var(--charcoal);">' + esc(name) + '</h3>' +
+          '<div style="margin-bottom:6px;">' + roleBadgeHtml + '</div>' +
+          badgesHtml +
+          '<div style="font-size:13px;color:var(--charcoal-soft);margin-bottom:10px;">@' + esc(p.username || '') + ' &middot; <span style="color:var(--amber);font-weight:600;">' + esc(p.sport || 'Athlete') + '</span></div>' +
+          statsSnippet +
+          (p.bio ? '<p style="font-size:13px;color:var(--charcoal);margin:0 0 12px 0;font-style:italic;">"' + esc(p.bio) + '"</p>' : '') +
+          '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">' + clubsList + '</div>' +
+          achsHtml;
+      }
+
+      // Public Profile Modal View (for viewing any student by username)
+      function openPublicProfileModal(username) {
+        if (!publicProfileModal) return;
+        var content = document.getElementById('pubProfileContent');
+        content.innerHTML = '<p style="color:var(--charcoal-soft);font-size:13px;">Loading profile...</p>';
+        publicProfileModal.style.display = 'flex';
+
+        fetch(API_BASE + '/users/profile/' + encodeURIComponent(username))
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res && res.success && res.profile) {
+              var p = res.profile;
+              var name = p.name || p.username || 'Student';
+              var initial = name.charAt(0).toUpperCase();
+              var avatarStyle = p.photo ? 'background-image:url(\'' + p.photo + '\');' : '';
+              var avatarContent = p.photo ? '' : initial;
+              var roleBadgeHtml = getRoleBadgeHtml(p.role, p);
+
+              var clubsList = (p.clubs || ['aceit-spikers']).map(function (c) {
+                return '<span style="display:inline-block;padding:3px 10px;border-radius:12px;background:var(--cream-2);border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--charcoal);">' + esc(c) + '</span>';
+              }).join(' ');
+
+              var badgesHtml = '';
+              if (p.badges && p.badges.length > 0) {
+                badgesHtml = '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:10px 0;">' +
+                  p.badges.map(function (b) { return getPerfBadgeHtml(b); }).join('') + '</div>';
+              }
+
+              var st = p.stats || {};
+              var statsSnippet = '<div style="display:flex;justify-content:center;gap:12px;margin:12px 0;background:var(--cream-2);padding:10px 14px;border-radius:10px;font-size:12px;">' +
+                '<span>Matches: <b>' + (st.matchesPlayed || 0) + '</b></span>' +
+                '<span>Points: <b>' + (st.points || 0) + '</b></span>' +
+                '<span>Spikes: <b>' + (st.spikes || 0) + '</b></span>' +
+                '<span>Blocks: <b>' + (st.blocks || 0) + '</b></span>' +
+                '<span>MVP: <b>' + (st.mvpAwards || 0) + '</b></span>' +
+                '</div>';
+
+              var achsHtml = '';
+              if (p.achievements && p.achievements.length > 0) {
+                achsHtml = '<div style="margin-top:16px;text-align:left;border-top:1px solid var(--border);padding-top:12px;">' +
+                  '<b style="font-size:12px;text-transform:uppercase;color:var(--charcoal-soft);letter-spacing:0.5px;">Achievements</b>' +
+                  '<ul style="margin:6px 0 0 0;padding-left:18px;font-size:12px;color:var(--charcoal);">' +
+                  p.achievements.map(function (a) { return '<li><b>' + esc(a.title || '') + '</b>' + (a.year ? ' (' + esc(a.year) + ')' : '') + '</li>'; }).join('') +
+                  '</ul></div>';
+              }
+
+              content.innerHTML = '<div style="width:80px;height:80px;border-radius:50%;background:var(--amber);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;margin-bottom:12px;background-size:cover;background-position:center;' + avatarStyle + '">' + avatarContent + '</div>' +
+                '<h3 style="font-size:22px;margin:0 0 4px 0;color:var(--charcoal);">' + esc(name) + '</h3>' +
+                '<div style="margin-bottom:6px;">' + roleBadgeHtml + '</div>' +
+                badgesHtml +
+                '<div style="font-size:13px;color:var(--charcoal-soft);margin-bottom:10px;">@' + esc(p.username || '') + ' &middot; <span style="color:var(--amber);font-weight:600;">' + esc(p.sport || 'Sports Enthusiast') + '</span></div>' +
+                statsSnippet +
+                (p.bio ? '<p style="font-size:13px;color:var(--charcoal);margin:0 0 14px 0;font-style:italic;line-height:1.5;">"' + esc(p.bio) + '"</p>' : '') +
+                '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' + clubsList + '</div>' +
+                achsHtml;
+            } else {
+              content.innerHTML = '<p style="color:#C0392B;font-size:13px;">' + (res && res.message ? res.message : 'User profile not found.') + '</p>';
+            }
+          })
+          .catch(function () {
+            content.innerHTML = '<p style="color:#C0392B;font-size:13px;">Network error loading profile.</p>';
+          });
+      }
+
+      // Public College MVP Leaderboard Logic
+      var currentLbFilter = 'mvp';
+
+      function renderLeaderboard(filter) {
+        currentLbFilter = filter || 'mvp';
+        var podiumContainer = document.getElementById('leaderboardPodium');
+        var rowsContainer = document.getElementById('leaderboardRows');
+        if (!podiumContainer || !rowsContainer) return;
+
+        fetch(API_BASE + '/leaderboard')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (!res || !res.success || !Array.isArray(res.leaderboard) || res.leaderboard.length === 0) {
+              podiumContainer.innerHTML = '';
+              rowsContainer.innerHTML = '<p style="text-align:center;padding:24px;color:var(--charcoal-soft);font-size:13px;">No athletes on the leaderboard yet.</p>';
+              return;
+            }
+
+            var athletes = res.leaderboard.slice();
+
+            if (currentLbFilter === 'spikes') {
+              athletes.sort(function (a, b) { return ((b.stats && b.stats.spikes) || 0) - ((a.stats && a.stats.spikes) || 0); });
+            } else if (currentLbFilter === 'blocks') {
+              athletes.sort(function (a, b) { return ((b.stats && b.stats.blocks) || 0) - ((a.stats && a.stats.blocks) || 0); });
+            } else if (currentLbFilter === 'aces') {
+              athletes.sort(function (a, b) { return ((b.stats && b.stats.aces) || 0) - ((a.stats && a.stats.aces) || 0); });
+            } else {
+              athletes.sort(function (a, b) { return ((b.stats && b.stats.mvpPoints) || 0) - ((a.stats && a.stats.mvpPoints) || 0); });
+            }
+
+            podiumContainer.innerHTML = '';
+            rowsContainer.innerHTML = '';
+
+            var top3 = athletes.slice(0, 3);
+            var crownText = ['👑 1st Rank', '🥈 2nd Rank', '🥉 3rd Rank'];
+            var podiumClasses = ['lb-podium-1', 'lb-podium-2', 'lb-podium-3'];
+
+            top3.forEach(function (ath, idx) {
+              var st = ath.stats || {};
+              var statVal = currentLbFilter === 'spikes' ? (st.spikes || 0) + ' Spikes'
+                : currentLbFilter === 'blocks' ? (st.blocks || 0) + ' Blocks'
+                : currentLbFilter === 'aces' ? (st.aces || 0) + ' Aces'
+                : (st.mvpPoints || 0) + ' MVP Pts';
+
+              var roleHtml = getRoleBadgeHtml(ath.role, ath);
+              var photoStyle = ath.photo ? 'background-image:url(\'' + ath.photo + '\');' : '';
+              var initial = (ath.name || ath.username || 'A').charAt(0).toUpperCase();
+
+              var badgesHtml = '';
+              if (ath.badges && ath.badges.length > 0) {
+                badgesHtml = '<div style="display:flex;justify-content:center;gap:4px;flex-wrap:wrap;margin-top:8px;">' +
+                  ath.badges.map(function (b) { return getPerfBadgeHtml(b); }).join('') + '</div>';
+              }
+
+              var card = document.createElement('div');
+              card.className = 'lb-podium-card ' + podiumClasses[idx];
+              card.innerHTML = '<span class="lb-rank-crown">' + crownText[idx] + '</span>' +
+                '<div style="width:68px;height:68px;border-radius:50%;background:var(--amber);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin:8px auto 10px auto;background-size:cover;background-position:center;' + photoStyle + '">' + (ath.photo ? '' : initial) + '</div>' +
+                '<h4 style="font-size:18px;margin:0 0 2px 0;color:var(--charcoal);cursor:pointer;" data-open-pubprofile="' + esc(ath.username) + '">' + esc(ath.name || ath.username) + '</h4>' +
+                '<div style="font-size:12px;color:var(--charcoal-soft);margin-bottom:8px;">@' + esc(ath.username) + ' &middot; ' + esc(ath.sport || 'Athlete') + '</div>' +
+                '<div style="margin-bottom:10px;">' + roleHtml + '</div>' +
+                '<div style="font-size:16px;font-weight:800;color:var(--charcoal);background:var(--cream-2);border-radius:8px;padding:6px 12px;display:inline-block;">' + statVal + '</div>' +
+                badgesHtml;
+
+              podiumContainer.appendChild(card);
+            });
+
+            var rest = athletes.slice(3);
+            if (rest.length > 0) {
+              rest.forEach(function (ath, idx) {
+                var rankNum = idx + 4;
+                var st = ath.stats || {};
+                var statVal = currentLbFilter === 'spikes' ? (st.spikes || 0) + ' Spk'
+                  : currentLbFilter === 'blocks' ? (st.blocks || 0) + ' Blk'
+                  : currentLbFilter === 'aces' ? (st.aces || 0) + ' Ace'
+                  : (st.mvpPoints || 0) + ' Pts';
+
+                var roleHtml = getRoleBadgeHtml(ath.role, ath);
+
+                var row = document.createElement('div');
+                row.className = 'lb-row';
+                row.innerHTML = '<span style="font-family:var(--font-mono);font-weight:800;color:var(--charcoal-soft);">' + rankNum + '</span>' +
+                  '<div><b style="color:var(--charcoal);cursor:pointer;font-size:14px;" data-open-pubprofile="' + esc(ath.username) + '">' + esc(ath.name || ath.username) + '</b> <span style="font-size:12px;color:var(--charcoal-soft);">(@' + esc(ath.username) + ')</span></div>' +
+                  '<div>' + roleHtml + '</div>' +
+                  '<div style="text-align:center;" class="lb-hide-mobile">' + (st.matchesPlayed || 0) + '</div>' +
+                  '<div style="text-align:center;font-weight:700;color:var(--charcoal);">' + statVal + '</div>' +
+                  '<div style="text-align:center;font-weight:800;color:#D4AC0D;">' + (st.mvpPoints || 0) + '</div>';
+
+                rowsContainer.appendChild(row);
+              });
+            }
+
+            document.querySelectorAll('[data-open-pubprofile]').forEach(function (el) {
+              el.addEventListener('click', function () {
+                var uname = el.getAttribute('data-open-pubprofile');
+                if (uname) openPublicProfileModal(uname);
+              });
+            });
+          })
+          .catch(function () {
+            rowsContainer.innerHTML = '<p style="text-align:center;padding:24px;color:#C0392B;font-size:13px;">Error loading leaderboard.</p>';
+          });
+      }
+
+      document.querySelectorAll('.leaderboard-filters .filter-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          document.querySelectorAll('.leaderboard-filters .filter-btn').forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          renderLeaderboard(btn.getAttribute('data-lbfilter'));
+        });
+      });
 
       document.querySelectorAll('.profile-tab-item').forEach(function (btn) {
         btn.addEventListener('click', function () {

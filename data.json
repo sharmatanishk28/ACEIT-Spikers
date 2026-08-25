@@ -406,6 +406,22 @@
   },
   "applications": [
     {
+      "_id": "app_1787665375154h14l",
+      "name": "Rahul Sharma",
+      "email": "spikertest_5096@aceit.ac.in",
+      "phone": "9876543210",
+      "position": "Player",
+      "experience": "2 years district level",
+      "message": "Excited to represent ACEIT Spikers in upcoming inter-college tourney!",
+      "status": "Accepted",
+      "source": "Student Portal",
+      "tallyEventId": null,
+      "tallyResponseId": null,
+      "createdAt": "2026-08-25T13:42:55.154Z",
+      "date": "2026-08-25T13:42:55.154Z",
+      "adminFeedback": "Welcome to the team! Training starts 6:00 AM on Monday."
+    },
+    {
       "_id": "app_1787664151209lfkr",
       "name": "Rahul Sharma",
       "email": "spikertest_1145@aceit.ac.in",
