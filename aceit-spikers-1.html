@@ -27,6 +27,7 @@
       --charcoal: #171410;
       --charcoal-soft: #3A342C;
       --border: #E6DFCF;
+      --bg-card: #FFFFFF;
       --navy: #0F1B33;
       --navy-2: #16264A;
       --gold: #F5A623;
@@ -54,6 +55,7 @@
     [data-theme="dark"] {
       --cream: #0B0E14;
       --cream-2: #10141C;
+      --bg-card: #141926;
       --charcoal: #F2EEE4;
       --charcoal-soft: #C9C2B2;
       --border: #242B38;
@@ -3515,21 +3517,50 @@
       background-size: cover;
       background-position: center;
     }
+    .custom-modal-overlay {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: rgba(10, 14, 23, 0.82) !important;
+      backdrop-filter: blur(14px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 20px !important;
+      z-index: 99999 !important;
+      animation: modalFadeIn 0.22s ease-out;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
     .profile-modal-box {
-      background: var(--bg-card);
-      border: 1.5px solid var(--border);
-      border-radius: 16px;
+      background: #FFFFFF !important;
+      border: 1.5px solid var(--border) !important;
+      border-radius: 20px !important;
       width: 100%;
       max-width: 680px;
       max-height: 90vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: var(--shadow-lg);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
       position: relative;
+      color: var(--charcoal);
+      opacity: 1 !important;
+    }
+    [data-theme="dark"] .profile-modal-box {
+      background: #121622 !important;
+      border-color: #283142 !important;
+      box-shadow: 0 35px 90px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
     }
     .profile-modal-header {
-      padding: 20px 24px;
+      padding: 18px 24px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -3540,23 +3571,30 @@
       padding: 24px;
       overflow-y: auto;
       flex: 1;
+      background: var(--bg-card);
     }
     .profile-tab-bar {
       display: flex;
       gap: 8px;
       border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      background: var(--bg-card);
+      padding: 0 20px;
+      background: var(--cream-2);
+      overflow-x: auto;
     }
     .profile-tab-item {
-      padding: 12px 16px;
+      padding: 12px 14px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--charcoal-soft);
       border: none;
       background: transparent;
       border-bottom: 2px solid transparent;
       cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--trans-fast);
+    }
+    .profile-tab-item:hover {
+      color: var(--charcoal);
     }
     .profile-tab-item.active {
       color: var(--amber);
@@ -3575,9 +3613,94 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    .dark .private-badge {
+    [data-theme="dark"] .private-badge {
       background: rgba(255,255,255,0.1);
       color: #aaa;
+    }
+    .pub-profile-banner {
+      background: linear-gradient(135deg, rgba(245, 166, 35, 0.25), rgba(255, 90, 31, 0.2), rgba(15, 27, 51, 0.8));
+      border-radius: 14px 14px 0 0;
+      height: 90px;
+      position: relative;
+      margin: -24px -24px 0 -24px;
+    }
+    .pub-profile-avatar-wrap {
+      position: relative;
+      margin-top: -46px;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+    .pub-profile-avatar {
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      background: var(--amber);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 800;
+      border: 3.5px solid var(--bg-card);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      background-size: cover;
+      background-position: center;
+    }
+    .pub-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 16px 0;
+    }
+    @media (max-width: 480px) {
+      .pub-stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .pub-stat-box {
+      background: var(--cream-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .pub-stat-box .pub-stat-val {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--charcoal);
+      line-height: 1.1;
+    }
+    .pub-stat-box .pub-stat-lbl {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--charcoal-soft);
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+    .pub-bio-box {
+      background: var(--cream-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin: 14px 0;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--charcoal);
+      font-style: italic;
+    }
+    .pub-club-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--cream-2);
+      border: 1px solid var(--border);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--charcoal);
     }
     .club-join-card {
       display: flex;
@@ -4556,13 +4679,13 @@
   </div>
 
   <!-- ============ PUBLIC USER PROFILE MODAL ============ -->
-  <div class="custom-modal-overlay" id="publicProfileModal" style="display:none;z-index:9999;">
-    <div class="profile-modal-box" style="max-width:480px;">
-      <div class="profile-modal-header" style="background:var(--cream-2);">
-        <h4 style="margin:0;font-size:16px;">Student Sports Profile</h4>
-        <button id="pubProfileCloseBtn" style="background:none;border:none;font-size:22px;color:var(--charcoal-soft);cursor:pointer;padding:4px 8px;">&times;</button>
+  <div class="custom-modal-overlay" id="publicProfileModal" style="display:none;z-index:99999;">
+    <div class="profile-modal-box" style="max-width:520px;">
+      <div class="profile-modal-header" style="background:var(--cream-2);border-bottom:1px solid var(--border);">
+        <h4 style="margin:0;font-size:16px;font-weight:800;color:var(--charcoal);letter-spacing:0.04em;">Student Sports Profile</h4>
+        <button id="pubProfileCloseBtn" style="background:none;border:none;font-size:24px;color:var(--charcoal-soft);cursor:pointer;padding:2px 8px;line-height:1;" aria-label="Close modal">&times;</button>
       </div>
-      <div class="profile-modal-body" id="pubProfileContent" style="padding:24px;text-align:center;"></div>
+      <div class="profile-modal-body" id="pubProfileContent" style="padding:24px;text-align:center;background:var(--bg-card);"></div>
     </div>
   </div>
 
@@ -6508,115 +6631,93 @@
           });
       }
 
-      // Public Preview Card
-      function renderSpPublicPreview(p) {
-        var card = document.getElementById('spPublicPreviewCard');
-        if (!card) return;
-
-        var name = p.name || p.username || 'Student';
+      // Athletic Card HTML Builder (used for public profile and preview)
+      function buildAthleticProfileCardHtml(p) {
+        var name = p.name || p.username || 'Student Athlete';
+        var username = p.username || '';
         var initial = name.charAt(0).toUpperCase();
         var avatarStyle = p.photo ? 'background-image:url(\'' + p.photo + '\');' : '';
         var avatarContent = p.photo ? '' : initial;
         var roleBadgeHtml = getRoleBadgeHtml(p.role, p);
+        var sport = p.sport || 'Volleyball';
 
         var clubsList = (p.clubs || ['aceit-spikers']).map(function (c) {
-          return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;background:var(--cream-2);border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--charcoal);">' + esc(c) + '</span>';
+          return '<span class="pub-club-chip">🏆 ' + esc(c) + '</span>';
         }).join(' ');
 
         var badgesHtml = '';
         if (p.badges && p.badges.length > 0) {
-          badgesHtml = '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:8px 0;">' +
-            p.badges.map(function (b) { return getPerfBadgeHtml(b); }).join('') + '</div>';
+          badgesHtml = '<div style="margin:14px 0 10px 0;text-align:left;">' +
+            '<span style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;color:var(--charcoal-soft);letter-spacing:0.5px;font-weight:700;display:block;margin-bottom:6px;">🏅 Performance Accolades</span>' +
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+            p.badges.map(function (b) { return getPerfBadgeHtml(b); }).join('') +
+            '</div></div>';
         }
 
         var st = p.stats || {};
-        var statsSnippet = '<div style="display:flex;justify-content:center;gap:12px;margin:10px 0;background:var(--cream-2);padding:8px 12px;border-radius:8px;font-size:12px;">' +
-          '<span>Matches: <b>' + (st.matchesPlayed || 0) + '</b></span>' +
-          '<span>Points: <b>' + (st.points || 0) + '</b></span>' +
-          '<span>MVP: <b>' + (st.mvpAwards || 0) + '</b></span>' +
+        var statsGridHtml = '<div class="pub-stat-grid">' +
+          '<div class="pub-stat-box"><div class="pub-stat-val">' + (st.matchesPlayed || 0) + '</div><div class="pub-stat-lbl">Matches</div></div>' +
+          '<div class="pub-stat-box"><div class="pub-stat-val">' + (st.points || 0) + '</div><div class="pub-stat-lbl">Points</div></div>' +
+          '<div class="pub-stat-box"><div class="pub-stat-val">' + (st.spikes || 0) + '</div><div class="pub-stat-lbl">Spikes</div></div>' +
+          '<div class="pub-stat-box" style="border-color:#F1C40F;background:rgba(241,196,15,0.08);"><div class="pub-stat-val" style="color:#D4AC0D;">' + (st.mvpAwards || 0) + '</div><div class="pub-stat-lbl">MVP Trophies</div></div>' +
           '</div>';
+
+        var bioHtml = p.bio ? ('<div class="pub-bio-box">&ldquo;' + esc(p.bio) + '&rdquo;</div>') : '';
 
         var achsHtml = '';
         if (p.achievements && p.achievements.length > 0) {
-          achsHtml = '<div style="margin-top:14px;text-align:left;border-top:1px solid var(--border);padding-top:10px;">' +
-            '<b style="font-size:12px;text-transform:uppercase;color:var(--charcoal-soft);letter-spacing:0.5px;">Achievements</b>' +
-            '<ul style="margin:6px 0 0 0;padding-left:18px;font-size:12px;color:var(--charcoal);">' +
-            p.achievements.map(function (a) { return '<li><b>' + esc(a.title || '') + '</b>' + (a.year ? ' (' + esc(a.year) + ')' : '') + '</li>'; }).join('') +
+          achsHtml = '<div style="margin-top:14px;text-align:left;border-top:1px solid var(--border);padding-top:12px;">' +
+            '<span style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;color:var(--charcoal-soft);letter-spacing:0.5px;font-weight:700;display:block;margin-bottom:6px;">🏆 Tournaments &amp; Honors</span>' +
+            '<ul style="margin:4px 0 0 0;padding-left:18px;font-size:12px;color:var(--charcoal);line-height:1.6;">' +
+            p.achievements.map(function (a) { return '<li><b>' + esc(a.title || '') + '</b>' + (a.year ? ' <span style="color:var(--charcoal-soft);font-size:11px;">(' + esc(a.year) + ')</span>' : '') + '</li>'; }).join('') +
             '</ul></div>';
         }
 
-        card.innerHTML = '<div style="width:72px;height:72px;border-radius:50%;background:var(--amber);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin-bottom:10px;background-size:cover;background-position:center;' + avatarStyle + '">' + avatarContent + '</div>' +
-          '<h3 style="font-size:20px;margin:0 0 4px 0;color:var(--charcoal);">' + esc(name) + '</h3>' +
-          '<div style="margin-bottom:6px;">' + roleBadgeHtml + '</div>' +
+        return '<div class="pub-profile-banner"></div>' +
+          '<div class="pub-profile-avatar-wrap">' +
+          '<div class="pub-profile-avatar"' + (p.photo ? (' style="' + avatarStyle + '"') : '') + '>' + avatarContent + '</div>' +
+          '</div>' +
+          '<h3 style="font-size:24px;font-weight:800;letter-spacing:0.02em;margin:0 0 4px 0;color:var(--charcoal);text-transform:uppercase;">' + esc(name) + '</h3>' +
+          '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">' +
+          '<span style="font-family:var(--font-mono);font-size:12px;color:var(--charcoal-soft);font-weight:600;">@' + esc(username) + '</span>' +
+          '<span style="color:var(--amber);font-weight:700;font-size:12px;">&bull; ' + esc(sport) + '</span>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:center;margin-bottom:14px;">' + roleBadgeHtml + '</div>' +
+          statsGridHtml +
           badgesHtml +
-          '<div style="font-size:13px;color:var(--charcoal-soft);margin-bottom:10px;">@' + esc(p.username || '') + ' &middot; <span style="color:var(--amber);font-weight:600;">' + esc(p.sport || 'Athlete') + '</span></div>' +
-          statsSnippet +
-          (p.bio ? '<p style="font-size:13px;color:var(--charcoal);margin:0 0 12px 0;font-style:italic;">"' + esc(p.bio) + '"</p>' : '') +
-          '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">' + clubsList + '</div>' +
+          bioHtml +
+          '<div style="margin-top:12px;text-align:left;">' +
+          '<span style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;color:var(--charcoal-soft);letter-spacing:0.5px;font-weight:700;display:block;margin-bottom:6px;">🏟️ Affiliated Clubs</span>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + clubsList + '</div>' +
+          '</div>' +
           achsHtml;
+      }
+
+      // Public Preview Card in Student Profile Modal
+      function renderSpPublicPreview(p) {
+        var card = document.getElementById('spPublicPreviewCard');
+        if (!card) return;
+        card.innerHTML = buildAthleticProfileCardHtml(p);
       }
 
       // Public Profile Modal View (for viewing any student by username)
       function openPublicProfileModal(username) {
         if (!publicProfileModal) return;
         var content = document.getElementById('pubProfileContent');
-        content.innerHTML = '<p style="color:var(--charcoal-soft);font-size:13px;">Loading profile...</p>';
+        content.innerHTML = '<div style="padding:40px 20px;text-align:center;"><p style="color:var(--charcoal-soft);font-size:14px;font-weight:600;">Loading athlete profile...</p></div>';
         publicProfileModal.style.display = 'flex';
 
         fetch(API_BASE + '/users/profile/' + encodeURIComponent(username))
           .then(function (r) { return r.json(); })
           .then(function (res) {
             if (res && res.success && res.profile) {
-              var p = res.profile;
-              var name = p.name || p.username || 'Student';
-              var initial = name.charAt(0).toUpperCase();
-              var avatarStyle = p.photo ? 'background-image:url(\'' + p.photo + '\');' : '';
-              var avatarContent = p.photo ? '' : initial;
-              var roleBadgeHtml = getRoleBadgeHtml(p.role, p);
-
-              var clubsList = (p.clubs || ['aceit-spikers']).map(function (c) {
-                return '<span style="display:inline-block;padding:3px 10px;border-radius:12px;background:var(--cream-2);border:1px solid var(--border);font-size:11px;font-weight:600;color:var(--charcoal);">' + esc(c) + '</span>';
-              }).join(' ');
-
-              var badgesHtml = '';
-              if (p.badges && p.badges.length > 0) {
-                badgesHtml = '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:10px 0;">' +
-                  p.badges.map(function (b) { return getPerfBadgeHtml(b); }).join('') + '</div>';
-              }
-
-              var st = p.stats || {};
-              var statsSnippet = '<div style="display:flex;justify-content:center;gap:12px;margin:12px 0;background:var(--cream-2);padding:10px 14px;border-radius:10px;font-size:12px;">' +
-                '<span>Matches: <b>' + (st.matchesPlayed || 0) + '</b></span>' +
-                '<span>Points: <b>' + (st.points || 0) + '</b></span>' +
-                '<span>Spikes: <b>' + (st.spikes || 0) + '</b></span>' +
-                '<span>Blocks: <b>' + (st.blocks || 0) + '</b></span>' +
-                '<span>MVP: <b>' + (st.mvpAwards || 0) + '</b></span>' +
-                '</div>';
-
-              var achsHtml = '';
-              if (p.achievements && p.achievements.length > 0) {
-                achsHtml = '<div style="margin-top:16px;text-align:left;border-top:1px solid var(--border);padding-top:12px;">' +
-                  '<b style="font-size:12px;text-transform:uppercase;color:var(--charcoal-soft);letter-spacing:0.5px;">Achievements</b>' +
-                  '<ul style="margin:6px 0 0 0;padding-left:18px;font-size:12px;color:var(--charcoal);">' +
-                  p.achievements.map(function (a) { return '<li><b>' + esc(a.title || '') + '</b>' + (a.year ? ' (' + esc(a.year) + ')' : '') + '</li>'; }).join('') +
-                  '</ul></div>';
-              }
-
-              content.innerHTML = '<div style="width:80px;height:80px;border-radius:50%;background:var(--amber);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;margin-bottom:12px;background-size:cover;background-position:center;' + avatarStyle + '">' + avatarContent + '</div>' +
-                '<h3 style="font-size:22px;margin:0 0 4px 0;color:var(--charcoal);">' + esc(name) + '</h3>' +
-                '<div style="margin-bottom:6px;">' + roleBadgeHtml + '</div>' +
-                badgesHtml +
-                '<div style="font-size:13px;color:var(--charcoal-soft);margin-bottom:10px;">@' + esc(p.username || '') + ' &middot; <span style="color:var(--amber);font-weight:600;">' + esc(p.sport || 'Sports Enthusiast') + '</span></div>' +
-                statsSnippet +
-                (p.bio ? '<p style="font-size:13px;color:var(--charcoal);margin:0 0 14px 0;font-style:italic;line-height:1.5;">"' + esc(p.bio) + '"</p>' : '') +
-                '<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' + clubsList + '</div>' +
-                achsHtml;
+              content.innerHTML = buildAthleticProfileCardHtml(res.profile);
             } else {
-              content.innerHTML = '<p style="color:#C0392B;font-size:13px;">' + (res && res.message ? res.message : 'User profile not found.') + '</p>';
+              content.innerHTML = '<div style="padding:30px 20px;"><p style="color:#C0392B;font-size:14px;font-weight:600;">' + (res && res.message ? res.message : 'User profile not found.') + '</p></div>';
             }
           })
           .catch(function () {
-            content.innerHTML = '<p style="color:#C0392B;font-size:13px;">Network error loading profile.</p>';
+            content.innerHTML = '<div style="padding:30px 20px;"><p style="color:#C0392B;font-size:14px;">Network error loading profile.</p></div>';
           });
       }
 
