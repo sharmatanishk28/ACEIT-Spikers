@@ -456,7 +456,10 @@ async function saveDB(data) {
         training: data.training || [],
         slideshow: data.slideshow || [],
         about: data.about || {},
-        contact: data.contact || {}
+        contact: data.contact || {},
+        deletedCategories: data.deletedCategories || {},
+        categories: data.categories || {},
+        customCategories: data.customCategories || {}
       },
       { upsert: true, new: true }
     );

@@ -4094,11 +4094,11 @@
             { id: uid(), n: 'Shubham Patidar', num: 1, pos: 'Captain / Outside Hitter', cat: 'Boys Team', h: "6'1\"", exp: '4 yrs', cap: true, insta: '', photo: '' },
             { id: uid(), n: 'Arjun Verma', num: 5, pos: 'Setter', cat: 'Boys Team', h: "5'10\"", exp: '3 yrs', cap: false, insta: '', photo: '' },
             { id: uid(), n: 'Ananya Sharma', num: 8, pos: 'Outside Hitter', cat: 'Girls Team', h: "5'9\"", exp: '2 yrs', cap: true, insta: '', photo: '' },
-            { id: uid(), n: 'Rohan Mehta', num: 9, pos: 'Middle Blocker', cat: '2nd Year', h: "6'3\"", exp: '2 yrs', cap: false, insta: '', photo: '' },
+            { id: uid(), n: 'Rohan Mehta', num: 9, pos: 'Middle Blocker', cat: 'Boys Team', h: "6'3\"", exp: '2 yrs', cap: false, insta: '', photo: '' },
             { id: uid(), n: 'Vikramaditya Singh', num: 10, pos: 'Setter (Pass-out)', cat: 'Alumni', h: "6'0\"", exp: '5 yrs', cap: false, insta: '', photo: '' },
             { id: uid(), n: 'Karan Singh', num: 11, pos: 'Libero', cat: 'Boys Team', h: "5'8\"", exp: '3 yrs', cap: false, insta: '', photo: '' },
             { id: uid(), n: 'Priya Rathore', num: 15, pos: 'Setter', cat: 'Girls Team', h: "5'7\"", exp: '2 yrs', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Aditya Rao', num: 14, pos: 'Opposite', cat: '2nd Year', h: "6'0\"", exp: '2 yrs', cap: false, insta: '', photo: '' }
+            { id: uid(), n: 'Aditya Rao', num: 14, pos: 'Opposite', cat: 'Boys Team', h: "6'0\"", exp: '2 yrs', cap: false, insta: '', photo: '' }
           ],
           gallery: [
             { id: uid(), cat: 'matches', h: 260, label: 'Match Day' }, { id: uid(), cat: 'training', h: 180, label: 'Training' },
@@ -4109,6 +4109,18 @@
             { id: uid(), cat: 'training', h: 200, label: 'Training' }, { id: uid(), cat: 'team', h: 260, label: 'Team' },
             { id: uid(), cat: 'matches', h: 180, label: 'Match Day' }
           ],
+          categories: {
+            team: ['boys team', 'girls team', 'alumni'],
+            gallery: ['matches', 'training', 'team', 'events', 'tournaments']
+          },
+          deletedCategories: {
+            team: ['2nd year'],
+            gallery: []
+          },
+          customCategories: {
+            team: [],
+            gallery: []
+          },
           matches: (function () {
             var now = new Date();
             function addDays(n) { var r = new Date(now); r.setDate(r.getDate() + n); return r.toISOString(); }
@@ -4230,6 +4242,13 @@
               });
               if (!parsed.about || typeof parsed.about !== 'object') { parsed.about = fresh.about; }
               if (!parsed.contact || typeof parsed.contact !== 'object') { parsed.contact = fresh.contact; }
+              if (!parsed.categories || typeof parsed.categories !== 'object') { parsed.categories = fresh.categories; }
+              if (!parsed.deletedCategories || typeof parsed.deletedCategories !== 'object') { parsed.deletedCategories = fresh.deletedCategories; }
+              if (!parsed.customCategories || typeof parsed.customCategories !== 'object') { parsed.customCategories = fresh.customCategories; }
+              
+              if (!parsed.deletedCategories.team) parsed.deletedCategories.team = [];
+              if (!parsed.deletedCategories.gallery) parsed.deletedCategories.gallery = [];
+
               return parsed;
             }
           }
@@ -4297,8 +4316,12 @@
               if (!Array.isArray(DB.events)) { DB.events = fresh.events; }
               if (!DB.about || typeof DB.about !== 'object') { DB.about = fresh.about; }
               if (!DB.contact || typeof DB.contact !== 'object') { DB.contact = fresh.contact; }
+              if (!DB.categories || typeof DB.categories !== 'object') { DB.categories = fresh.categories; }
+              if (!DB.deletedCategories || typeof DB.deletedCategories !== 'object') { DB.deletedCategories = fresh.deletedCategories; }
+              if (!DB.customCategories || typeof DB.customCategories !== 'object') { DB.customCategories = fresh.customCategories; }
               try { window.localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch (e) { }
               if (onComplete) onComplete();
+              renderAllPublic();
             }
           })
           .catch(function (err) {
@@ -4387,6 +4410,38 @@
         });
       }
 
+      function getAllCategories(tab) {
+        tab = tab || 'team';
+        var fresh = defaultDB();
+        var baseDefaults = (fresh.categories && fresh.categories[tab])
+          ? fresh.categories[tab]
+          : (tab === 'team' ? ['boys team', 'girls team', 'alumni'] : ['matches', 'training', 'team', 'events', 'tournaments']);
+
+        var deleted = ((DB && DB.deletedCategories && DB.deletedCategories[tab]) || []).map(function (c) { return String(c).trim().toLowerCase(); });
+        var configured = ((DB && DB.categories && DB.categories[tab]) || baseDefaults).map(function (c) { return String(c).trim().toLowerCase(); });
+        var custom = ((DB && DB.customCategories && DB.customCategories[tab]) || []).map(function (c) { return String(c).trim().toLowerCase(); });
+
+        var activeList = [];
+        function add(c) {
+          var norm = String(c).trim().toLowerCase();
+          if (!norm) return;
+          if (deleted.indexOf(norm) === -1 && activeList.indexOf(norm) === -1) {
+            activeList.push(norm);
+          }
+        }
+
+        configured.forEach(add);
+        custom.forEach(add);
+
+        // Also scan items in DB[tab] (ignoring any deleted category)
+        (DB && DB[tab] || []).forEach(function (it) {
+          var itCats = getCategories(it);
+          itCats.forEach(add);
+        });
+
+        return sortCategories(activeList);
+      }
+
       var teamGrid = document.getElementById('teamGrid');
       function instaUrl(v) {
         if (!v) return '';
@@ -4400,19 +4455,13 @@
         var container = document.getElementById('teamFilters');
         if (!container) return;
 
-        var deleted = (DB.deletedCategories && DB.deletedCategories.team) || [];
-        var defaultCats = ['boys team', 'girls team', 'alumni', '2nd year'].filter(function (c) { return deleted.indexOf(c) === -1; });
-        var customCats = [];
-        (DB.team || []).forEach(function (p) {
-          var pCats = getCategories(p);
-          pCats.forEach(function (norm) {
-            if (deleted.indexOf(norm) === -1 && defaultCats.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
-              customCats.push(norm);
-            }
-          });
-        });
+        var cats = getAllCategories('team');
+        var allCats = ['all'].concat(cats);
 
-        var allCats = ['all'].concat(sortCategories(defaultCats.concat(customCats)));
+        if (currentTeamFilter && currentTeamFilter !== 'all' && cats.indexOf(currentTeamFilter.toLowerCase()) === -1) {
+          currentTeamFilter = 'all';
+        }
+
         container.innerHTML = '';
 
         allCats.forEach(function (catKey) {
@@ -4474,19 +4523,13 @@
         var container = document.getElementById('galleryFilters');
         if (!container) return;
 
-        var deleted = (DB.deletedCategories && DB.deletedCategories.gallery) || [];
-        var defaultCats = ['matches', 'training', 'team', 'events', 'tournaments'].filter(function (c) { return deleted.indexOf(c) === -1; });
-        var customCats = [];
-        (DB.gallery || []).forEach(function (g) {
-          var gCats = getCategories(g);
-          gCats.forEach(function (norm) {
-            if (deleted.indexOf(norm) === -1 && defaultCats.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
-              customCats.push(norm);
-            }
-          });
-        });
+        var cats = getAllCategories('gallery');
+        var allCats = ['all'].concat(cats);
 
-        var allCats = ['all'].concat(sortCategories(defaultCats.concat(customCats)));
+        if (currentGalleryFilter && currentGalleryFilter !== 'all' && cats.indexOf(currentGalleryFilter.toLowerCase()) === -1) {
+          currentGalleryFilter = 'all';
+        }
+
         container.innerHTML = '';
 
         allCats.forEach(function (catKey) {
@@ -5416,7 +5459,7 @@
             { key: 'n', label: 'Name', type: 'text', full: true },
             { key: 'num', label: 'Jersey Number', type: 'number' },
             { key: 'pos', label: 'Position', type: 'select', options: ['Setter', 'Outside Hitter', 'Middle Blocker', 'Opposite', 'Libero', 'Captain / Outside Hitter'] },
-            { key: 'cat', label: 'Category / Squad (e.g. Boys Team, Girls Team, Alumni, 2nd Year)', type: 'select', options: ['boys team', 'girls team', 'alumni', '2nd year'] },
+            { key: 'cat', label: 'Category / Squad (e.g. Boys Team, Girls Team, Alumni, 1st Year)', type: 'select', options: ['boys team', 'girls team', 'alumni'] },
             { key: 'h', label: "Height (e.g. 6'1\")", type: 'text' },
             { key: 'exp', label: 'Experience (e.g. 3 yrs)', type: 'text' },
             { key: 'cap', label: 'Team Captain', type: 'checkbox' },
@@ -5684,24 +5727,10 @@
         if (!customModal || !customModalMsg || !customModalActions) return;
         var tab = currentAdminTab;
         var activeTabName = tab === 'team' ? 'Player / Squad' : 'Gallery';
-        var defaultCats = tab === 'team' ? ['boys team', 'girls team', 'alumni', '2nd year'] : ['matches', 'training', 'team', 'events', 'tournaments'];
-        var deleted = (DB.deletedCategories && DB.deletedCategories[tab]) || [];
-        var activeDefaults = defaultCats.filter(function (c) { return deleted.indexOf(c) === -1; });
-
-        var customCats = [];
-        (DB[tab] || []).forEach(function (it) {
-          var itemCats = getCategories(it);
-          itemCats.forEach(function (norm) {
-            if (deleted.indexOf(norm) === -1 && activeDefaults.indexOf(norm) === -1 && customCats.indexOf(norm) === -1) {
-              customCats.push(norm);
-            }
-          });
-        });
-
-        var existingCats = sortCategories(activeDefaults.concat(customCats));
+        var existingCats = getAllCategories(tab);
 
         var listHtml = '<div style="margin-top:16px;text-align:left;max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;">' +
-          '<b style="display:block;margin-bottom:8px;font-size:13px;color:var(--charcoal);">Existing Categories:</b>';
+          '<b style="display:block;margin-bottom:8px;font-size:13px;color:var(--charcoal);">Active Categories:</b>';
 
         if (existingCats.length === 0) {
           listHtml += '<p style="font-size:12px;color:var(--charcoal-soft);margin:0;">No active categories.</p>';
@@ -5719,7 +5748,7 @@
 
         customModalMsg.innerHTML =
           '<h4 style="margin-bottom:8px;font-size:18px;">Manage / Delete ' + activeTabName + ' Categories</h4>' +
-          '<p style="font-size:13px;color:var(--charcoal-soft);margin-bottom:12px;">Type a category name to add, or click <b>Delete</b> next to any category below to remove it from the public site.</p>' +
+          '<p style="font-size:13px;color:var(--charcoal-soft);margin-bottom:12px;">Type a category name to add, or click <b>Delete</b> next to any category below to remove it completely.</p>' +
           '<div style="display:flex;gap:8px;"><input type="text" id="modalNewCatInput" class="admin-search" style="flex:1;" placeholder="New category name (e.g. ' + (tab === 'team' ? '1st Year' : 'Championship 2026') + ')">' +
           '<button class="btn btn-primary" id="cmCatCreate" style="font-size:13px;padding:6px 14px;">+ Add</button></div>' +
           listHtml;
@@ -5742,15 +5771,47 @@
               showAlert('Please enter a category name.');
               return;
             }
+            var norm = catName.toLowerCase();
+
+            // Remove from deletedCategories if previously deleted
+            if (!DB.deletedCategories) DB.deletedCategories = {};
+            if (!DB.deletedCategories[tab]) DB.deletedCategories[tab] = [];
+            var dIdx = DB.deletedCategories[tab].indexOf(norm);
+            if (dIdx !== -1) {
+              DB.deletedCategories[tab].splice(dIdx, 1);
+            }
+
+            // Add to categories
+            if (!DB.categories) DB.categories = {};
+            if (!DB.categories[tab]) DB.categories[tab] = [];
+            if (DB.categories[tab].indexOf(norm) === -1) {
+              DB.categories[tab].push(norm);
+            }
+
+            if (!DB.customCategories) DB.customCategories = {};
+            if (!DB.customCategories[tab]) DB.customCategories[tab] = [];
+            if (DB.customCategories[tab].indexOf(norm) === -1) {
+              DB.customCategories[tab].push(norm);
+            }
+
+            saveDB(DB);
+            if (tab === 'team') {
+              renderTeamFilters();
+              renderTeamPublic();
+            } else {
+              renderGalleryFilters();
+              renderGalleryPublic();
+            }
+            renderAdminTab(tab);
             closeCustomModal();
-            openAdminForm(tab, null, catName);
+            showAlert('Category "' + catName + '" added successfully!');
           });
         }
 
         // Attach delete category listeners
         customModalMsg.querySelectorAll('.del-cat-btn').forEach(function (btn) {
           btn.addEventListener('click', function () {
-            var targetCat = btn.getAttribute('data-delcat');
+            var targetCat = (btn.getAttribute('data-delcat') || '').trim().toLowerCase();
             var label = targetCat.split(/[\s-_]+/).map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); }).join(' ');
             var fallbackCat = tab === 'team' ? 'boys team' : 'matches';
 
@@ -5774,7 +5835,17 @@
                 DB.deletedCategories[tab].push(targetCat);
               }
 
-              // 3. Save & refresh
+              // 3. Remove from DB.categories and DB.customCategories
+              if (DB.categories && DB.categories[tab]) {
+                var cIdx = DB.categories[tab].indexOf(targetCat);
+                if (cIdx !== -1) DB.categories[tab].splice(cIdx, 1);
+              }
+              if (DB.customCategories && DB.customCategories[tab]) {
+                var csIdx = DB.customCategories[tab].indexOf(targetCat);
+                if (csIdx !== -1) DB.customCategories[tab].splice(csIdx, 1);
+              }
+
+              // 4. Save & refresh
               saveDB(DB);
               if (tab === 'team') {
                 if ((currentTeamFilter || 'all').toLowerCase() === targetCat) currentTeamFilter = 'all';
@@ -5802,29 +5873,14 @@
           var val = item ? item[f.key] : '';
           var cls = f.full ? 'admin-field full' : 'admin-field';
           if (f.key === 'cat' && (tab === 'gallery' || tab === 'team')) {
-            var defaultOptions = tab === 'team'
-              ? ['boys team', 'girls team', 'alumni', '2nd year']
-              : ['matches', 'training', 'team', 'events', 'tournaments'];
-            var deleted = (DB.deletedCategories && DB.deletedCategories[tab]) || [];
-            var activeDefaults = defaultOptions.filter(function (c) { return deleted.indexOf(c) === -1; });
-
-            var customOptions = [];
-            (DB[tab] || []).forEach(function (it) {
-              var itemCats = getCategories(it);
-              itemCats.forEach(function (norm) {
-                if (deleted.indexOf(norm) === -1 && activeDefaults.indexOf(norm) === -1 && customOptions.indexOf(norm) === -1) {
-                  customOptions.push(norm);
-                }
-              });
-            });
+            var allCategoryOptions = getAllCategories(tab);
             if (initialCategory && initialCategory.trim()) {
               var normInit = initialCategory.trim().toLowerCase();
-              if (deleted.indexOf(normInit) === -1 && activeDefaults.indexOf(normInit) === -1 && customOptions.indexOf(normInit) === -1) {
-                customOptions.push(normInit);
+              if (allCategoryOptions.indexOf(normInit) === -1) {
+                allCategoryOptions.push(normInit);
               }
             }
 
-            var allCategoryOptions = sortCategories(activeDefaults.concat(customOptions));
             var itemCats = getCategories(item);
             if (itemCats.length === 0 && initialCategory && initialCategory.trim()) {
               itemCats = [initialCategory.trim().toLowerCase()];
@@ -5915,6 +5971,20 @@
           var container = formEl.querySelector('.admin-cat-multiselect');
           if (!container) return;
 
+          // Un-delete and persist category in DB
+          if (!DB.deletedCategories) DB.deletedCategories = {};
+          if (!DB.deletedCategories[tab]) DB.deletedCategories[tab] = [];
+          var dIdx = DB.deletedCategories[tab].indexOf(norm);
+          if (dIdx !== -1) DB.deletedCategories[tab].splice(dIdx, 1);
+
+          if (!DB.categories) DB.categories = {};
+          if (!DB.categories[tab]) DB.categories[tab] = [];
+          if (DB.categories[tab].indexOf(norm) === -1) DB.categories[tab].push(norm);
+
+          if (!DB.customCategories) DB.customCategories = {};
+          if (!DB.customCategories[tab]) DB.customCategories[tab] = [];
+          if (DB.customCategories[tab].indexOf(norm) === -1) DB.customCategories[tab].push(norm);
+
           var existingChk = container.querySelector('input[data-cat-check="' + norm + '"]');
           if (existingChk) {
             existingChk.checked = true;
@@ -6000,6 +6070,16 @@
               var catVal = (chk.getAttribute('data-cat-check') || (chk.value && chk.value !== 'on' ? chk.value : '') || '').trim().toLowerCase();
               if (catVal && selectedCats.indexOf(catVal) === -1) {
                 selectedCats.push(catVal);
+
+                // Ensure active categories list has this and un-delete if needed
+                if (!DB.deletedCategories) DB.deletedCategories = {};
+                if (!DB.deletedCategories[tab]) DB.deletedCategories[tab] = [];
+                var dIdx = DB.deletedCategories[tab].indexOf(catVal);
+                if (dIdx !== -1) DB.deletedCategories[tab].splice(dIdx, 1);
+
+                if (!DB.categories) DB.categories = {};
+                if (!DB.categories[tab]) DB.categories[tab] = [];
+                if (DB.categories[tab].indexOf(catVal) === -1) DB.categories[tab].push(catVal);
               }
             });
             if (selectedCats.length === 0) {

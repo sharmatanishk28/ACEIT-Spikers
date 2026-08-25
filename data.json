@@ -424,6 +424,21 @@
   "deletedCategories": {
     "team": [
       "2nd year"
+    ],
+    "gallery": []
+  },
+  "categories": {
+    "team": [
+      "boys team",
+      "girls team",
+      "alumni"
+    ],
+    "gallery": [
+      "matches",
+      "training",
+      "team",
+      "events",
+      "tournaments"
     ]
   },
   "training": [
