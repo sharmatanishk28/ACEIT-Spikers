@@ -1576,55 +1576,134 @@ const handleUpdateProfile = async (req, res) => {
 app.put('/api/profile/me', authenticateUser, requireAuth, handleUpdateProfile);
 app.put('/api/profile', authenticateUser, requireAuth, handleUpdateProfile);
 
-// 7. Profile: POST Follow/Join Club
-app.post('/api/profile/clubs/join', authenticateUser, requireAuth, async (req, res) => {
+// 7. Profile: GET My Followed Clubs with full details
+app.get('/api/profile/clubs', authenticateUser, requireAuth, async (req, res) => {
   try {
-    const { clubSlug } = req.body;
-    if (!clubSlug) return res.status(400).json({ success: false, message: 'Club identifier required' });
-    const slug = String(clubSlug).toLowerCase().trim();
+    const userClubs = Array.isArray(req.user.clubs) ? req.user.clubs : [];
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const matched = localClubs.filter(c => userClubs.includes(c.clubId) || userClubs.includes(c.slug) || userClubs.includes(String(c._id)));
+      return res.json({ success: true, clubs: matched });
+    }
+
+    const matched = await Club.find({
+      $or: [
+        { clubId: { $in: userClubs } },
+        { slug: { $in: userClubs } },
+        { _id: { $in: userClubs.filter(id => mongoose.Types.ObjectId.isValid(id)) } }
+      ]
+    }).sort({ name: 1 });
+
+    res.json({ success: true, clubs: matched });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 7b. Profile: POST Follow/Join Club
+const handleJoinClub = async (req, res) => {
+  try {
+    const clubIdInput = req.body.clubSlug || req.body.clubId || req.params.id;
+    if (!clubIdInput) return res.status(400).json({ success: false, message: 'Club identifier is required' });
+    const cleanInput = String(clubIdInput).toLowerCase().trim();
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
       const u = localUsers.find(u => String(u._id) === String(req.user._id || req.user.id));
       if (!u) return res.status(404).json({ success: false, message: 'User not found' });
       u.clubs = u.clubs || [];
-      if (u.clubs.indexOf(slug) === -1) u.clubs.push(slug);
-      return res.json({ success: true, clubs: u.clubs, message: 'Joined club successfully!' });
+      if (!u.clubs.includes(cleanInput)) {
+        u.clubs.push(cleanInput);
+      }
+      return res.json({ success: true, isFollowing: true, clubs: u.clubs, message: 'Joined club successfully!' });
     }
 
     const u = await User.findById(req.user._id || req.user.id);
     if (!u) return res.status(404).json({ success: false, message: 'User not found' });
     u.clubs = u.clubs || [];
-    if (u.clubs.indexOf(slug) === -1) {
-      u.clubs.push(slug);
+    if (!u.clubs.includes(cleanInput)) {
+      u.clubs.push(cleanInput);
       await u.save();
     }
-    res.json({ success: true, clubs: u.clubs, message: 'Joined club successfully!' });
+    res.json({ success: true, isFollowing: true, clubs: u.clubs, message: 'Joined club successfully!' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
-});
+};
 
-// 8. Profile: POST Leave Club
-app.post('/api/profile/clubs/leave', authenticateUser, requireAuth, async (req, res) => {
+app.post('/api/profile/clubs/join', authenticateUser, requireAuth, handleJoinClub);
+app.post('/api/clubs/:id/follow', authenticateUser, requireAuth, handleJoinClub);
+
+// 8. Profile: POST Leave/Unfollow Club
+const handleLeaveClub = async (req, res) => {
   try {
-    const { clubSlug } = req.body;
-    if (!clubSlug) return res.status(400).json({ success: false, message: 'Club identifier required' });
-    const slug = String(clubSlug).toLowerCase().trim();
+    const clubIdInput = req.body.clubSlug || req.body.clubId || req.params.id;
+    if (!clubIdInput) return res.status(400).json({ success: false, message: 'Club identifier is required' });
+    const cleanInput = String(clubIdInput).toLowerCase().trim();
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
       const u = localUsers.find(u => String(u._id) === String(req.user._id || req.user.id));
       if (!u) return res.status(404).json({ success: false, message: 'User not found' });
-      u.clubs = (u.clubs || []).filter(c => c !== slug);
-      return res.json({ success: true, clubs: u.clubs, message: 'Left club' });
+      u.clubs = (u.clubs || []).filter(c => c !== cleanInput && c !== 'aceit-' + cleanInput);
+      return res.json({ success: true, isFollowing: false, clubs: u.clubs, message: 'Left club' });
     }
 
     const u = await User.findById(req.user._id || req.user.id);
     if (!u) return res.status(404).json({ success: false, message: 'User not found' });
-    u.clubs = (u.clubs || []).filter(c => c !== slug);
+    u.clubs = (u.clubs || []).filter(c => c !== cleanInput && c !== 'aceit-' + cleanInput);
     await u.save();
-    res.json({ success: true, clubs: u.clubs, message: 'Left club' });
+    res.json({ success: true, isFollowing: false, clubs: u.clubs, message: 'Left club' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+app.post('/api/profile/clubs/leave', authenticateUser, requireAuth, handleLeaveClub);
+app.post('/api/clubs/:id/unfollow', authenticateUser, requireAuth, handleLeaveClub);
+
+// 8b. Clubs: POST Toggle Follow Status
+app.post('/api/clubs/:id/toggle-follow', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cleanInput = String(id).toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const u = localUsers.find(u => String(u._id) === String(req.user._id || req.user.id));
+      if (!u) return res.status(404).json({ success: false, message: 'User not found' });
+      u.clubs = u.clubs || [];
+      const isFollowing = u.clubs.includes(cleanInput);
+      if (isFollowing) {
+        u.clubs = u.clubs.filter(c => c !== cleanInput && c !== 'aceit-' + cleanInput);
+      } else {
+        u.clubs.push(cleanInput);
+      }
+      return res.json({
+        success: true,
+        isFollowing: !isFollowing,
+        clubs: u.clubs,
+        message: !isFollowing ? 'Followed club' : 'Unfollowed club'
+      });
+    }
+
+    const u = await User.findById(req.user._id || req.user.id);
+    if (!u) return res.status(404).json({ success: false, message: 'User not found' });
+    u.clubs = u.clubs || [];
+    const isFollowing = u.clubs.includes(cleanInput);
+    if (isFollowing) {
+      u.clubs = u.clubs.filter(c => c !== cleanInput && c !== 'aceit-' + cleanInput);
+    } else {
+      u.clubs.push(cleanInput);
+    }
+    await u.save();
+    res.json({
+      success: true,
+      isFollowing: !isFollowing,
+      clubs: u.clubs,
+      message: !isFollowing ? 'Followed club' : 'Unfollowed club'
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1842,16 +1921,28 @@ app.delete('/api/roles/:id', authenticateUser, requireAuth, async (req, res) => 
 app.get('/api/clubs', authenticateUser, async (req, res) => {
   try {
     const dbConn = await connectToDatabase();
+    const userClubs = (req.user && Array.isArray(req.user.clubs)) ? req.user.clubs : [];
+
     if (!dbConn) {
-      let clubs = localClubs;
-      if (req.user && req.user.role !== 'OWNER' && req.user.clubId && req.user.clubId !== 'ALL') {
-        clubs = localClubs.filter(c => String(c._id) === String(req.user.clubId) || c.clubId === req.user.clubId || c.slug === req.user.clubId);
+      let clubs = localClubs.map(c => {
+        const item = Object.assign({}, c);
+        item.isFollowing = userClubs.includes(item.clubId) || userClubs.includes(item.slug);
+        return item;
+      });
+      if (req.user && req.user.role === 'ADMIN' && req.user.clubId && req.user.clubId !== 'ALL') {
+        clubs = clubs.filter(c => String(c._id) === String(req.user.clubId) || c.clubId === req.user.clubId || c.slug === req.user.clubId);
       }
       return res.json({ success: true, clubs });
     }
+
     await seedInitialAuthAndClubs();
-    let clubs = await Club.find({}).sort({ createdAt: -1 });
-    if (req.user && req.user.role !== 'OWNER' && req.user.clubId && req.user.clubId !== 'ALL') {
+    let rawClubs = await Club.find({}).sort({ createdAt: -1 });
+    let clubs = rawClubs.map(c => {
+      const item = c.toObject();
+      item.isFollowing = userClubs.includes(item.clubId) || userClubs.includes(item.slug);
+      return item;
+    });
+    if (req.user && req.user.role === 'ADMIN' && req.user.clubId && req.user.clubId !== 'ALL') {
       clubs = clubs.filter(c => String(c._id) === String(req.user.clubId) || c.clubId === req.user.clubId || c.slug === req.user.clubId);
     }
     res.json({ success: true, clubs });

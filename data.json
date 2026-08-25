@@ -169,6 +169,15 @@
       "sport": "Football",
       "clubId": "strikers",
       "id": "id_mt8zm9gfbnhf6"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt8zu4c21wi7z"
     }
   ],
   "gallery": [
@@ -382,6 +391,18 @@
       "status": "Upcoming",
       "clubId": "strikers",
       "id": "id_mt8zm9gk73x71"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt8zu4c620h9x"
     }
   ],
   "news": [
@@ -501,6 +522,20 @@
     }
   ],
   "events": [
+    {
+      "id": "id_mt8zu4c9ul66l",
+      "clubId": "strikers",
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "date": "2026-10-05",
+      "time": "",
+      "venue": "ACEIT Football Stadium",
+      "poster": "",
+      "regBtnText": "Register Now",
+      "regUrl": "",
+      "regEnabled": true,
+      "createdAt": "2026-08-25T18:23:39.129Z"
+    },
     {
       "id": "id_mt8zm9gniub4o",
       "clubId": "strikers",
