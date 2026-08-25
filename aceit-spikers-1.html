@@ -1799,147 +1799,357 @@
       transform: translateY(-4px);
     }
 
-    /* ---------- Hero Slideshow ---------- */
+    /* ---------- Hero Slideshow / Moving Showcase Marquee ---------- */
     .hero-slideshow-section {
       width: 100%;
-      padding: var(--space-4) 0;
-      background: var(--cream-1);
-    }
-    .slideshow-container {
+      padding: clamp(48px, 6vw, 76px) 0 clamp(40px, 5vw, 64px);
+      background: var(--cream-2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
       position: relative;
-      width: 100%;
-      max-width: 1200px;
-      margin: 0 auto;
-      height: 440px;
-      border-radius: var(--radius-lg);
       overflow: hidden;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-      background: #111;
     }
-    @media (max-width: 768px) {
-      .slideshow-container {
-        height: 280px;
-        border-radius: var(--radius-md);
-      }
+
+    [data-theme="dark"] .hero-slideshow-section {
+      background: #0d121c;
+      border-color: rgba(255, 255, 255, 0.07);
     }
-    .slide-item {
+
+    .hero-slideshow-section::before {
+      content: '';
       position: absolute;
-      inset: 0;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.7s ease, transform 0.7s ease;
-      transform: scale(1.03);
+      top: -120px;
+      left: 20%;
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, rgba(245, 166, 35, 0.08), transparent 70%);
+      pointer-events: none;
+      z-index: 0;
     }
-    .slide-item.active {
-      opacity: 1;
-      visibility: visible;
-      transform: scale(1);
-      z-index: 1;
-    }
-    .slide-bg {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .slide-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);
+
+    .slideshow-header-row {
       display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: var(--space-5) var(--space-6);
-      color: #fff;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+      flex-wrap: wrap;
     }
-    @media (max-width: 768px) {
-      .slide-overlay {
-        padding: var(--space-3) var(--space-4);
+
+    .slideshow-header-left {
+      max-width: 640px;
+    }
+
+    .pulse-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--ember);
+      box-shadow: 0 0 10px var(--ember);
+      animation: pulseDotAnim 2s infinite ease-in-out;
+      margin-right: 6px;
+    }
+
+    @keyframes pulseDotAnim {
+      0%, 100% {
+        transform: scale(0.9);
+        opacity: 0.8;
+      }
+      50% {
+        transform: scale(1.35);
+        opacity: 1;
+        box-shadow: 0 0 14px var(--ember);
       }
     }
-    .slide-badge {
-      align-self: flex-start;
-      background: var(--orange);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 700;
-      padding: 4px 12px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-      box-shadow: 0 4px 10px rgba(255, 107, 0, 0.3);
+
+    .slideshow-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .slide-title {
-      font-size: 28px;
-      font-weight: 800;
-      color: #fff;
-      margin: 0 0 10px 0;
-      line-height: 1.2;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
-    }
-    @media (max-width: 768px) {
-      .slide-title {
-        font-size: 18px;
-        margin-bottom: 6px;
-      }
-    }
-    .slide-btn {
-      align-self: flex-start;
-      margin-top: 4px;
-    }
-    .slideshow-arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: #fff;
+
+    .showcase-nav-btn {
       width: 44px;
       height: 44px;
       border-radius: 50%;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      color: var(--charcoal);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      font-size: 17px;
       cursor: pointer;
-      transition: background 0.2s, transform 0.2s;
+      transition: all 0.28s var(--ease);
+      box-shadow: var(--shadow-sm);
+      user-select: none;
     }
-    .slideshow-arrow:hover {
-      background: var(--orange);
+
+    [data-theme="dark"] .showcase-nav-btn {
+      background: #141926;
+      border-color: rgba(255, 255, 255, 0.12);
       color: #fff;
-      border-color: var(--orange);
-      transform: translateY(-50%) scale(1.08);
     }
-    .slideshow-arrow.prev { left: 16px; }
-    .slideshow-arrow.next { right: 16px; }
+
+    .showcase-nav-btn:hover {
+      background: linear-gradient(135deg, var(--gold), var(--ember));
+      color: #1a0f00;
+      border-color: transparent;
+      transform: translateY(-2px) scale(1.06);
+      box-shadow: 0 8px 20px rgba(255, 90, 31, 0.35);
+    }
+
+    .showcase-nav-btn.play-pause {
+      font-size: 13px;
+      width: 44px;
+    }
+
+    /* Track Viewport */
+    .showcase-viewport {
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+      padding: 12px 0 20px;
+      cursor: grab;
+      user-select: none;
+      z-index: 1;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 1) 3%, rgba(0, 0, 0, 1) 97%, transparent 100%);
+      mask-image: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 1) 3%, rgba(0, 0, 0, 1) 97%, transparent 100%);
+    }
+
     @media (max-width: 768px) {
-      .slideshow-arrow { width: 34px; height: 34px; font-size: 16px; }
-      .slideshow-arrow.prev { left: 8px; }
-      .slideshow-arrow.next { right: 8px; }
+      .showcase-viewport {
+        -webkit-mask-image: none;
+        mask-image: none;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 12px;
+      }
     }
-    .slideshow-dots {
-      position: absolute;
-      bottom: 16px;
-      right: 24px;
-      z-index: 10;
+
+    .showcase-viewport.grabbing {
+      cursor: grabbing;
+    }
+
+    .showcase-track {
       display: flex;
+      gap: 24px;
+      width: max-content;
+      will-change: transform;
+      padding: 0 var(--space-3);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (max-width: 768px) {
+      .showcase-track {
+        gap: 16px;
+        padding: 0 16px;
+        transition: none;
+      }
+    }
+
+    /* Showcase Cards */
+    .showcase-card {
+      position: relative;
+      width: clamp(310px, 36vw, 540px);
+      height: clamp(270px, 28vw, 360px);
+      flex-shrink: 0;
+      border-radius: 22px;
+      overflow: hidden;
+      background: #0d121c;
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+      transition: transform 0.38s var(--ease), box-shadow 0.38s var(--ease), border-color 0.38s var(--ease);
+      scroll-snap-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .showcase-card {
+        width: 82vw;
+        max-width: 360px;
+        height: 270px;
+        border-radius: 18px;
+      }
+    }
+
+    .showcase-card:hover {
+      transform: translateY(-8px) scale(1.015);
+      border-color: rgba(255, 107, 0, 0.6);
+      box-shadow: 0 24px 50px rgba(255, 90, 31, 0.26);
+    }
+
+    .showcase-card-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s var(--ease);
+      filter: brightness(0.92);
+    }
+
+    .showcase-card:hover .showcase-card-img {
+      transform: scale(1.08);
+      filter: brightness(1.02);
+    }
+
+    .showcase-card-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 22px 24px;
+      background: linear-gradient(180deg, rgba(8, 12, 22, 0.25) 0%, rgba(8, 12, 22, 0.5) 45%, rgba(6, 9, 17, 0.95) 100%);
+      z-index: 2;
+    }
+
+    @media (max-width: 768px) {
+      .showcase-card-overlay {
+        padding: 16px 18px;
+      }
+    }
+
+    .showcase-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .showcase-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(255, 90, 31, 0.22);
+      border: 1px solid rgba(255, 107, 0, 0.45);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #FFAA5C;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .showcase-counter {
+      display: inline-flex;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .showcase-card-bottom {
+      display: flex;
+      flex-direction: column;
       gap: 8px;
     }
-    .slide-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.4);
-      cursor: pointer;
-      transition: background 0.3s, width 0.3s;
+
+    .showcase-card-title {
+      font-size: clamp(19px, 2.1vw, 25px);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+      margin: 0;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+      letter-spacing: 0.02em;
     }
-    .slide-dot.active {
-      background: var(--orange);
-      width: 24px;
+
+    @media (max-width: 768px) {
+      .showcase-card-title {
+        font-size: 17px;
+      }
+    }
+
+    .showcase-card-date {
+      font-size: 12.5px;
+      color: #D8D2C4;
+      font-weight: 500;
+      opacity: 0.92;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .showcase-btn {
+      align-self: flex-start;
+      margin-top: 6px;
+      padding: 9px 18px;
+      font-size: 13px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .showcase-btn .btn-arrow {
+      display: inline-block;
+      transition: transform 0.28s var(--ease);
+    }
+
+    .showcase-card:hover .showcase-btn .btn-arrow {
+      transform: translateX(4px);
+    }
+
+    .showcase-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 18px;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .showcase-dots {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .showcase-dot {
+      height: 8px;
+      width: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      cursor: pointer;
+      transition: all 0.3s var(--ease);
+    }
+
+    [data-theme="dark"] .showcase-dot {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .showcase-dot.active {
+      width: 26px;
       border-radius: 10px;
+      background: linear-gradient(90deg, var(--gold), var(--ember));
+    }
+
+    .showcase-hint {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--charcoal-soft);
+      opacity: 0.75;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
     /* ---------- Footer ---------- */
@@ -2600,16 +2810,19 @@
       user-select: none;
       transition: all 0.2s ease;
     }
+
     .cat-pill-checkbox:hover {
       border-color: var(--ember);
       background: #fff;
     }
+
     .cat-pill-checkbox input[type="checkbox"] {
       accent-color: var(--ember);
       width: 15px;
       height: 15px;
       cursor: pointer;
     }
+
     .cat-pill-checkbox.checked {
       border-color: var(--ember);
       background: rgba(255, 107, 0, 0.08);
@@ -3303,11 +3516,42 @@
     <div class="hero-scroll"><span>SCROLL</span><span class="scroll-line"></span></div>
   </header>
 
-  <!-- ============ HERO SLIDESHOW ============ -->
+  <!-- ============ HERO SLIDESHOW / SHOWCASE MARQUEE ============ -->
   <section id="hero-slideshow" class="hero-slideshow-section">
     <div class="container">
-      <div class="slideshow-container" id="slideshowContainer">
-        <!-- Slides dynamically rendered by JS -->
+      <div class="slideshow-header-row">
+        <div class="slideshow-header-left">
+          <span class="eyebrow"><span class="pulse-dot"></span>Club Spotlight & Highlights</span>
+          <h2 class="section-title">Championship Energy <span class="gradient-text">In Motion</span></h2>
+          <p class="section-sub">Celebrating tournament victories, intense collegiate training, and game-defining spikes.</p>
+        </div>
+        <div class="slideshow-controls">
+          <button class="showcase-nav-btn prev" id="showcasePrevBtn" aria-label="Previous Slide" title="Previous">‹</button>
+          <button class="showcase-nav-btn play-pause" id="showcasePlayPauseBtn" aria-label="Pause Auto-scroll" title="Play / Pause">
+            <span class="icon-pause">❚❚</span>
+            <span class="icon-play" style="display:none;">▶</span>
+          </button>
+          <button class="showcase-nav-btn next" id="showcaseNextBtn" aria-label="Next Slide" title="Next">›</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full-width Moving Marquee Viewport -->
+    <div class="showcase-viewport" id="showcaseViewport">
+      <div class="showcase-track" id="showcaseTrack">
+        <!-- Rendered dynamically by JS -->
+      </div>
+    </div>
+
+    <!-- Bottom Indicator & Navigation -->
+    <div class="container">
+      <div class="showcase-footer-row">
+        <div class="showcase-dots" id="showcaseDots">
+          <!-- Dots rendered dynamically -->
+        </div>
+        <div class="showcase-hint">
+          <span>‹ Drag or swipe to explore ›</span>
+        </div>
       </div>
     </div>
   </section>
@@ -3919,19 +4163,35 @@
           slideshow: [
             {
               id: 'slide_1',
+              title: 'WINNER TEAM SPIKERS 2.0',
+              date: 'AI&DS 3RD YEAR TEAM · Champions',
+              image: 'banner1.jpg',
+              link: '#matches',
+              btnText: 'View Highlights'
+            },
+            {
+              id: 'slide_2',
               title: 'Championship Season 2026',
               date: 'Upcoming Tournament · 15 Sept 2026',
-              image: 'banner1.jpg',
+              image: 'banner2.jpg',
               link: '#matches',
               btnText: 'View Match Schedule'
             },
             {
-              id: 'slide_2',
+              id: 'slide_3',
               title: 'Intense Team Training & Practice',
               date: 'Daily Practice · Arya Campus Grounds',
-              image: 'banner2.jpg',
+              image: 'banner1.jpg',
               link: '#training',
               btnText: 'View Timetable'
+            },
+            {
+              id: 'slide_4',
+              title: 'ACEIT Inter-College Volleyball Cup',
+              date: 'Main Indoor Court · 25 Sep 2026',
+              image: 'banner2.jpg',
+              link: '#events',
+              btnText: 'Explore Event'
             }
           ]
         };
@@ -4567,17 +4827,24 @@
         grid.innerHTML = html;
       }
 
-      var slideshowTimer = null;
-      var currentSlideIndex = 0;
+      var showcaseTimer = null;
+      var showcasePlaying = true;
+      var showcaseCurrentIndex = 0;
 
       function renderSlideshowPublic() {
-        var container = document.getElementById('slideshowContainer');
         var section = document.getElementById('hero-slideshow');
-        if (!container || !section) return;
+        var track = document.getElementById('showcaseTrack');
+        var viewport = document.getElementById('showcaseViewport');
+        var dotsContainer = document.getElementById('showcaseDots');
+        var prevBtn = document.getElementById('showcasePrevBtn');
+        var nextBtn = document.getElementById('showcaseNextBtn');
+        var playPauseBtn = document.getElementById('showcasePlayPauseBtn');
 
-        if (slideshowTimer) {
-          clearInterval(slideshowTimer);
-          slideshowTimer = null;
+        if (!section || !track || !viewport) return;
+
+        if (showcaseTimer) {
+          clearInterval(showcaseTimer);
+          showcaseTimer = null;
         }
 
         var items = DB.slideshow || [];
@@ -4587,104 +4854,220 @@
         }
         section.style.display = 'block';
 
-        if (currentSlideIndex >= items.length) {
-          currentSlideIndex = 0;
+        if (showcaseCurrentIndex >= items.length) {
+          showcaseCurrentIndex = 0;
         }
 
-        var html = '';
-        items.forEach(function (slide, idx) {
-          var isActive = (idx === currentSlideIndex) ? ' active' : '';
-          var fallbackImg = (idx % 2 === 0)
-            ? 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=1600&q=80'
-            : 'https://images.unsplash.com/photo-1592656094267-764a45160876?auto=format&fit=crop&w=1600&q=80';
-          var imgTag = slide.image
-            ? '<img class="slide-bg" src="' + esc(slide.image) + '" alt="' + esc(slide.title || 'Slide') + '" onerror="this.onerror=null;this.src=\'' + fallbackImg + '\';">'
-            : '<img class="slide-bg" src="' + fallbackImg + '" alt="' + esc(slide.title || 'Slide') + '">';
-          html += '<div class="slide-item' + isActive + '" data-slide-index="' + idx + '">' +
-            imgTag +
-            '<div class="slide-overlay">' +
-            (slide.date ? '<span class="slide-badge">' + esc(slide.date) + '</span>' : '') +
-            (slide.title ? '<h2 class="slide-title">' + esc(slide.title) + '</h2>' : '') +
-            (slide.link ? '<a href="' + esc(slide.link) + '" class="btn btn-primary slide-btn">' + esc(slide.btnText || 'Learn More') + '</a>' : '') +
+        function getCategoryBadge(slide, idx) {
+          var t = ((slide.title || '') + ' ' + (slide.date || '')).toLowerCase();
+          if (t.indexOf('winner') !== -1 || t.indexOf('champion') !== -1) return '🏆 Championship';
+          if (t.indexOf('train') !== -1 || t.indexOf('practice') !== -1) return '⚡ Training';
+          if (t.indexOf('cup') !== -1 || t.indexOf('tournament') !== -1) return '🔥 Tournament';
+          if (t.indexOf('match') !== -1 || t.indexOf('vs') !== -1) return '🏐 Match Day';
+          return '⭐ Spotlight';
+        }
+
+        var fallbackImgs = [
+          'banner1.jpg',
+          'banner2.jpg',
+          'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=1600&q=80',
+          'https://images.unsplash.com/photo-1592656094267-764a45160876?auto=format&fit=crop&w=1600&q=80'
+        ];
+
+        // If items are few (e.g. <= 3), duplicate cards for smooth continuous flow
+        var displayItems = items.slice();
+        if (items.length > 1 && items.length < 5) {
+          displayItems = displayItems.concat(items);
+        }
+
+        var trackHtml = '';
+        displayItems.forEach(function (slide, idx) {
+          var originalIndex = idx % items.length;
+          var fallback = fallbackImgs[originalIndex % fallbackImgs.length];
+          var imgSrc = slide.image ? esc(slide.image) : fallback;
+          var badgeText = getCategoryBadge(slide, originalIndex);
+          var countStr = (originalIndex + 1 < 10 ? '0' : '') + (originalIndex + 1) + ' / ' + (items.length < 10 ? '0' : '') + items.length;
+          var linkUrl = slide.link || '#about';
+          var btnLabel = slide.btnText || 'Explore Highlights';
+
+          trackHtml += '<div class="showcase-card" data-index="' + originalIndex + '">' +
+            '<img class="showcase-card-img" src="' + imgSrc + '" alt="' + esc(slide.title || 'ACEIT Spikers') + '" onerror="this.onerror=null;this.src=\'' + fallback + '\';">' +
+            '<div class="showcase-card-overlay">' +
+            '<div class="showcase-card-top">' +
+            '<span class="showcase-badge">' + badgeText + '</span>' +
+            '<span class="showcase-counter">' + countStr + '</span>' +
+            '</div>' +
+            '<div class="showcase-card-bottom">' +
+            (slide.date ? '<p class="showcase-card-date"><span>📅</span> ' + esc(slide.date) + '</p>' : '') +
+            '<h3 class="showcase-card-title">' + esc(slide.title || 'ACEIT Spikers Highlight') + '</h3>' +
+            '<a href="' + esc(linkUrl) + '" class="btn btn-primary showcase-btn">' +
+            esc(btnLabel) +
+            '<span class="btn-arrow">→</span>' +
+            '</a>' +
+            '</div>' +
             '</div>' +
             '</div>';
         });
 
-        if (items.length > 1) {
-          html += '<button class="slideshow-arrow prev" id="slidePrevBtn" aria-label="Previous Slide">‹</button>';
-          html += '<button class="slideshow-arrow next" id="slideNextBtn" aria-label="Next Slide">›</button>';
-          html += '<div class="slideshow-dots">';
-          items.forEach(function (_, idx) {
-            var isActive = (idx === currentSlideIndex) ? ' active' : '';
-            html += '<span class="slide-dot' + isActive + '" data-goto="' + idx + '"></span>';
+        track.innerHTML = trackHtml;
+
+        // Render Dots
+        if (dotsContainer) {
+          var dotsHtml = '';
+          items.forEach(function (_, i) {
+            dotsHtml += '<span class="showcase-dot' + (i === showcaseCurrentIndex ? ' active' : '') + '" data-goto="' + i + '"></span>';
           });
-          html += '</div>';
+          dotsContainer.innerHTML = dotsHtml;
         }
 
-        container.innerHTML = html;
+        // Navigation and scroll logic
+        var cards = track.querySelectorAll('.showcase-card');
+        var dots = dotsContainer ? dotsContainer.querySelectorAll('.showcase-dot') : [];
 
-        function goToSlide(idx) {
+        function updateDots() {
+          dots.forEach(function (dot, i) {
+            dot.classList.toggle('active', i === showcaseCurrentIndex);
+          });
+        }
+
+        function scrollToIndex(idx, smooth) {
           if (idx < 0) idx = items.length - 1;
           if (idx >= items.length) idx = 0;
-          currentSlideIndex = idx;
+          showcaseCurrentIndex = idx;
+          updateDots();
 
-          var slides = container.querySelectorAll('.slide-item');
-          var dots = container.querySelectorAll('.slide-dot');
+          // Find target card in viewport
+          var targetCard = track.querySelector('.showcase-card[data-index="' + idx + '"]');
+          if (targetCard) {
+            var cardLeft = targetCard.offsetLeft;
+            var vpWidth = viewport.clientWidth;
+            var cardWidth = targetCard.offsetWidth;
+            var scrollPos = cardLeft - (vpWidth / 2) + (cardWidth / 2);
+            if (scrollPos < 0) scrollPos = 0;
 
-          slides.forEach(function (s, i) {
-            s.classList.toggle('active', i === currentSlideIndex);
-          });
-          dots.forEach(function (d, i) {
-            d.classList.toggle('active', i === currentSlideIndex);
-          });
-        }
-
-        var prevBtn = document.getElementById('slidePrevBtn');
-        var nextBtn = document.getElementById('slideNextBtn');
-        if (prevBtn) {
-          prevBtn.addEventListener('click', function () {
-            goToSlide(currentSlideIndex - 1);
-            resetTimer();
-          });
-        }
-        if (nextBtn) {
-          nextBtn.addEventListener('click', function () {
-            goToSlide(currentSlideIndex + 1);
-            resetTimer();
-          });
-        }
-
-        container.querySelectorAll('.slide-dot').forEach(function (dot) {
-          dot.addEventListener('click', function () {
-            var g = parseInt(dot.getAttribute('data-goto'), 10);
-            if (!isNaN(g)) {
-              goToSlide(g);
-              resetTimer();
+            if (window.innerWidth <= 768) {
+              viewport.scrollTo({ left: scrollPos, behavior: smooth === false ? 'auto' : 'smooth' });
+            } else {
+              track.style.transition = smooth === false ? 'none' : 'transform 0.55s cubic-bezier(0.16, 1, 0.3, 1)';
+              track.style.transform = 'translateX(-' + scrollPos + 'px)';
             }
-          });
-        });
-
-        function startTimer() {
-          if (items.length > 1) {
-            slideshowTimer = setInterval(function () {
-              goToSlide(currentSlideIndex + 1);
-            }, 5000);
           }
         }
 
-        function resetTimer() {
-          if (slideshowTimer) clearInterval(slideshowTimer);
-          startTimer();
+        function nextSlide() {
+          scrollToIndex(showcaseCurrentIndex + 1);
         }
 
-        container.addEventListener('mouseenter', function () {
-          if (slideshowTimer) clearInterval(slideshowTimer);
-        });
-        container.addEventListener('mouseleave', function () {
-          resetTimer();
+        function prevSlide() {
+          scrollToIndex(showcaseCurrentIndex - 1);
+        }
+
+        // Button events
+        if (prevBtn) {
+          prevBtn.onclick = function () {
+            prevSlide();
+            resetTimer();
+          };
+        }
+        if (nextBtn) {
+          nextBtn.onclick = function () {
+            nextSlide();
+            resetTimer();
+          };
+        }
+
+        // Play/Pause button
+        function updatePlayPauseBtn() {
+          if (!playPauseBtn) return;
+          var iconPause = playPauseBtn.querySelector('.icon-pause');
+          var iconPlay = playPauseBtn.querySelector('.icon-play');
+          if (iconPause && iconPlay) {
+            iconPause.style.display = showcasePlaying ? 'inline-block' : 'none';
+            iconPlay.style.display = showcasePlaying ? 'none' : 'inline-block';
+          }
+        }
+
+        if (playPauseBtn) {
+          playPauseBtn.onclick = function () {
+            showcasePlaying = !showcasePlaying;
+            updatePlayPauseBtn();
+            if (showcasePlaying) {
+              startTimer();
+            } else {
+              if (showcaseTimer) clearInterval(showcaseTimer);
+            }
+          };
+        }
+
+        // Dot events
+        dots.forEach(function (dot) {
+          dot.onclick = function () {
+            var g = parseInt(dot.getAttribute('data-goto'), 10);
+            if (!isNaN(g)) {
+              scrollToIndex(g);
+              resetTimer();
+            }
+          };
         });
 
+        // Mouse Drag / Touch Swipe
+        var isDown = false;
+        var startX = 0;
+        var scrollLeftInit = 0;
+        var trackTransformInit = 0;
+
+        viewport.addEventListener('mousedown', function (e) {
+          if (e.target.closest('a') || e.target.closest('button')) return;
+          isDown = true;
+          viewport.classList.add('grabbing');
+          startX = e.pageX - viewport.offsetLeft;
+          var tr = track.style.transform || '';
+          var match = tr.match(/translateX\(-?([0-9.]+)px\)/);
+          trackTransformInit = match ? parseFloat(match[1]) : 0;
+        });
+
+        window.addEventListener('mouseup', function () {
+          if (isDown) {
+            isDown = false;
+            viewport.classList.remove('grabbing');
+          }
+        });
+
+        viewport.addEventListener('mousemove', function (e) {
+          if (!isDown) return;
+          e.preventDefault();
+          var x = e.pageX - viewport.offsetLeft;
+          var walk = (x - startX) * 1.4;
+          var newPos = Math.max(0, trackTransformInit - walk);
+          track.style.transition = 'none';
+          track.style.transform = 'translateX(-' + newPos + 'px)';
+        });
+
+        // Autoplay timer
+        function startTimer() {
+          if (!showcasePlaying || items.length <= 1) return;
+          if (showcaseTimer) clearInterval(showcaseTimer);
+          showcaseTimer = setInterval(function () {
+            nextSlide();
+          }, 3800);
+        }
+
+        function resetTimer() {
+          if (showcaseTimer) clearInterval(showcaseTimer);
+          if (showcasePlaying) startTimer();
+        }
+
+        viewport.addEventListener('mouseenter', function () {
+          if (showcaseTimer) clearInterval(showcaseTimer);
+        });
+
+        viewport.addEventListener('mouseleave', function () {
+          if (showcasePlaying) resetTimer();
+        });
+
+        updatePlayPauseBtn();
         startTimer();
+        scrollToIndex(0, false);
       }
 
       function renderAllPublic() {

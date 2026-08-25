@@ -459,19 +459,35 @@
   "slideshow": [
     {
       "id": "slide_1",
+      "title": "WINNER TEAM SPIKERS 2.0",
+      "date": "AI&DS 3RD YEAR TEAM · Champions",
+      "image": "banner1.jpg",
+      "link": "#matches",
+      "btnText": "View Highlights"
+    },
+    {
+      "id": "slide_2",
       "title": "Championship Season 2026",
       "date": "Upcoming Tournament · 15 Sept 2026",
-      "image": "banner1.jpg",
+      "image": "banner2.jpg",
       "link": "#matches",
       "btnText": "View Match Schedule"
     },
     {
-      "id": "slide_2",
+      "id": "slide_3",
       "title": "Intense Team Training & Practice",
       "date": "Daily Practice · Arya Campus Grounds",
-      "image": "banner2.jpg",
+      "image": "banner1.jpg",
       "link": "#training",
       "btnText": "View Timetable"
+    },
+    {
+      "id": "slide_4",
+      "title": "ACEIT Inter-College Volleyball Cup",
+      "date": "Main Indoor Court · 25 Sep 2026",
+      "image": "banner2.jpg",
+      "link": "#events",
+      "btnText": "Explore Event"
     }
   ]
 }
