@@ -10,7 +10,8 @@
       "cap": true,
       "insta": "",
       "photo": "",
-      "cat": "Boys Team"
+      "cat": "Boys Team",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl2",
@@ -22,7 +23,8 @@
       "cap": false,
       "insta": "",
       "photo": "",
-      "cat": "Boys Team"
+      "cat": "Boys Team",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl3",
@@ -34,7 +36,8 @@
       "cap": false,
       "insta": "",
       "photo": "",
-      "cat": "Girls Team"
+      "cat": "Girls Team",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl4",
@@ -46,7 +49,8 @@
       "cap": false,
       "insta": "",
       "photo": "",
-      "cat": "Alumni"
+      "cat": "Alumni",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl5",
@@ -58,7 +62,8 @@
       "cap": false,
       "insta": "",
       "photo": "",
-      "cat": "boys team"
+      "cat": "boys team",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl6",
@@ -70,7 +75,8 @@
       "cap": false,
       "insta": "",
       "photo": "",
-      "cat": "Boys Team"
+      "cat": "Boys Team",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl7",
@@ -82,7 +88,8 @@
       "cap": false,
       "insta": "",
       "photo": "",
-      "cat": "Girls Team"
+      "cat": "Girls Team",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl8",
@@ -94,7 +101,8 @@
       "cap": false,
       "insta": "",
       "photo": "",
-      "cat": "Alumni"
+      "cat": "Alumni",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl_g1",
@@ -106,7 +114,8 @@
       "cap": false,
       "cat": "Girls Team",
       "insta": "",
-      "photo": ""
+      "photo": "",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl_a1",
@@ -118,7 +127,8 @@
       "cap": false,
       "cat": "Alumni",
       "insta": "",
-      "photo": ""
+      "photo": "",
+      "clubId": "spikers"
     },
     {
       "id": "idmt7aagjz45",
@@ -130,7 +140,26 @@
       "h": "",
       "exp": "",
       "cap": false,
-      "insta": ""
+      "insta": "",
+      "clubId": "spikers"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt8zeo2cnz1v9"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt8zg7h70hhiw"
     }
   ],
   "gallery": [
@@ -138,86 +167,100 @@
       "id": "idmsozmogl9",
       "cat": "matches",
       "h": 260,
-      "label": "Match Day"
+      "label": "Match Day",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl10",
       "cat": "training",
       "h": 180,
-      "label": "Training"
+      "label": "Training",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl11",
       "cat": "team",
       "h": 220,
-      "label": "Team"
+      "label": "Team",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl12",
       "cat": "events",
       "h": 200,
-      "label": "Event"
+      "label": "Event",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl13",
       "cat": "matches",
       "h": 200,
-      "label": "Match Day"
+      "label": "Match Day",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl14",
       "cat": "training",
       "h": 260,
-      "label": "Training"
+      "label": "Training",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl15",
       "cat": "team",
       "h": 180,
-      "label": "Team"
+      "label": "Team",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl16",
       "cat": "matches",
       "h": 220,
-      "label": "Match Day"
+      "label": "Match Day",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl17",
       "cat": "events",
       "h": 240,
-      "label": "Event"
+      "label": "Event",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl18",
       "cat": "training",
       "h": 200,
-      "label": "Training"
+      "label": "Training",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl19",
       "cat": "team",
       "h": 260,
-      "label": "Team"
+      "label": "Team",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl20",
       "cat": "matches",
       "h": 180,
-      "label": "Match Day"
+      "label": "Match Day",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogl25",
       "cat": "tournaments",
       "h": 240,
-      "label": "Tournament Champions"
+      "label": "Tournament Champions",
+      "clubId": "spikers"
     },
     {
       "id": "idmt797zms45",
       "photo": "",
       "label": "Inter-College Final Match",
       "cat": "inter-college cup 2026",
-      "h": 0
+      "h": 0,
+      "clubId": "spikers"
     }
   ],
   "matches": [
@@ -231,7 +274,8 @@
       "date": "2026-08-16T18:22:28.437Z",
       "venue": "ACEIT Indoor Court",
       "status": "completed",
-      "winner": "team1"
+      "winner": "team1",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm22",
@@ -252,7 +296,8 @@
           "team1": 2,
           "team2": 0
         }
-      ]
+      ],
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm23",
@@ -264,7 +309,8 @@
       "date": "2026-09-01T18:22:28.437Z",
       "venue": "ACEIT Indoor Court",
       "status": "upcoming",
-      "winner": "none"
+      "winner": "none",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm24",
@@ -276,7 +322,8 @@
       "date": "2026-09-10T18:22:28.437Z",
       "venue": "MNIT Sports Complex",
       "status": "upcoming",
-      "winner": "none"
+      "winner": "none",
+      "clubId": "spikers"
     },
     {
       "id": "idmt77sm8544",
@@ -288,7 +335,32 @@
       "venue": "LPU Ground",
       "status": "completed",
       "winner": "team1",
-      "team2": "LPU Strikers"
+      "team2": "LPU Strikers",
+      "clubId": "spikers"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt8zeo2fqa7z9"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt8zg7hbs44ps"
     }
   ],
   "news": [
@@ -298,7 +370,8 @@
       "date": "20 Jul 2026",
       "title": "Spikers clinch regional title after thrilling 5-set final",
       "body": "ACEIT Spikers edged out a tightly contested final to bring home the regional championship trophy for the second year running.",
-      "featured": true
+      "featured": true,
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm26",
@@ -306,7 +379,8 @@
       "date": "14 Jul 2026",
       "title": "New training block begins August 1",
       "body": "An updated strength & conditioning block kicks off next month for all first-team players.",
-      "featured": false
+      "featured": false,
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm27",
@@ -314,33 +388,40 @@
       "date": "02 Jul 2026",
       "title": "Spikers advance to inter-college semifinal",
       "body": "A dominant straight-sets win books our place in the semifinal round.",
-      "featured": false
+      "featured": false,
+      "clubId": "spikers"
     }
   ],
   "sponsors": [
     {
       "id": "idmsozmogm28",
-      "name": "Wonder Cement"
+      "name": "Wonder Cement",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm29",
-      "name": "FireNodeX"
+      "name": "FireNodeX",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm30",
-      "name": "Arya College"
+      "name": "Arya College",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm31",
-      "name": "Sports Authority"
+      "name": "Sports Authority",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm32",
-      "name": "Nova Gear"
+      "name": "Nova Gear",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm33",
-      "name": "FireCraft Network"
+      "name": "FireCraft Network",
+      "clubId": "spikers"
     }
   ],
   "testimonials": [
@@ -348,19 +429,22 @@
       "id": "idmsozmogm34",
       "q": "Joining Spikers made me a better player and a better teammate. The discipline here is real.",
       "n": "Arjun Verma",
-      "r": "Setter"
+      "r": "Setter",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm35",
       "q": "Our coaches push us hard, but they care harder. That balance is what wins matches.",
       "n": "Karan Singh",
-      "r": "Libero"
+      "r": "Libero",
+      "clubId": "spikers"
     },
     {
       "id": "idmsozmogm36",
       "q": "This club taught me more about leadership than any classroom could.",
       "n": "Shubham Patidar",
-      "r": "Team Captain"
+      "r": "Team Captain",
+      "clubId": "spikers"
     }
   ],
   "stats": [
@@ -395,7 +479,36 @@
       "target": 6
     }
   ],
-  "events": [],
+  "events": [
+    {
+      "id": "id_mt8zg7hf6ata4",
+      "clubId": "strikers",
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "date": "2026-10-05",
+      "time": "",
+      "venue": "ACEIT Football Stadium",
+      "poster": "",
+      "regBtnText": "Register Now",
+      "regUrl": "",
+      "regEnabled": true,
+      "createdAt": "2026-08-25T18:12:50.019Z"
+    },
+    {
+      "id": "id_mt8zeo2j80k6t",
+      "clubId": "strikers",
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "date": "2026-10-05",
+      "time": "",
+      "venue": "ACEIT Football Stadium",
+      "poster": "",
+      "regBtnText": "Register Now",
+      "regUrl": "",
+      "regEnabled": true,
+      "createdAt": "2026-08-25T18:11:38.203Z"
+    }
+  ],
   "about": {
     "eyebrow": "WHO WE ARE - TEST",
     "title": "BUILT ON THE COURT,\\nDEFINED BY EXCELLENCE.",
@@ -520,28 +633,32 @@
       "icon": "🌅",
       "title": "Morning Session",
       "time": "06:00 – 07:30",
-      "desc": "Mon / Wed / Fri — footwork, serving accuracy, and reception drills."
+      "desc": "Mon / Wed / Fri — footwork, serving accuracy, and reception drills.",
+      "clubId": "spikers"
     },
     {
       "id": "tr_e1",
       "icon": "🌆",
       "title": "Evening Session",
       "time": "17:30 – 19:30",
-      "desc": "Daily — full-court scrimmage, attack combinations, block timing."
+      "desc": "Daily — full-court scrimmage, attack combinations, block timing.",
+      "clubId": "spikers"
     },
     {
       "id": "tr_w1",
       "icon": "🏆",
       "title": "Weekend Practice",
       "time": "Sat 09:00 – 12:00",
-      "desc": "Match simulation and set-play rehearsal ahead of fixtures."
+      "desc": "Match simulation and set-play rehearsal ahead of fixtures.",
+      "clubId": "spikers"
     },
     {
       "id": "tr_s1",
       "icon": "💪",
       "title": "Strength Training",
       "time": "Tue / Thu 18:00",
-      "desc": "Conditioning, jump strength, and injury-prevention work in the gym."
+      "desc": "Conditioning, jump strength, and injury-prevention work in the gym.",
+      "clubId": "spikers"
     }
   ],
   "slideshow": [

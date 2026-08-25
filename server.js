@@ -16,7 +16,19 @@ const DATA_FILE = path.join(__dirname, 'data.json');
 
 // In-memory fallback stores for standalone/offline dev mode without MONGODB_URI
 let localClubs = [
-  { _id: 'c1', name: 'ACEIT Spikers', sport: 'Volleyball', slug: 'aceit-spikers', logo: '', description: 'ACEIT Official Volleyball Club', active: true, createdAt: new Date() }
+  {
+    _id: 'c_spikers',
+    clubId: 'spikers',
+    name: 'ACEIT Spikers',
+    sport: 'Volleyball',
+    slug: 'spikers',
+    logo: '',
+    coverImage: '',
+    description: 'ACEIT Official Volleyball Club',
+    active: true,
+    status: 'active',
+    createdAt: new Date()
+  }
 ];
 
 let localRoles = [
@@ -170,12 +182,15 @@ const ClubDoc = mongoose.models.ClubDoc || mongoose.model('ClubDoc', clubSchema)
 
 // Dynamic Multi-Club Model
 const clubItemSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  sport: { type: String, required: true },
-  slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  clubId: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  name: { type: String, required: true, trim: true },
+  sport: { type: String, required: true, trim: true },
+  slug: { type: String, required: true, lowercase: true, trim: true },
   logo: { type: String, default: '' },
+  coverImage: { type: String, default: '' },
   description: { type: String, default: '' },
-  active: { type: Boolean, default: true }
+  active: { type: Boolean, default: true },
+  status: { type: String, default: 'active' }
 }, { timestamps: true });
 
 const Club = mongoose.models.Club || mongoose.model('Club', clubItemSchema);
@@ -414,17 +429,26 @@ async function seedInitialAuthAndClubs() {
   if (!dbConn) return;
 
   try {
-    const clubCount = await Club.countDocuments();
-    if (clubCount === 0) {
+    const spikersClub = await Club.findOne({ $or: [{ clubId: 'spikers' }, { slug: 'spikers' }, { slug: 'aceit-spikers' }] });
+    if (!spikersClub) {
       await Club.create({
+        clubId: 'spikers',
         name: 'ACEIT Spikers',
         sport: 'Volleyball',
-        slug: 'aceit-spikers',
+        slug: 'spikers',
         logo: '',
+        coverImage: '',
         description: 'ACEIT Official Volleyball Club',
-        active: true
+        active: true,
+        status: 'active'
       });
-      console.log('[MongoDB Atlas] Auto-seeded default club: ACEIT Spikers (Volleyball)');
+      console.log('[MongoDB Atlas] Auto-seeded default club: ACEIT Spikers (Volleyball) with clubId: spikers');
+    } else {
+      let updated = false;
+      if (!spikersClub.clubId) { spikersClub.clubId = 'spikers'; updated = true; }
+      if (!spikersClub.status) { spikersClub.status = spikersClub.active ? 'active' : 'inactive'; updated = true; }
+      if (spikersClub.coverImage === undefined) { spikersClub.coverImage = ''; updated = true; }
+      if (updated) await spikersClub.save();
     }
 
     const roleCount = await Role.countDocuments();
@@ -571,12 +595,45 @@ function requireClubAccess(req, res, next) {
   return res.status(403).json({ success: false, message: `Access forbidden: No access to club '${reqClub}'` });
 }
 
+// Multi-Club Data Normalization & Filtering Helpers
+function normalizeItemClubId(item, defaultClubId = 'spikers') {
+  if (!item || typeof item !== 'object') return item;
+  if (!item.clubId) {
+    item.clubId = defaultClubId;
+  }
+  return item;
+}
+
+function filterByClub(items, reqClubId = 'spikers') {
+  if (!Array.isArray(items)) return [];
+  if (reqClubId === 'all' || reqClubId === 'ALL') {
+    return items;
+  }
+  const normReq = String(reqClubId || 'spikers').toLowerCase().trim();
+  return items.filter(item => {
+    const cId = String(item.clubId || item.clubSlug || 'spikers').toLowerCase().trim();
+    if (normReq === 'spikers' || normReq === 'aceit-spikers') {
+      return cId === 'spikers' || cId === 'aceit-spikers';
+    }
+    return cId === normReq;
+  });
+}
+
 // Helper: Read default data.json fallback (used ONLY for initial empty collection seeding or local standalone dev)
 function readLocalFileDB() {
   try {
     if (fs.existsSync(DATA_FILE)) {
       const raw = fs.readFileSync(DATA_FILE, 'utf-8');
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.team)) parsed.team.forEach(i => normalizeItemClubId(i, 'spikers'));
+      if (Array.isArray(parsed.matches)) parsed.matches.forEach(i => normalizeItemClubId(i, 'spikers'));
+      if (Array.isArray(parsed.events)) parsed.events.forEach(i => normalizeItemClubId(i, 'spikers'));
+      if (Array.isArray(parsed.training)) parsed.training.forEach(i => normalizeItemClubId(i, 'spikers'));
+      if (Array.isArray(parsed.news)) parsed.news.forEach(i => normalizeItemClubId(i, 'spikers'));
+      if (Array.isArray(parsed.gallery)) parsed.gallery.forEach(i => normalizeItemClubId(i, 'spikers'));
+      if (Array.isArray(parsed.sponsors)) parsed.sponsors.forEach(i => normalizeItemClubId(i, 'spikers'));
+      if (Array.isArray(parsed.testimonials)) parsed.testimonials.forEach(i => normalizeItemClubId(i, 'spikers'));
+      return parsed;
     }
   } catch (err) { }
   return {
@@ -625,7 +682,18 @@ async function getDB() {
           doc = await ClubDoc.findOne({});
         }
       }
-      if (doc) return { success: true, data: doc.toObject() };
+      if (doc) {
+        const docObj = doc.toObject();
+        if (Array.isArray(docObj.team)) docObj.team.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(docObj.matches)) docObj.matches.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(docObj.events)) docObj.events.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(docObj.training)) docObj.training.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(docObj.news)) docObj.news.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(docObj.gallery)) docObj.gallery.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(docObj.sponsors)) docObj.sponsors.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(docObj.testimonials)) docObj.testimonials.forEach(i => normalizeItemClubId(i, 'spikers'));
+        return { success: true, data: docObj };
+      }
     } catch (err) {
       console.error('[MongoDB Atlas Error] Fetch failed:', err.message);
       if (hasUri) {
@@ -734,13 +802,30 @@ app.get('/api/debug-db', async (req, res) => {
   });
 });
 
-// 1. Get full database
+// 1. Get full database (supports ?clubId=)
 app.get('/api/db', async (req, res) => {
   const result = await getDB();
   if (!result.success) {
     return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${result.error}`, error: result.error });
   }
-  res.json({ success: true, data: result.data });
+  let data = result.data;
+  const reqClubId = req.query.clubId || 'spikers';
+  if (reqClubId !== 'all' && reqClubId !== 'ALL') {
+    data = {
+      ...data,
+      team: filterByClub(data.team, reqClubId),
+      matches: filterByClub(data.matches, reqClubId),
+      events: filterByClub(data.events, reqClubId),
+      training: filterByClub(data.training, reqClubId),
+      news: filterByClub(data.news, reqClubId),
+      gallery: filterByClub(data.gallery, reqClubId),
+      sponsors: filterByClub(data.sponsors, reqClubId),
+      testimonials: filterByClub(data.testimonials, reqClubId),
+      stats: filterByClub(data.stats, reqClubId),
+      slideshow: filterByClub(data.slideshow, reqClubId)
+    };
+  }
+  res.json({ success: true, data });
 });
 
 // 2. Save full database
@@ -756,13 +841,14 @@ app.post('/api/save-all', authenticateUser, requireAuth, requirePermission('sett
   res.json({ success: true, message: 'Database saved online to MongoDB Atlas' });
 });
 
-// 3. Get players team array
+// 3. Get players team array (supports ?clubId=)
 app.get('/api/team', async (req, res) => {
   const result = await getDB();
   if (!result.success) {
     return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${result.error}`, error: result.error });
   }
-  res.json({ success: true, team: result.data.team || [] });
+  let team = filterByClub(result.data.team || [], req.query.clubId || 'spikers');
+  res.json({ success: true, team });
 });
 
 // 4. Add a player
@@ -778,6 +864,7 @@ app.post('/api/team', authenticateUser, requireAuth, requirePermission('players.
       return res.status(400).json({ success: false, message: 'Player name is required' });
     }
     player.id = player.id || generateId();
+    player.clubId = player.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
     db.team = db.team || [];
     db.team.push(player);
 
@@ -787,7 +874,7 @@ app.post('/api/team', authenticateUser, requireAuth, requirePermission('players.
       return res.status(500).json({ success: false, message: `Failed to persist player addition: ${result.error}`, error: result.error });
     }
 
-    console.log(`[API Player Add Success] Player added to MongoDB Atlas: ${player.n} (#${player.num}) ID: ${player.id}`);
+    console.log(`[API Player Add Success] Player added to MongoDB Atlas: ${player.n} (#${player.num}) ID: ${player.id} (Club: ${player.clubId})`);
     res.json({ success: true, player, team: db.team });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message, error: err.message });
@@ -811,6 +898,9 @@ app.put('/api/team/:id', authenticateUser, requireAuth, requirePermission('playe
       return res.status(404).json({ success: false, message: 'Player not found' });
     }
     updatedPlayer.id = id;
+    if (!updatedPlayer.clubId) {
+      updatedPlayer.clubId = db.team[idx].clubId || 'spikers';
+    }
     db.team[idx] = updatedPlayer;
 
     const result = await saveDB(db);
@@ -890,13 +980,14 @@ app.post('/api/team/duplicate/:id', authenticateUser, requireAuth, requirePermis
 // MATCHES API ENDPOINTS (MongoDB Persistence)
 // ==========================================
 
-// GET /api/matches
+// GET /api/matches (supports ?clubId=)
 app.get('/api/matches', async (req, res) => {
   const result = await getDB();
   if (!result.success) {
     return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${result.error}`, error: result.error });
   }
-  res.json({ success: true, matches: result.data.matches || [] });
+  let matches = filterByClub(result.data.matches || [], req.query.clubId || 'spikers');
+  res.json({ success: true, matches });
 });
 
 // POST /api/matches (Add Match)
@@ -909,7 +1000,8 @@ app.post('/api/matches', authenticateUser, requireAuth, async (req, res) => {
     const db = dbRes.data;
     const match = req.body || {};
     match.id = match.id || generateId();
-    if (!match.team1) match.team1 = 'ACEIT Spikers';
+    match.clubId = match.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!match.team1) match.team1 = match.clubId === 'spikers' ? 'ACEIT Spikers' : 'Home Team';
     if (!match.opp && match.team2) match.opp = match.team2;
     if (!match.team2 && match.opp) match.team2 = match.opp;
     if (!match.winner) match.winner = 'none';
@@ -923,7 +1015,7 @@ app.post('/api/matches', authenticateUser, requireAuth, async (req, res) => {
       return res.status(500).json({ success: false, message: `Failed to persist match addition: ${result.error}`, error: result.error });
     }
 
-    console.log(`[API Match Add Success] Match added to MongoDB Atlas: ID ${match.id}`);
+    console.log(`[API Match Add Success] Match added to MongoDB Atlas: ID ${match.id} (Club: ${match.clubId})`);
     res.json({ success: true, match, matches: db.matches });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message, error: err.message });
@@ -946,7 +1038,10 @@ app.put('/api/matches/:id', authenticateUser, requireAuth, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Match not found' });
     }
     updatedMatch.id = id;
-    if (!updatedMatch.team1) updatedMatch.team1 = 'ACEIT Spikers';
+    if (!updatedMatch.clubId) {
+      updatedMatch.clubId = db.matches[idx].clubId || 'spikers';
+    }
+    if (!updatedMatch.team1) updatedMatch.team1 = updatedMatch.clubId === 'spikers' ? 'ACEIT Spikers' : 'Home Team';
     if (!updatedMatch.opp && updatedMatch.team2) updatedMatch.opp = updatedMatch.team2;
     if (!updatedMatch.team2 && updatedMatch.opp) updatedMatch.team2 = updatedMatch.opp;
     if (!updatedMatch.winner) updatedMatch.winner = 'none';
@@ -1024,6 +1119,94 @@ app.post('/api/matches/duplicate/:id', authenticateUser, requireAuth, async (req
   } catch (err) {
     res.status(500).json({ success: false, message: err.message, error: err.message });
   }
+});
+
+// ==========================================
+// CONTENT API ENDPOINTS (News, Gallery, Sponsors, Achievements, About, Contact)
+// ==========================================
+
+// GET /api/news (supports ?clubId=)
+app.get('/api/news', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) return res.status(500).json({ success: false, message: result.error });
+  let news = filterByClub(result.data.news || [], req.query.clubId || 'spikers');
+  res.json({ success: true, news });
+});
+
+// POST /api/news
+app.post('/api/news', authenticateUser, requireAuth, requirePermission('news.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const item = req.body || {};
+    item.id = item.id || generateId();
+    item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    db.news = db.news || [];
+    db.news.unshift(item);
+    await saveDB(db);
+    res.json({ success: true, item, news: db.news });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/gallery (supports ?clubId=)
+app.get('/api/gallery', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) return res.status(500).json({ success: false, message: result.error });
+  let gallery = filterByClub(result.data.gallery || [], req.query.clubId || 'spikers');
+  res.json({ success: true, gallery });
+});
+
+// POST /api/gallery
+app.post('/api/gallery', authenticateUser, requireAuth, requirePermission('gallery.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const item = req.body || {};
+    item.id = item.id || generateId();
+    item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    db.gallery = db.gallery || [];
+    db.gallery.unshift(item);
+    await saveDB(db);
+    res.json({ success: true, item, gallery: db.gallery });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/sponsors (supports ?clubId=)
+app.get('/api/sponsors', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) return res.status(500).json({ success: false, message: result.error });
+  let sponsors = filterByClub(result.data.sponsors || [], req.query.clubId || 'spikers');
+  res.json({ success: true, sponsors });
+});
+
+// GET /api/achievements (supports ?clubId=)
+app.get('/api/achievements', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) return res.status(500).json({ success: false, message: result.error });
+  let achievements = filterByClub(result.data.testimonials || result.data.achievements || [], req.query.clubId || 'spikers');
+  res.json({ success: true, achievements });
+});
+
+// GET /api/about (supports ?clubId=)
+app.get('/api/about', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) return res.status(500).json({ success: false, message: result.error });
+  let about = result.data.about || {};
+  res.json({ success: true, about });
+});
+
+// GET /api/contact (supports ?clubId=)
+app.get('/api/contact', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) return res.status(500).json({ success: false, message: result.error });
+  let contact = result.data.contact || {};
+  res.json({ success: true, contact });
 });
 
 // 8. Admin PIN endpoints & verification
@@ -1632,22 +1815,49 @@ app.delete('/api/roles/:id', authenticateUser, requireAuth, async (req, res) => 
 });
 
 // 4. Clubs: GET List
-app.get('/api/clubs', authenticateUser, requireAuth, async (req, res) => {
+app.get('/api/clubs', authenticateUser, async (req, res) => {
   try {
     const dbConn = await connectToDatabase();
     if (!dbConn) {
       let clubs = localClubs;
-      if (req.user && req.user.role !== 'OWNER' && req.user.clubId !== 'ALL') {
-        clubs = localClubs.filter(c => String(c._id) === String(req.user.clubId));
+      if (req.user && req.user.role !== 'OWNER' && req.user.clubId && req.user.clubId !== 'ALL') {
+        clubs = localClubs.filter(c => String(c._id) === String(req.user.clubId) || c.clubId === req.user.clubId || c.slug === req.user.clubId);
       }
       return res.json({ success: true, clubs });
     }
     await seedInitialAuthAndClubs();
     let clubs = await Club.find({}).sort({ createdAt: -1 });
-    if (req.user && req.user.role !== 'OWNER' && req.user.clubId !== 'ALL') {
-      clubs = clubs.filter(c => String(c._id) === String(req.user.clubId));
+    if (req.user && req.user.role !== 'OWNER' && req.user.clubId && req.user.clubId !== 'ALL') {
+      clubs = clubs.filter(c => String(c._id) === String(req.user.clubId) || c.clubId === req.user.clubId || c.slug === req.user.clubId);
     }
     res.json({ success: true, clubs });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// 4b. Clubs: GET Single Club by ID, clubId, or slug
+app.get('/api/clubs/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cleanId = String(id).toLowerCase().trim();
+    const dbConn = await connectToDatabase();
+
+    if (!dbConn) {
+      const club = localClubs.find(c => String(c._id) === id || (c.clubId && c.clubId.toLowerCase() === cleanId) || (c.slug && c.slug.toLowerCase() === cleanId));
+      if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
+      return res.json({ success: true, club });
+    }
+
+    let club = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      club = await Club.findById(id);
+    }
+    if (!club) {
+      club = await Club.findOne({ $or: [{ clubId: cleanId }, { slug: cleanId }, { _id: id }] });
+    }
+    if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
+    res.json({ success: true, club });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1656,44 +1866,54 @@ app.get('/api/clubs', authenticateUser, requireAuth, async (req, res) => {
 // 5. Clubs: POST Create
 app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.create'), async (req, res) => {
   try {
-    const { name, sport, slug, logo, description, active } = req.body;
+    const { clubId, name, sport, slug, logo, coverImage, description, active, status } = req.body;
     if (!name || !sport) {
       return res.status(400).json({ success: false, message: 'Club Name and Sport are required' });
     }
-    const cleanSlug = (slug || (name + '-' + sport)).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || ('club-' + Date.now());
+    const cleanSlug = (slug || clubId || (name + '-' + sport)).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || ('club-' + Date.now());
+    const cleanClubId = (clubId || cleanSlug).toLowerCase().trim();
+    const isActive = active !== undefined ? !!active : (status ? status === 'active' : true);
+    const clubStatus = status || (isActive ? 'active' : 'inactive');
+
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
-      const existingLocal = localClubs.find(c => c.slug === cleanSlug);
+      const existingLocal = localClubs.find(c => c.clubId === cleanClubId || c.slug === cleanSlug);
       if (existingLocal) {
-        return res.status(400).json({ success: false, message: `A club with slug '${cleanSlug}' already exists.` });
+        return res.status(400).json({ success: false, message: `A club with identifier '${cleanClubId}' or slug '${cleanSlug}' already exists.` });
       }
       const newClub = {
         _id: 'c_' + Date.now(),
-        name,
-        sport,
+        clubId: cleanClubId,
+        name: String(name).trim(),
+        sport: String(sport).trim(),
         slug: cleanSlug,
         logo: logo || '',
+        coverImage: coverImage || '',
         description: description || '',
-        active: active !== undefined ? active : true,
+        active: isActive,
+        status: clubStatus,
         createdAt: new Date()
       };
       localClubs.unshift(newClub);
       return res.json({ success: true, club: newClub, message: 'Club created successfully' });
     }
 
-    const existing = await Club.findOne({ slug: cleanSlug });
+    const existing = await Club.findOne({ $or: [{ clubId: cleanClubId }, { slug: cleanSlug }] });
     if (existing) {
-      return res.status(400).json({ success: false, message: `A club with slug '${cleanSlug}' already exists.` });
+      return res.status(400).json({ success: false, message: `A club with identifier '${cleanClubId}' or slug '${cleanSlug}' already exists.` });
     }
 
     const club = await Club.create({
-      name,
-      sport,
+      clubId: cleanClubId,
+      name: String(name).trim(),
+      sport: String(sport).trim(),
       slug: cleanSlug,
       logo: logo || '',
+      coverImage: coverImage || '',
       description: description || '',
-      active: active !== undefined ? active : true
+      active: isActive,
+      status: clubStatus
     });
 
     res.json({ success: true, club, message: 'Club created successfully' });
@@ -1706,18 +1926,21 @@ app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.c
 app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('clubs.edit'), requireClubAccess, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, sport, slug, logo, description, active } = req.body;
+    const { clubId, name, sport, slug, logo, coverImage, description, active, status } = req.body;
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
-      const club = localClubs.find(c => String(c._id) === String(id));
+      const club = localClubs.find(c => String(c._id) === String(id) || c.clubId === id || c.slug === id);
       if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
-      if (name) club.name = name;
-      if (sport) club.sport = sport;
+      if (name) club.name = String(name).trim();
+      if (sport) club.sport = String(sport).trim();
+      if (clubId) club.clubId = String(clubId).toLowerCase().trim();
       if (slug) club.slug = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       if (logo !== undefined) club.logo = logo;
+      if (coverImage !== undefined) club.coverImage = coverImage;
       if (description !== undefined) club.description = description;
-      if (active !== undefined) club.active = active;
+      if (active !== undefined) club.active = !!active;
+      if (status !== undefined) club.status = status;
       return res.json({ success: true, club, message: 'Club updated successfully' });
     }
 
@@ -1726,7 +1949,7 @@ app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('club
       club = await Club.findById(id);
     }
     if (!club) {
-      club = await Club.findOne({ slug: id }) || await Club.findOne({ _id: id });
+      club = await Club.findOne({ $or: [{ clubId: id }, { slug: id }, { _id: id }] });
     }
     if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
 
@@ -1738,12 +1961,22 @@ app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('club
       }
       club.slug = cleanSlug;
     }
+    if (clubId) {
+      const cleanClubId = String(clubId).toLowerCase().trim();
+      const duplicate = await Club.findOne({ clubId: cleanClubId, _id: { $ne: club._id } });
+      if (duplicate) {
+        return res.status(400).json({ success: false, message: `ClubId '${cleanClubId}' is already in use by another club.` });
+      }
+      club.clubId = cleanClubId;
+    }
 
-    if (name) club.name = name;
-    if (sport) club.sport = sport;
+    if (name) club.name = String(name).trim();
+    if (sport) club.sport = String(sport).trim();
     if (logo !== undefined) club.logo = logo;
+    if (coverImage !== undefined) club.coverImage = coverImage;
     if (description !== undefined) club.description = description;
-    if (active !== undefined) club.active = active;
+    if (active !== undefined) club.active = !!active;
+    if (status !== undefined) club.status = status;
 
     await club.save();
     res.json({ success: true, club, message: 'Club updated successfully' });
@@ -1756,10 +1989,14 @@ app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('club
 app.delete('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('clubs.delete'), requireClubAccess, async (req, res) => {
   try {
     const { id } = req.params;
+    const cleanId = String(id).toLowerCase().trim();
+    if (cleanId === 'spikers' || cleanId === 'aceit-spikers' || cleanId === 'c_spikers') {
+      return res.status(400).json({ success: false, message: 'Cannot delete primary club ACEIT Spikers.' });
+    }
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
-      localClubs = localClubs.filter(c => String(c._id) !== String(id));
+      localClubs = localClubs.filter(c => String(c._id) !== String(id) && c.clubId !== cleanId && c.slug !== cleanId);
       return res.json({ success: true, message: 'Club deleted successfully' });
     }
 
@@ -1768,15 +2005,12 @@ app.delete('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('c
       club = await Club.findById(id);
     }
     if (!club) {
-      club = await Club.findOne({ slug: id }) || await Club.findOne({ _id: id });
+      club = await Club.findOne({ $or: [{ clubId: cleanId }, { slug: cleanId }, { _id: id }] });
     }
     if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
 
-    if (club.slug === 'aceit-spikers') {
-      const total = await Club.countDocuments();
-      if (total <= 1) {
-        return res.status(400).json({ success: false, message: 'Cannot delete primary club when it is the only club.' });
-      }
+    if (club.clubId === 'spikers' || club.slug === 'aceit-spikers' || club.slug === 'spikers') {
+      return res.status(400).json({ success: false, message: 'Cannot delete primary club ACEIT Spikers.' });
     }
 
     await Club.findByIdAndDelete(club._id);
@@ -2454,13 +2688,17 @@ app.delete('/api/applications/:id', authenticateUser, requireAuth, async (req, r
 // EVENTS API ENDPOINTS
 // ==========================================
 
-// GET /api/events
+// GET /api/events (supports ?clubId=)
 app.get('/api/events', async (req, res) => {
   const result = await getDB();
   if (!result.success) {
     return res.status(500).json({ success: false, message: `MongoDB Error: ${result.error}` });
   }
-  res.json({ success: true, events: result.data.events || [] });
+  let events = result.data.events || [];
+  if (req.query.clubId) {
+    events = filterByClub(events, req.query.clubId);
+  }
+  res.json({ success: true, events });
 });
 
 // POST /api/events (Create event)
@@ -2473,6 +2711,7 @@ app.post('/api/events', authenticateUser, requireAuth, async (req, res) => {
 
     const newEvt = {
       id: req.body.id || generateId(),
+      clubId: req.body.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers'),
       title: req.body.title || 'Untitled Event',
       description: req.body.description || '',
       date: req.body.date || '',
@@ -2510,6 +2749,7 @@ app.put('/api/events/:id', authenticateUser, requireAuth, async (req, res) => {
       ...events[idx],
       ...req.body,
       id: events[idx].id || req.params.id,
+      clubId: req.body.clubId || events[idx].clubId || 'spikers',
       updatedAt: new Date().toISOString()
     };
     dbData.events = events;
@@ -2539,13 +2779,17 @@ app.delete('/api/events/:id', authenticateUser, requireAuth, async (req, res) =>
   }
 });
 
-// GET /api/training
+// GET /api/training (supports ?clubId=)
 app.get('/api/training', async (req, res) => {
   const result = await getDB();
   if (!result.success) {
     return res.status(500).json({ success: false, message: `MongoDB Error: ${result.error}` });
   }
-  res.json({ success: true, training: result.data.training || [] });
+  let training = result.data.training || [];
+  if (req.query.clubId) {
+    training = filterByClub(training, req.query.clubId);
+  }
+  res.json({ success: true, training });
 });
 
 // POST /api/training (Create training session)
@@ -2558,6 +2802,7 @@ app.post('/api/training', authenticateUser, requireAuth, requirePermission('trai
 
     const newTr = {
       id: req.body.id || generateId(),
+      clubId: req.body.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers'),
       icon: req.body.icon || '🏐',
       title: req.body.title || 'Training Session',
       time: req.body.time || '',
@@ -2590,6 +2835,7 @@ app.put('/api/training/:id', authenticateUser, requireAuth, requirePermission('t
       ...training[idx],
       ...req.body,
       id: training[idx].id || req.params.id,
+      clubId: req.body.clubId || training[idx].clubId || 'spikers',
       updatedAt: new Date().toISOString()
     };
     dbData.training = training;
