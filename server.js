@@ -980,10 +980,18 @@ app.post('/api/save-all', authenticateUser, requireAuth, async (req, res) => {
       // Global save across all clubs (Owner / Global Admin)
       arrayModules.forEach(mod => {
         if (Array.isArray(db[mod])) {
-          currentDB[mod] = db[mod].map(item => {
-            const cId = (item.clubId || (req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers')).toLowerCase();
-            return Object.assign({}, item, { clubId: cId });
+          const seen = new Set();
+          const clean = [];
+          db[mod].forEach(item => {
+            if (!item || typeof item !== 'object') return;
+            const itemId = item.id || ('id_' + Math.random().toString(36).substr(2, 9));
+            if (!seen.has(itemId)) {
+              seen.add(itemId);
+              const cId = (item.clubId || (req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers')).toLowerCase();
+              clean.push(Object.assign({}, item, { id: itemId, clubId: cId }));
+            }
           });
+          currentDB[mod] = clean;
         }
       });
       if (db.about && typeof db.about === 'object') currentDB.about = db.about;
@@ -995,12 +1003,33 @@ app.post('/api/save-all', authenticateUser, requireAuth, async (req, res) => {
       const targetClubId = rawTarget;
       arrayModules.forEach(mod => {
         if (Array.isArray(db[mod])) {
+          // 1. Keep all items belonging to OTHER clubs untouched
           const others = (currentDB[mod] || []).filter(item => {
             const itemClub = (item.clubId || 'spikers').toLowerCase();
             return itemClub !== targetClubId && !((itemClub === 'spikers' || itemClub === 'c_spikers') && (targetClubId === 'spikers' || targetClubId === 'c_spikers'));
           });
-          const targetItems = db[mod].map(item => Object.assign({}, item, { clubId: targetClubId }));
-          currentDB[mod] = others.concat(targetItems);
+
+          // 2. Determine target items: if the array contains items with explicit other clubIds, filter them out!
+          const isPureScoped = db[mod].every(item => !item.clubId || item.clubId.toLowerCase() === targetClubId || ((item.clubId.toLowerCase() === 'spikers' || item.clubId.toLowerCase() === 'c_spikers') && (targetClubId === 'spikers' || targetClubId === 'c_spikers')));
+          
+          let targetRaw = isPureScoped ? db[mod] : db[mod].filter(item => {
+            const itemClub = (item.clubId || 'spikers').toLowerCase();
+            return itemClub === targetClubId || ((itemClub === 'spikers' || itemClub === 'c_spikers') && (targetClubId === 'spikers' || targetClubId === 'c_spikers'));
+          });
+
+          // 3. Deduplicate target items by ID
+          const seen = new Set();
+          const uniqueTarget = [];
+          targetRaw.forEach(item => {
+            if (!item || typeof item !== 'object') return;
+            const itemId = item.id || ('id_' + Math.random().toString(36).substr(2, 9));
+            if (!seen.has(itemId)) {
+              seen.add(itemId);
+              uniqueTarget.push(Object.assign({}, item, { id: itemId, clubId: targetClubId }));
+            }
+          });
+
+          currentDB[mod] = others.concat(uniqueTarget);
         }
       });
 

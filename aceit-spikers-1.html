@@ -4655,10 +4655,18 @@
       var isVolley = s.includes('volley') || s.includes('spik');
       if (isLoader && isVolley) {
         img.src = 'volleyball-loader.png';
+        img.onerror = function() {
+          this.onerror = null;
+          this.src = window.getSportCrestSVG({ sport: 'Volleyball', name: name || 'ACEIT Spikers', _forceSvg: true });
+        };
         return;
       }
       if (!isLoader && isVolley) {
         img.src = 'spikers-logo.png';
+        img.onerror = function() {
+          this.onerror = null;
+          this.src = window.getSportCrestSVG({ sport: 'Volleyball', name: name || 'ACEIT Spikers', _forceSvg: true });
+        };
         return;
       }
       img.src = window.getSportCrestSVG({ sport: sport || 'Volleyball', name: name || 'ACEIT Club', _forceSvg: true });
@@ -6661,9 +6669,12 @@
             .then(function (r) { return r.json(); })
             .then(function (res) {
               if (res && res.success && res.data) {
-                if (activeClub === 'all') {
-                  DB = res.data;
-                }
+                DB = res.data;
+                try {
+                  window.localStorage.setItem('aceitSpikersDB_master', JSON.stringify(DB));
+                  window.localStorage.setItem('aceitSpikersDB_' + activeClub, JSON.stringify(DB));
+                  window.localStorage.setItem(DB_KEY, JSON.stringify(DB));
+                } catch (e) { }
               }
               if (cb) cb(true);
             })
@@ -9776,6 +9787,18 @@
             return itemClub === targetScope || ((itemClub === 'spikers' || itemClub === 'c_spikers') && (targetScope === 'spikers' || targetScope === 'c_spikers'));
           });
         }
+        // Deduplicate items by ID to guarantee ZERO duplicate rows rendered
+        var seenRenderIds = {};
+        var uniqueItems = [];
+        items.forEach(function (it) {
+          if (!it || typeof it !== 'object') return;
+          var itId = it.id || (String(it.n || it.title || '') + '_' + String(it.clubId || ''));
+          if (!seenRenderIds[itId]) {
+            seenRenderIds[itId] = true;
+            uniqueItems.push(it);
+          }
+        });
+        items = uniqueItems;
         var extraBtns = '';
         if (tab === 'gallery' || tab === 'team') {
           extraBtns = '<button class="admin-btn" id="adminAddCategoryBtn" style="margin-right:8px;background:var(--cream-2);color:var(--charcoal);border:1px solid var(--border);">Manage / Delete Categories</button>';
