@@ -25,6 +25,8 @@ let localClubs = [
     logo: '',
     coverImage: '',
     description: 'ACEIT Official Volleyball Club',
+    themeColor: '',
+    accentColor: '',
     active: true,
     status: 'active',
     createdAt: new Date()
@@ -189,6 +191,8 @@ const clubSchema = new mongoose.Schema({
   training: { type: Array, default: [] },
   about: { type: Object, default: {} },
   contact: { type: Object, default: {} },
+  abouts: { type: Object, default: {} },
+  contacts: { type: Object, default: {} },
   pin: { type: String, default: '2026' }
 }, { timestamps: true, strict: false });
 
@@ -203,6 +207,8 @@ const clubItemSchema = new mongoose.Schema({
   logo: { type: String, default: '' },
   coverImage: { type: String, default: '' },
   description: { type: String, default: '' },
+  themeColor: { type: String, default: '' },
+  accentColor: { type: String, default: '' },
   active: { type: Boolean, default: true },
   status: { type: String, default: 'active' }
 }, { timestamps: true });
@@ -776,6 +782,8 @@ async function saveDB(data) {
         slideshow: data.slideshow || [],
         about: data.about || {},
         contact: data.contact || {},
+        abouts: data.abouts || {},
+        contacts: data.contacts || {},
         deletedCategories: data.deletedCategories || {},
         categories: data.categories || {},
         customCategories: data.customCategories || {}
@@ -797,42 +805,17 @@ function generateId() {
 }
 
 // ==========================================
-// API ENDPOINTS
+// API ROUTES
 // ==========================================
 
-// Diagnostic Endpoint
-app.get('/api/debug-db', async (req, res) => {
-  const uri = process.env.MONGODB_URI;
-  const hasUri = !!uri;
-  const maskedUri = hasUri ? uri.replace(/:([^@]+)@/, ':****@') : null;
-  let mongoConnected = false;
-  let docFound = false;
-  let docPlayerCount = 0;
-  let mongoError = null;
-
-  try {
-    const conn = await connectToDatabase();
-    mongoConnected = !!conn;
-    if (conn) {
-      const doc = await ClubDoc.findOne({ key: 'main' });
-      if (doc) {
-        docFound = true;
-        docPlayerCount = (doc.team || []).length;
-      }
-    } else {
-      mongoError = lastMongoError;
-    }
-  } catch (err) {
-    mongoError = err.message;
-  }
-
+// Health Check
+app.get('/api/health', (req, res) => {
+  const isMongo = isMongoConnected();
+  const mongoError = isMongo ? null : lastMongoError;
   res.json({
-    success: mongoConnected,
-    hasMongoUri: hasUri,
-    maskedUri: maskedUri,
-    mongoConnected: mongoConnected,
-    docFound: docFound,
-    docPlayerCount: docPlayerCount,
+    status: 'ok',
+    database: isMongo ? 'MongoDB Atlas' : 'Local File (data.json fallback)',
+    connected: isMongo,
     lastError: mongoError
   });
 });
@@ -844,10 +827,15 @@ app.get('/api/db', async (req, res) => {
     return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${result.error}`, error: result.error });
   }
   let data = result.data;
-  const reqClubId = req.query.clubId || 'spikers';
+  const reqClubId = (req.query.clubId || 'spikers').toLowerCase();
   if (reqClubId !== 'all' && reqClubId !== 'ALL') {
+    let clubAbout = (data.abouts && data.abouts[reqClubId]) ? data.abouts[reqClubId] : (reqClubId === 'spikers' ? data.about : null);
+    let clubContact = (data.contacts && data.contacts[reqClubId]) ? data.contacts[reqClubId] : (reqClubId === 'spikers' ? data.contact : null);
+
     data = {
       ...data,
+      about: clubAbout || (reqClubId === 'spikers' ? (data.about || {}) : {}),
+      contact: clubContact || (reqClubId === 'spikers' ? (data.contact || {}) : {}),
       team: filterByClub(data.team, reqClubId),
       matches: filterByClub(data.matches, reqClubId),
       events: filterByClub(data.events, reqClubId),
@@ -874,44 +862,55 @@ app.post('/api/save-all', authenticateUser, requireAuth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid payload' });
     }
 
-    const targetClubId = req.query.clubId || db.clubId || (req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    const targetClubId = (req.query.clubId || db.clubId || (req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers')).toLowerCase();
     if (!hasClubAccess(req.user, targetClubId)) {
       return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to manage club '${targetClubId}'` });
     }
 
-    const isOwner = req.user.role === 'OWNER' || (Array.isArray(req.user.permissions) && req.user.permissions.includes('*'));
-    if (!isOwner && !req.user.permissions.includes('settings.*')) {
-      // If user has granular module permissions, merge only the allowed modules into current DB
-      const currentRes = await getDB();
-      const currentDB = currentRes.success ? currentRes.data : {};
-      const userPerms = req.user.permissions || [];
+    const currentRes = await getDB();
+    const currentDB = currentRes.success ? currentRes.data : {};
 
-      const modules = ['team', 'matches', 'events', 'news', 'gallery', 'training', 'sponsors', 'testimonials', 'stats', 'about', 'contact', 'slideshow'];
-      modules.forEach(mod => {
-        const permKey = mod === 'team' ? 'players' : mod;
-        if (userPerms.includes(`${permKey}.*`) || userPerms.includes(permKey)) {
-          if (Array.isArray(db[mod])) {
-            // Keep items from other clubs, replace items for target club
-            const others = (currentDB[mod] || []).filter(item => (item.clubId || 'spikers') !== targetClubId);
-            const targetItems = db[mod].map(item => Object.assign({}, item, { clubId: targetClubId }));
-            currentDB[mod] = others.concat(targetItems);
-          } else if (db[mod] && typeof db[mod] === 'object') {
-            currentDB[mod] = db[mod];
-          }
-        }
-      });
-      const result = await saveDB(currentDB);
-      if (!result.success) {
-        return res.status(500).json({ success: false, message: `Failed to save changes: ${result.error}`, error: result.error });
+    // Merge array modules scoped to targetClubId
+    const arrayModules = ['team', 'matches', 'events', 'news', 'gallery', 'training', 'sponsors', 'testimonials', 'stats', 'slideshow'];
+    arrayModules.forEach(mod => {
+      if (Array.isArray(db[mod])) {
+        const others = (currentDB[mod] || []).filter(item => {
+          const itemClub = (item.clubId || 'spikers').toLowerCase();
+          return itemClub !== targetClubId && !((itemClub === 'spikers' || itemClub === 'c_spikers') && (targetClubId === 'spikers' || targetClubId === 'c_spikers'));
+        });
+        const targetItems = db[mod].map(item => Object.assign({}, item, { clubId: targetClubId }));
+        currentDB[mod] = others.concat(targetItems);
       }
-      return res.json({ success: true, message: 'Club database updated successfully' });
+    });
+
+    // Merge About scoped to targetClubId
+    if (db.about && typeof db.about === 'object') {
+      currentDB.abouts = currentDB.abouts || {};
+      currentDB.abouts[targetClubId] = db.about;
+      if (targetClubId === 'spikers' || targetClubId === 'c_spikers') {
+        currentDB.about = db.about;
+      }
     }
 
-    const result = await saveDB(db);
-    if (!result.success) {
-      return res.status(500).json({ success: false, message: `Failed to save to MongoDB Atlas: ${result.error}`, error: result.error });
+    // Merge Contact scoped to targetClubId
+    if (db.contact && typeof db.contact === 'object') {
+      currentDB.contacts = currentDB.contacts || {};
+      currentDB.contacts[targetClubId] = db.contact;
+      if (targetClubId === 'spikers' || targetClubId === 'c_spikers') {
+        currentDB.contact = db.contact;
+      }
     }
-    res.json({ success: true, message: 'Database saved online to MongoDB Atlas' });
+
+    // Merge categories
+    if (db.categories) currentDB.categories = db.categories;
+    if (db.deletedCategories) currentDB.deletedCategories = db.deletedCategories;
+    if (db.customCategories) currentDB.customCategories = db.customCategories;
+
+    const result = await saveDB(currentDB);
+    if (!result.success) {
+      return res.status(500).json({ success: false, message: `Failed to save changes: ${result.error}`, error: result.error });
+    }
+    return res.json({ success: true, message: `Club database for '${targetClubId}' updated successfully` });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1457,6 +1456,75 @@ app.post('/api/stats', authenticateUser, requireAuth, requirePermission('stats.*
     db.stats.push(item);
     await saveDB(db);
     res.json({ success: true, item, stats: db.stats });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/slideshow (supports ?clubId=)
+app.get('/api/slideshow', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) return res.status(500).json({ success: false, message: result.error });
+  let slideshow = filterByClub(result.data.slideshow || [], req.query.clubId || 'spikers');
+  res.json({ success: true, slideshow });
+});
+
+// POST /api/slideshow
+app.post('/api/slideshow', authenticateUser, requireAuth, requirePermission('slideshow.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const item = req.body || {};
+    item.id = item.id || generateId();
+    item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, item.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to manage slideshow for club '${item.clubId}'` });
+    }
+    db.slideshow = db.slideshow || [];
+    db.slideshow.push(item);
+    await saveDB(db);
+    res.json({ success: true, item, slideshow: db.slideshow });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/slideshow/:id
+app.put('/api/slideshow/:id', authenticateUser, requireAuth, requirePermission('slideshow.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const idx = (db.slideshow || []).findIndex(it => it.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ success: false, message: 'Slide not found' });
+    const existing = db.slideshow[idx];
+    if (!hasClubAccess(req.user, existing.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: 'Access forbidden: Cannot modify slides from other clubs' });
+    }
+    db.slideshow[idx] = Object.assign({}, existing, req.body, { id: req.params.id, clubId: existing.clubId });
+    await saveDB(db);
+    res.json({ success: true, item: db.slideshow[idx] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/slideshow/:id
+app.delete('/api/slideshow/:id', authenticateUser, requireAuth, requirePermission('slideshow.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const idx = (db.slideshow || []).findIndex(it => it.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ success: false, message: 'Slide not found' });
+    const existing = db.slideshow[idx];
+    if (!hasClubAccess(req.user, existing.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: 'Access forbidden: Cannot delete slides from other clubs' });
+    }
+    db.slideshow.splice(idx, 1);
+    await saveDB(db);
+    res.json({ success: true, message: 'Slide deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -2289,7 +2357,7 @@ app.get('/api/clubs/:id', async (req, res) => {
 // 5. Clubs: POST Create
 app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.create'), async (req, res) => {
   try {
-    const { clubId, name, sport, slug, logo, coverImage, description, active, status } = req.body;
+    const { clubId, name, sport, slug, logo, coverImage, description, themeColor, accentColor, active, status } = req.body;
     if (!name || !sport) {
       return res.status(400).json({ success: false, message: 'Club Name and Sport are required' });
     }
@@ -2314,6 +2382,8 @@ app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.c
         logo: logo || '',
         coverImage: coverImage || '',
         description: description || '',
+        themeColor: themeColor || '',
+        accentColor: accentColor || '',
         active: isActive,
         status: clubStatus,
         createdAt: new Date()
@@ -2335,6 +2405,8 @@ app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.c
       logo: logo || '',
       coverImage: coverImage || '',
       description: description || '',
+      themeColor: themeColor || '',
+      accentColor: accentColor || '',
       active: isActive,
       status: clubStatus
     });
@@ -2349,7 +2421,7 @@ app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.c
 app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('clubs.edit'), requireClubAccess, async (req, res) => {
   try {
     const { id } = req.params;
-    const { clubId, name, sport, slug, logo, coverImage, description, active, status } = req.body;
+    const { clubId, name, sport, slug, logo, coverImage, description, themeColor, accentColor, active, status } = req.body;
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
@@ -2362,6 +2434,8 @@ app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('club
       if (logo !== undefined) club.logo = logo;
       if (coverImage !== undefined) club.coverImage = coverImage;
       if (description !== undefined) club.description = description;
+      if (themeColor !== undefined) club.themeColor = themeColor;
+      if (accentColor !== undefined) club.accentColor = accentColor;
       if (active !== undefined) club.active = !!active;
       if (status !== undefined) club.status = status;
       return res.json({ success: true, club, message: 'Club updated successfully' });
@@ -2398,6 +2472,8 @@ app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('club
     if (logo !== undefined) club.logo = logo;
     if (coverImage !== undefined) club.coverImage = coverImage;
     if (description !== undefined) club.description = description;
+    if (themeColor !== undefined) club.themeColor = themeColor;
+    if (accentColor !== undefined) club.accentColor = accentColor;
     if (active !== undefined) club.active = !!active;
     if (status !== undefined) club.status = status;
 

@@ -5720,34 +5720,551 @@
         return '🏆';
       }
 
+      function getSportTheme(sport, club) {
+        if (club && club.themeColor) {
+          var customP = club.themeColor;
+          var customA = club.accentColor || club.themeColor;
+          return {
+            primary: customP,
+            accent: customA,
+            amber: customP,
+            navy: '#0F1B33',
+            navy2: '#16264A',
+            isCustom: true
+          };
+        }
+
+        var s = String(sport || '').toLowerCase();
+        if (s.indexOf('kabad') !== -1) {
+          return {
+            primary: '#C0392B',
+            accent: '#E74C3C',
+            amber: '#C0392B',
+            navy: '#2C1111',
+            navy2: '#3D1717',
+            sport: 'Kabaddi'
+          };
+        }
+        if (s.indexOf('foot') !== -1 || s.indexOf('soccer') !== -1) {
+          return {
+            primary: '#27AE60',
+            accent: '#1E8449',
+            amber: '#27AE60',
+            navy: '#0D2618',
+            navy2: '#143823',
+            sport: 'Football'
+          };
+        }
+        if (s.indexOf('badminton') !== -1 || s.indexOf('shuttle') !== -1) {
+          return {
+            primary: '#8E44AD',
+            accent: '#9B59B6',
+            amber: '#8E44AD',
+            navy: '#22112E',
+            navy2: '#311842',
+            sport: 'Badminton'
+          };
+        }
+        if (s.indexOf('basket') !== -1) {
+          return {
+            primary: '#E67E22',
+            accent: '#D35400',
+            amber: '#E67E22',
+            navy: '#26170A',
+            navy2: '#38220F',
+            sport: 'Basketball'
+          };
+        }
+        if (s.indexOf('cricket') !== -1) {
+          return {
+            primary: '#1ABC9C',
+            accent: '#16A085',
+            amber: '#1ABC9C',
+            navy: '#0D2624',
+            navy2: '#143834',
+            sport: 'Cricket'
+          };
+        }
+        if (s.indexOf('table') !== -1 || s.indexOf('tennis') !== -1 || s.indexOf('ping') !== -1) {
+          return {
+            primary: '#2980B9',
+            accent: '#3498DB',
+            amber: '#2980B9',
+            navy: '#0E1F30',
+            navy2: '#152C42',
+            sport: 'Table Tennis'
+          };
+        }
+        if (s.indexOf('chess') !== -1) {
+          return {
+            primary: '#7F8C8D',
+            accent: '#95A5A6',
+            amber: '#7F8C8D',
+            navy: '#1A2226',
+            navy2: '#242F35',
+            sport: 'Chess'
+          };
+        }
+        if (s.indexOf('carrom') !== -1) {
+          return {
+            primary: '#F39C12',
+            accent: '#D68910',
+            amber: '#F39C12',
+            navy: '#261C0B',
+            navy2: '#382A10',
+            sport: 'Carrom'
+          };
+        }
+        if (s.indexOf('athletics') !== -1 || s.indexOf('run') !== -1 || s.indexOf('track') !== -1) {
+          return {
+            primary: '#E91E63',
+            accent: '#C2185B',
+            amber: '#E91E63',
+            navy: '#2B0E1B',
+            navy2: '#3D1528',
+            sport: 'Athletics'
+          };
+        }
+
+        // Default: Volleyball / Spikers (Master Theme - Amber & Ember)
+        return {
+          primary: '#F5A623',
+          accent: '#FF5A1F',
+          amber: '#F5A623',
+          navy: '#0F1B33',
+          navy2: '#16264A',
+          sport: 'Volleyball',
+          isDefault: true
+        };
+      }
+
       function getSportCrestSVG(club) {
         var name = (club && club.name) ? club.name : 'Club';
         var sport = (club && club.sport) ? club.sport : 'Athletics';
+        var theme = getSportTheme(sport, club);
         var icon = getSportIcon(sport);
         var initial = name.charAt(0).toUpperCase();
         var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="100%" height="100%">' +
           '<defs>' +
             '<linearGradient id="crestGrad_' + esc(initial) + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
-              '<stop offset="0%" stop-color="#1B2A4A"/>' +
-              '<stop offset="100%" stop-color="#0B132B"/>' +
+              '<stop offset="0%" stop-color="' + theme.navy2 + '"/>' +
+              '<stop offset="100%" stop-color="' + theme.navy + '"/>' +
             '</linearGradient>' +
             '<linearGradient id="goldGrad_' + esc(initial) + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
-              '<stop offset="0%" stop-color="#F5A623"/>' +
-              '<stop offset="100%" stop-color="#D97706"/>' +
+              '<stop offset="0%" stop-color="' + theme.primary + '"/>' +
+              '<stop offset="100%" stop-color="' + theme.accent + '"/>' +
             '</linearGradient>' +
           '</defs>' +
           '<path d="M80 10 L140 35 L140 95 C140 125 80 150 80 150 C80 150 20 125 20 95 L20 35 Z" fill="url(#crestGrad_' + esc(initial) + ')" stroke="url(#goldGrad_' + esc(initial) + ')" stroke-width="4"/>' +
-          '<path d="M80 18 L132 40 L132 92 C132 118 80 140 80 140 C80 140 28 118 28 92 L28 40 Z" fill="none" stroke="rgba(245,166,35,0.3)" stroke-width="1.5"/>' +
+          '<path d="M80 18 L132 40 L132 92 C132 118 80 140 80 140 C80 140 28 118 28 92 L28 40 Z" fill="none" stroke="' + theme.primary + '4D" stroke-width="1.5"/>' +
           '<text x="80" y="78" font-size="34" text-anchor="middle" dominant-baseline="central">' + icon + '</text>' +
-          '<text x="80" y="112" font-family="sans-serif" font-size="14" font-weight="900" fill="#F5A623" text-anchor="middle" letter-spacing="1">' + esc(initial) + '</text>' +
+          '<text x="80" y="112" font-family="sans-serif" font-size="14" font-weight="900" fill="' + theme.primary + '" text-anchor="middle" letter-spacing="1">' + esc(initial) + '</text>' +
         '</svg>';
         return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+      }
+
+      function getSportAboutDefaults(club) {
+        var name = (club && club.name) ? club.name : 'ACEIT Spikers';
+        var sport = (club && club.sport) ? club.sport : 'Volleyball';
+        var s = String(sport || '').toLowerCase();
+
+        if (s.indexOf('kabad') !== -1) {
+          return {
+            eyebrow: 'Pride of ACEIT',
+            title: 'Strength on the mat,\nunstoppable in raid.',
+            sub: name + ' brings together fierce raiders and ironclad defenders trained for collegiate championships and state tournaments.',
+            mission: 'To cultivate mental grit, explosive raid power, and tactical defense in traditional and modern collegiate Kabaddi.',
+            vision: 'To be the premier collegiate Kabaddi powerhouse in Rajasthan, producing champion athletes who play with honor.'
+          };
+        }
+        if (s.indexOf('foot') !== -1 || s.indexOf('soccer') !== -1) {
+          return {
+            eyebrow: 'The Beautiful Game',
+            title: 'Passion on the pitch,\nunited for 90 minutes.',
+            sub: name + ' is built on swift passing, clinical finishing, tactical discipline, and unwavering brotherhood.',
+            mission: 'To foster tactical intelligence, cardiovascular stamina, and sportsmanship through modern football training.',
+            vision: 'To set the collegiate benchmark for competitive football at ACEIT with discipline, flair, and championships.'
+          };
+        }
+        if (s.indexOf('badminton') !== -1 || s.indexOf('shuttle') !== -1) {
+          return {
+            eyebrow: 'Speed & Precision',
+            title: 'Master every rally,\nsmash every limit.',
+            sub: name + ' brings together dedicated singles and doubles shuttlers competing for collegiate and university glory.',
+            mission: 'To refine reflex speed, court agility, and mental composure in high-stakes collegiate badminton tournaments.',
+            vision: 'To nurture collegiate badminton champions who dominate inter-university championships with skill and grace.'
+          };
+        }
+        if (s.indexOf('basket') !== -1) {
+          return {
+            eyebrow: 'Court Dominance',
+            title: 'Every possession counts,\nevery basket earned.',
+            sub: name + ' squad trains with relentless pace, sharpshooting accuracy, and lockdown team defense.',
+            mission: 'To develop high-IQ, fast-paced basketball players who execute under pressure with unity, grit, and passion.',
+            vision: 'To build an elite championship-winning basketball legacy representing Arya College across national tourneys.'
+          };
+        }
+        if (s.indexOf('cricket') !== -1) {
+          return {
+            eyebrow: "Gentleman's Game",
+            title: 'Discipline at the crease,\npower on the field.',
+            sub: name + ' combines technical batting, hostile fast & spin bowling, and sharp fielding for every match fixture.',
+            mission: 'To build a formidable collegiate cricket squad grounded in match temperament, relentless fitness, and teamwork.',
+            vision: 'To be celebrated as the top university cricket team in the region with an undefeated championship spirit.'
+          };
+        }
+        if (s.indexOf('table') !== -1 || s.indexOf('tennis') !== -1 || s.indexOf('ping') !== -1) {
+          return {
+            eyebrow: 'Lightning Reflexes',
+            title: 'Spin, speed, precision —\nevery point a battle.',
+            sub: name + ' trains table tennis players with razor-sharp focus, modern spin techniques, and tournament grit.',
+            mission: 'To develop collegiate table tennis athletes with superior hand-eye coordination and tactical adaptability.',
+            vision: 'To dominate inter-college table tennis circuits through technical mastery and competitive excellence.'
+          };
+        }
+        if (s.indexOf('chess') !== -1) {
+          return {
+            eyebrow: 'Mind Over Matter',
+            title: 'Tactical foresight,\ncalculated precision.',
+            sub: name + ' brings together strategic thinkers and master tacticians competing across university chess championships.',
+            mission: 'To cultivate deep analytical calculation, patience, and competitive composure through classical and rapid chess.',
+            vision: 'To establish an intellectual powerhouse of collegiate chess masters representing ACEIT nationwide.'
+          };
+        }
+        if (s.indexOf('carrom') !== -1) {
+          return {
+            eyebrow: 'Striking Precision',
+            title: 'Angles, touch, and\nflawless pocketing.',
+            sub: name + ' celebrates the traditional art and competitive tournament precision of collegiate carrom.',
+            mission: 'To refine pocketing accuracy, rebound angles, and steady hands under intense match pressure.',
+            vision: 'To lead collegiate carrom leagues with sportsmanship, finesse, and championship triumphs.'
+          };
+        }
+        if (s.indexOf('athletics') !== -1 || s.indexOf('run') !== -1 || s.indexOf('track') !== -1) {
+          return {
+            eyebrow: 'Speed & Endurance',
+            title: 'Push the pace,\nbreak every record.',
+            sub: name + ' is the home of track and field athletes training for sprint dominance, middle distance, and field glory.',
+            mission: 'To develop explosive sprint speed, relentless cardiovascular endurance, and athletic discipline.',
+            vision: 'To produce state and national collegiate track champions representing Arya College of Engineering & IT.'
+          };
+        }
+
+        // Default: Volleyball (ACEIT Spikers)
+        return {
+          eyebrow: 'Who we are',
+          title: 'Built on the court,\ndefined by character.',
+          sub: 'ACEIT Spikers brings together players who train hard, compete fair, and show up for one another — on and off the court.',
+          mission: 'To build a competitive volleyball program that develops skilled, disciplined athletes while creating a home for anyone who wants to play, grow, and belong.',
+          vision: 'To be recognised as the standard-bearer for collegiate volleyball at ACEIT — a club that wins with class and trains the next generation of captains.'
+        };
+      }
+
+      function getSportSlideshowDefaults(club) {
+        var name = (club && club.name) ? club.name : 'ACEIT Spikers';
+        var sport = (club && club.sport) ? club.sport : 'Volleyball';
+        var s = String(sport || '').toLowerCase();
+        var isSpikers = (!club || club.slug === 'spikers' || club.clubId === 'spikers' || (!club.slug && !club.clubId && (!club.sport || club.sport.toLowerCase() === 'volleyball')));
+        var cSlug = (club && (club.slug || club.clubId)) ? (club.slug || club.clubId) : 'spikers';
+
+        if (isSpikers) {
+          return [
+            {
+              id: 'slide_spikers_1',
+              title: 'Winner Team Spikers 2.0',
+              date: 'AI&DS 3RD YEAR TEAM · Champions',
+              image: 'banner1.jpg',
+              link: '#matches',
+              btnText: 'View Highlights',
+              clubId: 'spikers'
+            },
+            {
+              id: 'slide_spikers_2',
+              title: 'ACEIT Inter-College Volleyball Cup',
+              date: 'Main Indoor Court · 25 Sep 2026',
+              image: 'banner2.jpg',
+              link: '#events',
+              btnText: 'Explore Event',
+              clubId: 'spikers'
+            },
+            {
+              id: 'slide_spikers_3',
+              title: 'Championship Finals 2026',
+              date: 'Upcoming Tournament · Live on Campus',
+              image: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=1600&q=80',
+              link: '#matches',
+              btnText: 'View Match Schedule',
+              clubId: 'spikers'
+            },
+            {
+              id: 'slide_spikers_4',
+              title: 'Intense Morning Practice',
+              date: 'Dawn Session · 06:00 AM',
+              image: 'https://images.unsplash.com/photo-1592656094267-764a45160876?auto=format&fit=crop&w=1600&q=80',
+              link: '#training',
+              btnText: 'View Timetable',
+              clubId: 'spikers'
+            }
+          ];
+        }
+
+        if (s.indexOf('kabad') !== -1) {
+          return [
+            {
+              id: 'slide_kabaddi_1',
+              title: name + ' Champion Raid Squad',
+              date: 'Rajasthan Collegiate Kabaddi Trophy · Gold',
+              image: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=1600&q=80',
+              link: '#matches',
+              btnText: 'View Match Highlights',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_kabaddi_2',
+              title: 'Maha-Raid Inter-College Cup 2026',
+              date: 'Outdoor Kabaddi Arena · Live on Campus',
+              image: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1600&q=80',
+              link: '#events',
+              btnText: 'Explore Tournament',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_kabaddi_3',
+              title: 'Ironclad Defense & Tactical Drills',
+              date: 'Daily Morning Conditioning · 06:00 AM',
+              image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=80',
+              link: '#training',
+              btnText: 'View Training Drills',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_kabaddi_4',
+              title: 'Collegiate Derby Showdown',
+              date: 'ACEIT Raiders vs State Contenders',
+              image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1600&q=80',
+              link: '#matches',
+              btnText: 'Match Schedule',
+              clubId: cSlug
+            }
+          ];
+        }
+
+        if (s.indexOf('basket') !== -1) {
+          return [
+            {
+              id: 'slide_basket_1',
+              title: name + ' Championship Final',
+              date: 'Inter-University Basketball Trophy · Champions',
+              image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1600&q=80',
+              link: '#matches',
+              btnText: 'View Highlights',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_basket_2',
+              title: 'All-Star 3-Point Shootout & Cup',
+              date: 'Campus Hardcourt Arena · Oct 2026',
+              image: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=1600&q=80',
+              link: '#events',
+              btnText: 'Explore Event',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_basket_3',
+              title: 'High-Tempo Fast Break & Defense',
+              date: 'Morning Practice · 06:00 AM',
+              image: 'https://images.unsplash.com/photo-1519861531473-9200262188bf?auto=format&fit=crop&w=1600&q=80',
+              link: '#training',
+              btnText: 'View Timetable',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_basket_4',
+              title: 'Playoff Showdown & Derby Games',
+              date: 'Upcoming Fixtures · Live on Campus',
+              image: 'https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&w=1600&q=80',
+              link: '#matches',
+              btnText: 'Game Schedule',
+              clubId: cSlug
+            }
+          ];
+        }
+
+        if (s.indexOf('foot') !== -1 || s.indexOf('soccer') !== -1) {
+          return [
+            {
+              id: 'slide_foot_1',
+              title: name + ' Derby Triumph',
+              date: 'Inter-College Football Cup · Champions',
+              image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1600&q=80',
+              link: '#matches',
+              btnText: 'View Highlights',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_foot_2',
+              title: 'ACEIT Premier League Cup 2026',
+              date: 'Main Football Arena · Nov 2026',
+              image: 'https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?auto=format&fit=crop&w=1600&q=80',
+              link: '#events',
+              btnText: 'Explore Tournament',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_foot_3',
+              title: 'Tactical Passing & Set-Piece Drills',
+              date: 'Daily Morning Session · 06:00 AM',
+              image: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1600&q=80',
+              link: '#training',
+              btnText: 'Training Schedule',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_foot_4',
+              title: 'Championship Derby Match',
+              date: 'Campus Arena · Live Kickoff',
+              image: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=1600&q=80',
+              link: '#matches',
+              btnText: 'Match Fixture',
+              clubId: cSlug
+            }
+          ];
+        }
+
+        if (s.indexOf('badminton') !== -1 || s.indexOf('shuttle') !== -1) {
+          return [
+            {
+              id: 'slide_badm_1',
+              title: name + ' Gold Medal Victory',
+              date: 'State University Singles & Doubles Cup',
+              image: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1600&q=80',
+              link: '#matches',
+              btnText: 'View Highlights',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_badm_2',
+              title: 'ACEIT Open Shuttle Tournament',
+              date: 'Indoor Badminton Complex · Oct 2026',
+              image: 'https://images.unsplash.com/photo-1521537634581-0dced2fee2ef?auto=format&fit=crop&w=1600&q=80',
+              link: '#events',
+              btnText: 'Explore Event',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_badm_3',
+              title: 'Reflexes, Agility & Smash Drills',
+              date: 'Morning Conditioning · 06:30 AM',
+              image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=80',
+              link: '#training',
+              btnText: 'View Timetable',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_badm_4',
+              title: 'Inter-College Shuttle Derby',
+              date: 'Centre Court · Live Matches',
+              image: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1600&q=80',
+              link: '#matches',
+              btnText: 'View Schedule',
+              clubId: cSlug
+            }
+          ];
+        }
+
+        if (s.indexOf('cricket') !== -1) {
+          return [
+            {
+              id: 'slide_crick_1',
+              title: name + ' Inter-College Champions',
+              date: 'State University Trophy · Gold',
+              image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?auto=format&fit=crop&w=1600&q=80',
+              link: '#matches',
+              btnText: 'View Highlights',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_crick_2',
+              title: 'ACEIT T20 Super League 2026',
+              date: 'Main Cricket Ground · Nov 2026',
+              image: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1600&q=80',
+              link: '#events',
+              btnText: 'Explore League',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_crick_3',
+              title: 'Net Practice & Bowling Accuracy',
+              date: 'Morning Nets Session · 06:00 AM',
+              image: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1600&q=80',
+              link: '#training',
+              btnText: 'View Training Drills',
+              clubId: cSlug
+            },
+            {
+              id: 'slide_crick_4',
+              title: 'Big Match Day vs City Rivals',
+              date: 'Day-Night Fixture · Main Turf',
+              image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1600&q=80',
+              link: '#matches',
+              btnText: 'Match Schedule',
+              clubId: cSlug
+            }
+          ];
+        }
+
+        // Generic Athletic Sport
+        return [
+          {
+            id: 'slide_gen_1',
+            title: name + ' Championship Spotlight',
+            date: 'Collegiate Tournament · Champions',
+            image: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1600&q=80',
+            link: '#matches',
+            btnText: 'View Highlights',
+            clubId: cSlug
+          },
+          {
+            id: 'slide_gen_2',
+            title: 'Annual ACEIT Sports Meet',
+            date: 'Campus Sports Arena · 2026',
+            image: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1600&q=80',
+            link: '#events',
+            btnText: 'Explore Event',
+            clubId: cSlug
+          },
+          {
+            id: 'slide_gen_3',
+            title: 'Intense Team Training & Drills',
+            date: 'Daily Practice Session',
+            image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=80',
+            link: '#training',
+            btnText: 'View Timetable',
+            clubId: cSlug
+          },
+          {
+            id: 'slide_gen_4',
+            title: 'Championship Match Day',
+            date: 'Live Upcoming Fixtures',
+            image: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=1600&q=80',
+            link: '#matches',
+            btnText: 'View Schedule',
+            clubId: cSlug
+          }
+        ];
       }
 
       function defaultDB(clubId) {
         clubId = (clubId || getActiveClubId()).toLowerCase();
         var isSpikers = (clubId === 'spikers' || clubId === 'c_spikers');
         if (!isSpikers) {
+          var targetClub = (systemClubs || []).find(function(c) {
+            var cid = (c.slug || c.clubId || c._id || c.id || '').toLowerCase();
+            return cid === clubId.toLowerCase();
+          }) || { name: 'ACEIT ' + (clubId.charAt(0).toUpperCase() + clubId.slice(1)), sport: clubId, slug: clubId };
+          var aboutDef = getSportAboutDefaults(targetClub);
+          var slideshowDef = getSportSlideshowDefaults(targetClub);
+
           return {
             training: [],
             team: [],
@@ -5769,13 +6286,7 @@
               { id: uid(), label: 'Athletes', target: 0 },
               { id: uid(), label: 'Coaches', target: 2 }
             ],
-            about: {
-              eyebrow: 'Who we are',
-              title: 'Built with dedication,\ndefined by teamwork.',
-              sub: 'Bringing together student athletes who train hard, compete fair, and represent ACEIT with honor.',
-              mission: 'To build a competitive athletics program that develops skilled, disciplined athletes.',
-              vision: 'To be recognised as a leading collegiate sports club at Arya College of Engineering & IT.'
-            },
+            about: aboutDef,
             contact: {
               address: 'Arya College of Engineering & IT, Jaipur, Rajasthan',
               email: 'sports@aceit.edu.in',
@@ -5786,7 +6297,7 @@
               yt: '#',
               wa: '#'
             },
-            slideshow: []
+            slideshow: slideshowDef
           };
         }
         return {
@@ -5980,12 +6491,14 @@
         return fetch(url, opts);
       }
 
-      function saveDB(db, cb) {
+      function saveDB(db, targetClubId, cb) {
         if (!db) db = DB;
-        if (typeof db === 'function') { cb = db; db = DB; }
-        try { window.localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch (e) { }
+        if (typeof targetClubId === 'function') { cb = targetClubId; targetClubId = null; }
+        if (typeof db === 'function') { cb = db; db = DB; targetClubId = null; }
+        var activeClub = (targetClubId || ((activeClubScope && activeClubScope !== 'ALL') ? activeClubScope : getActiveClubId())).toLowerCase();
+        var storageKey = 'aceitSpikersDB_' + activeClub;
+        try { window.localStorage.setItem(storageKey, JSON.stringify(db)); } catch (e) { }
         try {
-          var activeClub = getActiveClubId();
           authFetch(API_BASE + '/save-all?clubId=' + encodeURIComponent(activeClub), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -6006,6 +6519,57 @@
 
       var DB = loadDB();
 
+      function applyClubTheme(club) {
+        var styleTag = document.getElementById('club-theme-override');
+        if (!styleTag) {
+          styleTag = document.createElement('style');
+          styleTag.id = 'club-theme-override';
+          document.head.appendChild(styleTag);
+        }
+
+        var isSpikers = (!club || club.slug === 'spikers' || club.clubId === 'spikers' || (!club.slug && !club.clubId && (!club.sport || club.sport.toLowerCase() === 'volleyball')));
+        
+        if (isSpikers && (!club || (!club.themeColor && !club.accentColor))) {
+          styleTag.innerHTML = '';
+          return;
+        }
+
+        var theme = getSportTheme(club ? club.sport : '', club);
+        var p = theme.primary;
+        var a = theme.accent;
+        var n1 = theme.navy;
+        var n2 = theme.navy2;
+
+        styleTag.innerHTML = 
+          ':root {\n' +
+          '  --gold: ' + p + ' !important;\n' +
+          '  --ember: ' + a + ' !important;\n' +
+          '  --amber: ' + p + ' !important;\n' +
+          '  --navy: ' + n1 + ' !important;\n' +
+          '  --navy-2: ' + n2 + ' !important;\n' +
+          '}\n' +
+          '.btn-primary {\n' +
+          '  background: linear-gradient(135deg, ' + p + ', ' + a + ') !important;\n' +
+          '  box-shadow: 0 10px 30px ' + p + '55 !important;\n' +
+          '}\n' +
+          '.btn-primary:hover {\n' +
+          '  box-shadow: 0 16px 40px ' + p + '77 !important;\n' +
+          '}\n' +
+          '.gradient-text {\n' +
+          '  background: linear-gradient(90deg, ' + p + ', ' + a + ') !important;\n' +
+          '  -webkit-background-clip: text !important;\n' +
+          '  background-clip: text !important;\n' +
+          '  color: transparent !important;\n' +
+          '}\n' +
+          '.eyebrow::before {\n' +
+          '  background: linear-gradient(90deg, ' + p + ', ' + a + ') !important;\n' +
+          '}\n' +
+          '.club-banner-card.active-club-card {\n' +
+          '  border-color: ' + p + ' !important;\n' +
+          '  box-shadow: 0 0 0 2px ' + p + '44 !important;\n' +
+          '}\n';
+      }
+
       function applyClubBranding(club) {
         if (!club) return;
         currentActiveClub = club;
@@ -6014,6 +6578,9 @@
         var clubDesc = club.description || ('The official ' + sportName.toLowerCase() + ' club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.');
         var isSpikers = (club.slug === 'spikers' || club.clubId === 'spikers' || (!club.slug && !club.clubId));
         
+        // 0. Apply Dynamic Theme CSS Variables
+        applyClubTheme(club);
+
         // 1. Update Title & Tab
         document.title = clubName + ' — Official ' + sportName + ' Club | Arya College of Engineering & IT';
         
@@ -6070,18 +6637,22 @@
         }
 
         // 5. Update About Section
-        var aboutSub = document.getElementById('aboutSub');
-        if (aboutSub && (!DB.about || !DB.about.p1 || !isSpikers)) {
-          aboutSub.textContent = clubName + ' brings together athletes who train hard, compete fair, and represent ACEIT in ' + sportName + '.';
+        renderAboutPublic();
+
+        // 5b. Update Hero Slideshow Section
+        var slideEyebrow = document.querySelector('#hero-slideshow .eyebrow');
+        if (slideEyebrow) {
+          slideEyebrow.innerHTML = '<span class="pulse-dot"></span>' + esc(clubName) + ' Spotlight & Highlights';
         }
-        var aboutMission = document.getElementById('aboutMission');
-        if (aboutMission && (!DB.about || !DB.about.mission || !isSpikers)) {
-          aboutMission.textContent = 'To build a competitive ' + sportName.toLowerCase() + ' program that develops skilled, disciplined athletes while creating a home for anyone who wants to play, grow, and belong.';
+        var slideTitle = document.querySelector('#hero-slideshow .section-title');
+        if (slideTitle) {
+          slideTitle.innerHTML = esc(sportName) + ' Energy <span class="gradient-text">In Motion</span>';
         }
-        var aboutVision = document.getElementById('aboutVision');
-        if (aboutVision && (!DB.about || !DB.about.vision || !isSpikers)) {
-          aboutVision.textContent = 'To be recognised as the standard-bearer for collegiate ' + sportName.toLowerCase() + ' at ACEIT — a club that wins with class and trains the next generation of captains.';
+        var slideSub = document.querySelector('#hero-slideshow .section-sub');
+        if (slideSub) {
+          slideSub.textContent = 'Celebrating tournament victories, intense collegiate training, and game-defining moments of ' + clubName + '.';
         }
+        renderSlideshowPublic();
 
         // 6. Update Position Selector on Join Form
         var posSelect = document.getElementById('in-position');
@@ -6140,6 +6711,8 @@
             var isCurrent = (cId === activeClubId || club.slug === activeClubId || (activeClubId === 'spikers' && (cId === 'spikers' || cId === 'c_spikers')));
             var card = document.createElement('div');
             card.className = 'club-banner-card reveal visible' + (isCurrent ? ' active-club-card' : '');
+            var cTheme = getSportTheme(club.sport, club);
+            card.style.borderLeft = '4px solid ' + cTheme.primary;
             var sportIcon = getSportIcon(club.sport);
             var crestStyle = club.logo ? ('background-image:url(\'' + esc(club.logo) + '\');color:transparent;') : '';
             var crestContent = club.logo ? '' : sportIcon;
@@ -6151,14 +6724,14 @@
                 '<div class="club-banner-content">' +
                   '<div class="club-banner-title-row">' +
                     '<h3 class="club-banner-title">' + esc(club.name) + '</h3>' +
-                    '<span class="pill" style="font-size:11px;padding:3px 10px;background:var(--amber);color:#fff;font-weight:700;">' + sportIcon + ' ' + esc(club.sport || 'Sport') + '</span>' +
+                    '<span class="pill" style="font-size:11px;padding:3px 10px;background:linear-gradient(135deg,' + cTheme.primary + ',' + cTheme.accent + ');color:#fff;font-weight:700;box-shadow:0 2px 8px ' + cTheme.primary + '44;">' + sportIcon + ' ' + esc(club.sport || 'Sport') + '</span>' +
                     (isCurrent ? ' <span class="pill" style="font-size:10px;padding:3px 8px;background:#27AE60;color:#fff;">Active Club Page</span>' : '') +
                   '</div>' +
                   '<p class="club-banner-desc">' + esc(club.description || ('Official ' + (club.sport || 'sports') + ' club of Arya College of Engineering & IT.')) + '</p>' +
                 '</div>' +
               '</div>' +
               '<div class="club-banner-actions">' +
-                '<a href="' + esc(clubUrl) + '" class="btn btn-primary club-banner-btn-visit">Visit Club <span style="font-size:14px;margin-left:2px;">›</span></a>' +
+                '<a href="' + esc(clubUrl) + '" class="btn btn-primary club-banner-btn-visit" style="background:linear-gradient(135deg,' + cTheme.primary + ',' + cTheme.accent + ');color:#fff;box-shadow:0 4px 14px ' + cTheme.primary + '55;">Visit Club <span style="font-size:14px;margin-left:2px;">›</span></a>' +
                 '<button class="btn btn-outline" data-toggle-club="' + esc(cId) + '" style="font-size:12px;padding:9px 14px;white-space:nowrap;">' + (club.isFollowing ? '✓ Following' : '+ Follow') + '</button>' +
               '</div>';
 
@@ -6737,21 +7310,24 @@
       }
 
       function renderAboutPublic() {
-        if (!DB || !DB.about) return;
-        var ab = DB.about;
+        var club = currentActiveClub || { name: 'ACEIT Spikers', sport: 'Volleyball', slug: 'spikers' };
+        var def = getSportAboutDefaults(club);
+        var ab = (DB && DB.about) ? DB.about : {};
+
         var eyebrowEl = document.getElementById('aboutEyebrow');
         var titleEl = document.getElementById('aboutTitle');
         var subEl = document.getElementById('aboutSub');
         var missionEl = document.getElementById('aboutMission');
         var visionEl = document.getElementById('aboutVision');
 
-        if (eyebrowEl && ab.eyebrow !== undefined) eyebrowEl.textContent = ab.eyebrow;
-        if (titleEl && ab.title !== undefined) {
-          titleEl.innerHTML = esc(ab.title).replace(/\\n|\n/g, '<br>');
+        if (eyebrowEl) eyebrowEl.textContent = ab.eyebrow || def.eyebrow;
+        if (titleEl) {
+          var t = ab.title || def.title;
+          titleEl.innerHTML = esc(t).replace(/\\n|\n/g, '<br>');
         }
-        if (subEl && ab.sub !== undefined) subEl.textContent = ab.sub;
-        if (missionEl && ab.mission !== undefined) missionEl.textContent = ab.mission;
-        if (visionEl && ab.vision !== undefined) visionEl.textContent = ab.vision;
+        if (subEl) subEl.textContent = ab.sub || def.sub;
+        if (missionEl) missionEl.textContent = ab.mission || def.mission;
+        if (visionEl) visionEl.textContent = ab.vision || def.vision;
       }
 
       function renderContactPublic() {
@@ -6894,19 +7470,28 @@
 
         if (!section || !track || !viewport) return;
 
-        var items = DB.slideshow || [];
+        var club = currentActiveClub || { name: 'ACEIT Spikers', sport: 'Volleyball', slug: 'spikers' };
+        var activeSlug = (club.slug || club.clubId || 'spikers').toLowerCase();
+
+        var allItems = (DB && Array.isArray(DB.slideshow)) ? DB.slideshow : [];
+        var items = allItems.filter(function (it) {
+          var itemClub = (it.clubId || 'spikers').toLowerCase();
+          return itemClub === activeSlug || ((itemClub === 'spikers' || itemClub === 'c_spikers') && (activeSlug === 'spikers' || activeSlug === 'c_spikers'));
+        });
+
         if (!items.length) {
-          section.style.display = 'none';
-          return;
+          items = getSportSlideshowDefaults(club);
         }
+
         section.style.display = 'block';
 
         function getCategoryBadge(slide, idx) {
           var t = ((slide.title || '') + ' ' + (slide.date || '')).toLowerCase();
-          if (t.indexOf('winner') !== -1 || t.indexOf('champion') !== -1) return '🏆 Championship';
-          if (t.indexOf('train') !== -1 || t.indexOf('practice') !== -1) return '⚡ Training';
-          if (t.indexOf('cup') !== -1 || t.indexOf('tournament') !== -1) return '🔥 Tournament';
-          if (t.indexOf('match') !== -1 || t.indexOf('vs') !== -1) return '🏐 Match Day';
+          var sIcon = getSportIcon(club.sport);
+          if (t.indexOf('winner') !== -1 || t.indexOf('champion') !== -1 || t.indexOf('gold') !== -1) return '🏆 Championship';
+          if (t.indexOf('train') !== -1 || t.indexOf('practice') !== -1 || t.indexOf('drill') !== -1) return '⚡ Training';
+          if (t.indexOf('cup') !== -1 || t.indexOf('tournament') !== -1 || t.indexOf('trophy') !== -1 || t.indexOf('shootout') !== -1 || t.indexOf('league') !== -1) return '🔥 Tournament';
+          if (t.indexOf('match') !== -1 || t.indexOf('vs') !== -1 || t.indexOf('derby') !== -1 || t.indexOf('game') !== -1) return sIcon + ' Match Day';
           return '⭐ Spotlight';
         }
 
@@ -6935,7 +7520,7 @@
           var btnLabel = slide.btnText || 'Explore Highlights';
 
           trackHtml += '<div class="showcase-card" data-index="' + originalIndex + '">' +
-            '<img class="showcase-card-img" src="' + imgSrc + '" alt="' + esc(slide.title || 'ACEIT Spikers') + '" onerror="this.onerror=null;this.src=\'' + fallback + '\';">' +
+            '<img class="showcase-card-img" src="' + imgSrc + '" alt="' + esc(slide.title || club.name) + '" onerror="this.onerror=null;this.src=\'' + fallback + '\';">' +
             '<div class="showcase-card-overlay">' +
             '<div class="showcase-card-top">' +
             '<span class="showcase-badge">' + badgeText + '</span>' +
@@ -6943,7 +7528,7 @@
             '</div>' +
             '<div class="showcase-card-bottom">' +
             (slide.date ? '<p class="showcase-card-date"><span>📅</span> ' + esc(slide.date) + '</p>' : '') +
-            '<h3 class="showcase-card-title">' + esc(slide.title || 'ACEIT Spikers Highlight') + '</h3>' +
+            '<h3 class="showcase-card-title">' + esc(slide.title || (club.name + ' Highlight')) + '</h3>' +
             '<a href="' + esc(linkUrl) + '" class="btn btn-primary showcase-btn">' +
             esc(btnLabel) +
             '<span class="btn-arrow">→</span>' +
@@ -8829,10 +9414,18 @@
             return itemClub === targetScope || ((itemClub === 'spikers' || itemClub === 'c_spikers') && (targetScope === 'spikers' || targetScope === 'c_spikers'));
           });
         }
+        var extraBtns = '';
+        if (tab === 'gallery' || tab === 'team') {
+          extraBtns = '<button class="admin-btn" id="adminAddCategoryBtn" style="margin-right:8px;background:var(--cream-2);color:var(--charcoal);border:1px solid var(--border);">Manage / Delete Categories</button>';
+        } else if (tab === 'slideshow') {
+          extraBtns = '<button class="admin-btn" id="adminResetSlidesBtn" style="margin-right:8px;background:var(--cream-2);color:var(--charcoal);border:1px solid var(--border);">✨ Auto-Fill Default Slides</button>';
+        }
+
         var html = '<div class="admin-panel-head"><h3>' + schema.title + ' <span class="admin-count mono">' + items.length + '</span></h3><div>' +
-          ((tab === 'gallery' || tab === 'team') ? '<button class="admin-btn" id="adminAddCategoryBtn" style="margin-right:8px;background:var(--cream-2);color:var(--charcoal);border:1px solid var(--border);">Manage / Delete Categories</button>' : '') +
+          extraBtns +
           '<button class="admin-btn" id="adminAddBtn">+ Add ' + schema.label + '</button></div></div>';
         if (tab === 'team') { html += '<div class="admin-note">Photos are compressed and stored in this browser. Keep them under a few dozen for best performance — export a backup from Data &amp; PIN after adding photos.</div>'; }
+        if (tab === 'slideshow') { html += '<div class="admin-note">Manage the full-width motion showcase slides on the public home page for this club. Move slides up/down to reorder.</div>'; }
         if (items.length > 4) { html += '<input type="text" id="adminSearch" class="admin-search" placeholder="Search ' + schema.title.toLowerCase() + '...">'; }
         html += '<div class="admin-list" id="adminList">';
         items.forEach(function (it) {
@@ -8844,7 +9437,7 @@
             '<div class="info"><b>' + s.title + '</b><span>' + (s.sub || '') + '</span></div>' +
             '<div class="actions">' + moveBtns + '<button class="admin-btn" data-edit="' + it.id + '">Edit</button><button class="admin-btn" data-dup="' + it.id + '">Duplicate</button><button class="admin-btn danger" data-del="' + it.id + '">Delete</button></div></div>';
         });
-        if (items.length === 0) { html += '<p style="color:var(--charcoal-soft);font-size:14px;">No items yet — click "+ Add ' + schema.label + '" to create one.</p>'; }
+        if (items.length === 0) { html += '<p style="color:var(--charcoal-soft);font-size:14px;">No custom slides yet — click "+ Add Slide" or "✨ Auto-Fill Default Slides" to populate default sport highlights.</p>'; }
         html += '</div><div class="admin-form" id="adminForm"></div>';
         adminContent.innerHTML = html;
         adminContent.scrollTop = 0;
@@ -8864,6 +9457,28 @@
         if (addCatBtn) {
           addCatBtn.addEventListener('click', function () {
             openAddCategoryModal();
+          });
+        }
+        var resetSlidesBtn = document.getElementById('adminResetSlidesBtn');
+        if (resetSlidesBtn) {
+          resetSlidesBtn.addEventListener('click', function () {
+            var targetScope = (activeClubScope && activeClubScope !== 'ALL') ? activeClubScope : getActiveClubId();
+            var targetClub = (systemClubs || []).find(function (c) {
+              var cid = (c.slug || c.clubId || c._id || c.id || '').toLowerCase();
+              return cid === targetScope.toLowerCase();
+            }) || currentActiveClub || { name: 'ACEIT Spikers', sport: 'Volleyball', slug: 'spikers' };
+            var defaults = getSportSlideshowDefaults(targetClub);
+            
+            DB.slideshow = (DB.slideshow || []).filter(function (it) {
+              var itemClub = (it.clubId || 'spikers').toLowerCase();
+              return itemClub !== targetScope.toLowerCase();
+            }).concat(defaults);
+
+            saveDB(DB, targetScope, function () {
+              renderAdminTab('slideshow');
+              renderSlideshowPublic();
+              showAlert('Default sport slideshow loaded for ' + targetClub.name + '!');
+            });
           });
         }
         adminContent.querySelectorAll('[data-edit]').forEach(function (b) {
@@ -9434,23 +10049,36 @@
 
       /* ============ ABOUT TAB MANAGEMENT ============ */
       function renderAboutTab() {
-        var about = DB.about || {
-          eyebrow: 'Who we are',
-          title: 'Built on the court,\ndefined by character.',
-          sub: 'ACEIT Spikers brings together players who train hard, compete fair, and show up for one another — on and off the court.',
-          mission: 'To build a competitive volleyball program that develops skilled, disciplined athletes while creating a home for anyone who wants to play, grow, and belong.',
-          vision: 'To be recognised as the standard-bearer for collegiate volleyball at ACEIT — a club that wins with class and trains the next generation of captains.'
+        var targetScope = (activeClubScope && activeClubScope !== 'ALL') ? activeClubScope : getActiveClubId();
+        var targetClub = (systemClubs || []).find(function (c) {
+          var cid = (c.slug || c.clubId || c._id || c.id || '').toLowerCase();
+          return cid === targetScope.toLowerCase();
+        }) || currentActiveClub || { name: 'ACEIT Spikers', sport: 'Volleyball', slug: 'spikers' };
+
+        var sportDef = getSportAboutDefaults(targetClub);
+        var ab = (DB && DB.about) ? DB.about : {};
+
+        var aboutData = {
+          eyebrow: ab.eyebrow || sportDef.eyebrow,
+          title: ab.title || sportDef.title,
+          sub: ab.sub || sportDef.sub,
+          mission: ab.mission || sportDef.mission,
+          vision: ab.vision || sportDef.vision
         };
 
-        var html = '<div class="admin-panel-head"><h3>About Section Management</h3></div>' +
-          '<div class="admin-note">Edit the headline, sub-heading, mission, and vision content displayed in the About section of the public website.</div>' +
+        var html = '<div class="admin-panel-head"><h3>About Section Management</h3>' +
+          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+          '<span class="pill" style="font-size:11px;padding:4px 10px;background:var(--amber);color:#fff;font-weight:700;">Club: ' + esc(targetClub.name) + ' (' + esc(targetClub.sport || 'Sport') + ')</span>' +
+          '<button type="button" class="btn btn-ghost" id="abResetDefaultsBtn" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);">✨ Auto-Fill Sport Defaults</button>' +
+          '</div></div>' +
+          '<div class="admin-note">Edit the headline, sub-heading, mission, and vision content displayed in the About section of the public website for <b>' + esc(targetClub.name) + '</b>.</div>' +
           '<div class="admin-form open" style="margin-top:16px;">' +
           '<div class="admin-form-grid">' +
-          '<div class="admin-field"><label>Eyebrow Tagline</label><input type="text" id="abEyebrow" value="' + esc(about.eyebrow || '') + '"></div>' +
-          '<div class="admin-field"><label>Headline Title</label><input type="text" id="abTitle" value="' + esc(about.title || '') + '"></div>' +
-          '<div class="admin-field full"><label>Sub-heading Description</label><textarea id="abSub" rows="3">' + esc(about.sub || '') + '</textarea></div>' +
-          '<div class="admin-field full"><label>Our Mission</label><textarea id="abMission" rows="3">' + esc(about.mission || '') + '</textarea></div>' +
-          '<div class="admin-field full"><label>Our Vision</label><textarea id="abVision" rows="3">' + esc(about.vision || '') + '</textarea></div>' +
+          '<div class="admin-field"><label>Eyebrow Tagline</label><input type="text" id="abEyebrow" value="' + esc(aboutData.eyebrow) + '"></div>' +
+          '<div class="admin-field"><label>Headline Title</label><input type="text" id="abTitle" value="' + esc(aboutData.title) + '"></div>' +
+          '<div class="admin-field full"><label>Sub-heading Description</label><textarea id="abSub" rows="3">' + esc(aboutData.sub) + '</textarea></div>' +
+          '<div class="admin-field full"><label>Our Mission</label><textarea id="abMission" rows="3">' + esc(aboutData.mission) + '</textarea></div>' +
+          '<div class="admin-field full"><label>Our Vision</label><textarea id="abVision" rows="3">' + esc(aboutData.vision) + '</textarea></div>' +
           '</div>' +
           '<div style="margin-top:16px;display:flex;gap:12px;">' +
           '<button class="btn btn-primary" id="saveAboutBtn">Save About Section</button>' +
@@ -9460,6 +10088,16 @@
         adminContent.innerHTML = html;
         adminContent.scrollTop = 0;
 
+        document.getElementById('abResetDefaultsBtn').addEventListener('click', function () {
+          var def = getSportAboutDefaults(targetClub);
+          document.getElementById('abEyebrow').value = def.eyebrow;
+          document.getElementById('abTitle').value = def.title;
+          document.getElementById('abSub').value = def.sub;
+          document.getElementById('abMission').value = def.mission;
+          document.getElementById('abVision').value = def.vision;
+          showAlert('Filled default mission, vision, and description for ' + (targetClub.sport || 'this sport') + '!');
+        });
+
         document.getElementById('saveAboutBtn').addEventListener('click', function () {
           var eyebrow = (document.getElementById('abEyebrow').value || '').trim();
           var title = (document.getElementById('abTitle').value || '').trim();
@@ -9467,25 +10105,35 @@
           var mission = (document.getElementById('abMission').value || '').trim();
           var vision = (document.getElementById('abVision').value || '').trim();
 
-          DB.about = {
-            eyebrow: eyebrow,
-            title: title,
-            sub: sub,
-            mission: mission,
-            vision: vision
+          var newAbout = {
+            eyebrow: eyebrow || sportDef.eyebrow,
+            title: title || sportDef.title,
+            sub: sub || sportDef.sub,
+            mission: mission || sportDef.mission,
+            vision: vision || sportDef.vision
           };
 
-          saveDB(DB);
-          renderAboutPublic();
-          showAlert('About section updated successfully.');
+          DB.about = newAbout;
+          saveDB(DB, targetScope, function () {
+            if (targetScope === getActiveClubId() || (targetScope === 'spikers' && getActiveClubId() === 'spikers')) {
+              renderAboutPublic();
+            }
+            showAlert('About section updated successfully for ' + targetClub.name + '!');
+          });
         });
       }
 
       /* ============ CONTACT TAB MANAGEMENT ============ */
       function renderContactTab() {
-        var contact = DB.contact || {
+        var targetScope = (activeClubScope && activeClubScope !== 'ALL') ? activeClubScope : getActiveClubId();
+        var targetClub = (systemClubs || []).find(function (c) {
+          var cid = (c.slug || c.clubId || c._id || c.id || '').toLowerCase();
+          return cid === targetScope.toLowerCase();
+        }) || currentActiveClub || { name: 'ACEIT Spikers', sport: 'Volleyball', slug: 'spikers' };
+
+        var contact = (DB && DB.contact) ? DB.contact : {
           address: 'Arya College of Engineering & IT, Jaipur, Rajasthan',
-          email: 'spikers@aceit.edu.in',
+          email: 'sports@aceit.edu.in',
           phone: '+91 98765 43210',
           hours: 'Mon–Sat, 6:00 AM – 8:00 PM',
           insta: '#',
@@ -9494,8 +10142,9 @@
           wa: '#'
         };
 
-        var html = '<div class="admin-panel-head"><h3>Contact Section Management</h3></div>' +
-          '<div class="admin-note">Edit the address, email, phone, working hours, and social links displayed in the Contact section of the public website.</div>' +
+        var html = '<div class="admin-panel-head"><h3>Contact Section Management</h3>' +
+          '<span class="pill" style="font-size:11px;padding:4px 10px;background:var(--amber);color:#fff;font-weight:700;">Club: ' + esc(targetClub.name) + ' (' + esc(targetClub.sport || 'Sport') + ')</span></div>' +
+          '<div class="admin-note">Edit the address, email, phone, working hours, and social links displayed in the Contact section of the public website for <b>' + esc(targetClub.name) + '</b>.</div>' +
           '<div class="admin-form open" style="margin-top:16px;">' +
           '<div class="admin-form-grid">' +
           '<div class="admin-field full"><label>Address</label><input type="text" id="ctAddress" value="' + esc(contact.address || '') + '"></div>' +
@@ -9536,9 +10185,12 @@
             wa: wa
           };
 
-          saveDB(DB);
-          renderContactPublic();
-          showAlert('Contact section updated successfully.');
+          saveDB(DB, targetScope, function () {
+            if (targetScope === getActiveClubId() || (targetScope === 'spikers' && getActiveClubId() === 'spikers')) {
+              renderContactPublic();
+            }
+            showAlert('Contact section updated successfully for ' + targetClub.name + '!');
+          });
         });
       }
 
@@ -10397,15 +11049,17 @@
             clubs.forEach(function (c) {
               var cid = String(c._id || c.id);
               var cSlug = c.slug || c.clubId || cid;
+              var cTheme = getSportTheme(c.sport, c);
               var sportIcon = getSportIcon(c.sport);
               var pageUrl = (cSlug === 'spikers' || cSlug === 'c_spikers') ? '/?club=spikers' : ('/?club=' + encodeURIComponent(cSlug));
-              html += '<div class="admin-item" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;gap:12px;flex-wrap:wrap;">' +
+              html += '<div class="admin-item" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;gap:12px;flex-wrap:wrap;border-left:4px solid ' + cTheme.primary + ';">' +
                 '<div class="info" style="display:flex;align-items:center;gap:14px;flex:1;min-width:240px;">' +
                 (c.logo ? '<img src="' + esc(c.logo) + '" style="width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">' : '<div style="width:46px;height:46px;background:var(--cream-2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;">' + sportIcon + '</div>') +
                 '<div>' +
                 '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
                 '<b style="font-size:15px;color:var(--charcoal);">' + esc(c.name) + '</b>' +
-                '<span class="pill" style="font-size:10px;padding:2px 8px;background:var(--amber);color:#fff;font-weight:700;">' + sportIcon + ' ' + esc(c.sport || 'Sport') + '</span>' +
+                '<span class="pill" style="font-size:10px;padding:2px 8px;background:linear-gradient(135deg,' + cTheme.primary + ',' + cTheme.accent + ');color:#fff;font-weight:700;box-shadow:0 2px 6px ' + cTheme.primary + '44;">' + sportIcon + ' ' + esc(c.sport || 'Sport') + '</span>' +
+                (c.themeColor ? ('<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + c.themeColor + '22;color:' + c.themeColor + ';font-weight:700;">Custom Theme</span>') : '') +
                 '<span style="font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;' + (c.active !== false ? 'background:rgba(39,174,96,0.15);color:#27AE60;' : 'background:rgba(231,76,60,0.15);color:#E74C3C;') + '">' + (c.active !== false ? 'Active' : 'Disabled') + '</span>' +
                 '</div>' +
                 '<div style="margin-top:4px;font-size:12px;color:var(--charcoal-soft);">' +
@@ -10487,6 +11141,7 @@
 
         var existingLogo = (club && club.logo) ? club.logo : '';
         var existingCover = (club && club.coverImage) ? club.coverImage : '';
+        var initTheme = getSportTheme(club ? club.sport : '', club);
         var sportIcon = getSportIcon(club ? club.sport : '');
 
         var html = '<div class="admin-form-box" style="margin-top:20px;padding:26px;border:1.5px solid var(--border);border-radius:14px;background:var(--bg-card);box-shadow:0 6px 24px rgba(0,0,0,0.06);">' +
@@ -10507,6 +11162,30 @@
           '</div>' +
           '<div class="admin-field"><label>Slug (URL path key)</label><input type="text" id="cModalSlug" value="' + esc(club ? club.slug : '') + '" placeholder="e.g. kabaddi (URL: /club/kabaddi)"></div>' +
           
+          '<!-- THEME COLOR CUSTOMIZATION -->' +
+          '<div class="admin-field">' +
+          '<label>Theme Primary Color</label>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<input type="color" id="cModalThemePicker" value="' + (initTheme.primary || '#F5A623') + '" style="width:40px;height:38px;padding:2px;border-radius:6px;border:1.5px solid var(--border);cursor:pointer;">' +
+          '<input type="text" id="cModalThemeColor" value="' + esc(club ? club.themeColor || '' : '') + '" placeholder="Auto from Sport (or #hex)" style="flex:1;">' +
+          '</div>' +
+          '</div>' +
+          '<div class="admin-field">' +
+          '<label>Theme Accent Gradient Color</label>' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+          '<input type="color" id="cModalAccentPicker" value="' + (initTheme.accent || '#FF5A1F') + '" style="width:40px;height:38px;padding:2px;border-radius:6px;border:1.5px solid var(--border);cursor:pointer;">' +
+          '<input type="text" id="cModalAccentColor" value="' + esc(club ? club.accentColor || '' : '') + '" placeholder="Auto from Sport (or #hex)" style="flex:1;">' +
+          '</div>' +
+          '</div>' +
+
+          '<div class="admin-field full" style="display:flex;align-items:center;gap:14px;background:var(--cream-2);padding:12px 16px;border-radius:10px;border:1.5px solid var(--border);flex-wrap:wrap;">' +
+          '<span style="font-size:13px;font-weight:700;color:var(--charcoal);">Theme Live Preview:</span>' +
+          '<div id="cModalLiveThemeBtn" style="padding:8px 20px;border-radius:999px;color:#fff;font-weight:700;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;background:linear-gradient(135deg,' + initTheme.primary + ',' + initTheme.accent + ');box-shadow:0 6px 18px ' + initTheme.primary + '55;">' +
+          'Visit Club ›' +
+          '</div>' +
+          '<button type="button" class="btn btn-ghost" id="cModalResetThemeBtn" style="font-size:11px;padding:5px 10px;margin-left:auto;">Reset to Sport Default</button>' +
+          '</div>' +
+
           '<!-- CLUB LOGO UPLOADER -->' +
           '<div class="admin-field">' +
           '<label>Club Logo (Upload Device Image or URL)</label>' +
@@ -10560,6 +11239,54 @@
         var nameInput = document.getElementById('cModalName');
         var sportInput = document.getElementById('cModalSport');
         var slugInput = document.getElementById('cModalSlug');
+
+        var themeColorInput = document.getElementById('cModalThemeColor');
+        var themePicker = document.getElementById('cModalThemePicker');
+        var accentColorInput = document.getElementById('cModalAccentColor');
+        var accentPicker = document.getElementById('cModalAccentPicker');
+        var liveThemeBtn = document.getElementById('cModalLiveThemeBtn');
+        var resetThemeBtn = document.getElementById('cModalResetThemeBtn');
+
+        function updateThemeLivePreview() {
+          var sport = sportInput.value.trim();
+          var customClub = {
+            themeColor: themeColorInput.value.trim(),
+            accentColor: accentColorInput.value.trim()
+          };
+          var t = getSportTheme(sport, customClub);
+          liveThemeBtn.style.background = 'linear-gradient(135deg, ' + t.primary + ', ' + t.accent + ')';
+          liveThemeBtn.style.boxShadow = '0 6px 18px ' + t.primary + '55';
+          if (t.primary.startsWith('#') && t.primary.length === 7) themePicker.value = t.primary;
+          if (t.accent.startsWith('#') && t.accent.length === 7) accentPicker.value = t.accent;
+        }
+
+        themePicker.addEventListener('input', function () {
+          themeColorInput.value = themePicker.value;
+          updateThemeLivePreview();
+        });
+        themeColorInput.addEventListener('input', function () {
+          if (themeColorInput.value.startsWith('#') && themeColorInput.value.length === 7) {
+            themePicker.value = themeColorInput.value;
+          }
+          updateThemeLivePreview();
+        });
+
+        accentPicker.addEventListener('input', function () {
+          accentColorInput.value = accentPicker.value;
+          updateThemeLivePreview();
+        });
+        accentColorInput.addEventListener('input', function () {
+          if (accentColorInput.value.startsWith('#') && accentColorInput.value.length === 7) {
+            accentPicker.value = accentColorInput.value;
+          }
+          updateThemeLivePreview();
+        });
+
+        resetThemeBtn.addEventListener('click', function () {
+          themeColorInput.value = '';
+          accentColorInput.value = '';
+          updateThemeLivePreview();
+        });
 
         var logoHidden = document.getElementById('cModalLogo');
         var logoUrlInput = document.getElementById('cModalLogoUrlInput');
@@ -10645,7 +11372,16 @@
             if (!logoHidden.value) {
               updateLogoPreview('');
             }
+            if (!themeColorInput.value.trim() && !accentColorInput.value.trim()) {
+              updateThemeLivePreview();
+            }
           });
+        });
+
+        sportInput.addEventListener('input', function () {
+          if (!themeColorInput.value.trim() && !accentColorInput.value.trim()) {
+            updateThemeLivePreview();
+          }
         });
 
         nameInput.addEventListener('input', function () {
@@ -10666,6 +11402,8 @@
           var logo = (document.getElementById('cModalLogo').value || '').trim();
           var coverImage = (document.getElementById('cModalCover').value || '').trim();
           var description = (document.getElementById('cModalDesc').value || '').trim();
+          var themeColor = (document.getElementById('cModalThemeColor').value || '').trim();
+          var accentColor = (document.getElementById('cModalAccentColor').value || '').trim();
           var active = document.getElementById('cModalActive').checked;
 
           if (!name || !sport) {
@@ -10680,6 +11418,8 @@
             logo: logo,
             coverImage: coverImage,
             description: description,
+            themeColor: themeColor,
+            accentColor: accentColor,
             active: active
           };
 
