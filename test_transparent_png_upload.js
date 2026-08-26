@@ -110,12 +110,12 @@ async function runTests() {
   assert(htmlContent.includes('navBrandLogo.src = club.logo'), 'applyClubBranding sets navBrandLogo.src dynamically from club.logo');
   assert(htmlContent.includes('heroLogoImg.src = club.logo'), 'applyClubBranding sets heroLogoImg.src dynamically from club.logo');
 
-  // Restore official /spikers-logo.png
+  // Restore official spikers-logo.png
   await request('PUT', '/api/clubs/spikers', {
     name: 'ACEIT Spikers',
     sport: 'Volleyball',
     description: 'The official volleyball club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.',
-    logo: '/spikers-logo.png'
+    logo: 'spikers-logo.png'
   }, { 'Authorization': `Bearer ${ownerToken}` });
 
   console.log('\n====================================================');

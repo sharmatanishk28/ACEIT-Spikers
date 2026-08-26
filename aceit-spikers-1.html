@@ -4601,8 +4601,9 @@
 
   <div class="loader" id="loader"><img
       id="loaderLogoImg"
-      src="/spikers-logo.png"
-      alt="Loading ACEIT Spikers"></div>
+      src="spikers-logo.png"
+      alt="Loading ACEIT Spikers"
+      onerror="if(this.src!=='spikers-logo.png'){this.src='spikers-logo.png';}else{this.onerror=null;this.src=getSportCrestSVG({sport:'Volleyball',name:'ACEIT Spikers',_forceSvg:true});}"></div>
   <div class="progress-bar" id="progressBar"></div>
   <div class="mouse-glow" id="mouseGlow"></div>
 
@@ -4611,8 +4612,9 @@
     <div class="nav-inner">
       <a href="#hero" class="nav-brand"><img
           id="navBrandLogo"
-          src="/spikers-logo.png"
-          alt="ACEIT Crest"> <span id="navBrandText">ACEIT <span class="accent">SPIKERS</span></span></a>
+          src="spikers-logo.png"
+          alt="ACEIT Crest"
+          onerror="if(this.src!=='spikers-logo.png'){this.src='spikers-logo.png';}else{this.onerror=null;this.src=getSportCrestSVG({sport:'Volleyball',name:'ACEIT Spikers',_forceSvg:true});}"> <span id="navBrandText">ACEIT <span class="accent">SPIKERS</span></span></a>
       <ul class="nav-links" id="navLinks">
         <li><a href="#about">About</a></li>
         <li><a href="#team">Team</a></li>
@@ -4688,8 +4690,9 @@
       <div class="hero-logo-wrap">
         <img
           id="heroLogoImg"
-          src="/spikers-logo.png"
-          alt="ACEIT Spikers official crest">
+          src="spikers-logo.png"
+          alt="ACEIT Spikers official crest"
+          onerror="if(this.src!=='spikers-logo.png'){this.src='spikers-logo.png';}else{this.onerror=null;this.src=getSportCrestSVG({sport:'Volleyball',name:'ACEIT Spikers',_forceSvg:true});}">
       </div>
     </div>
     <div class="hero-scroll"><span>SCROLL</span><span class="scroll-line"></span></div>
@@ -5917,8 +5920,8 @@
       }
 
       function getSportCrestSVG(club) {
-        var isSpk = club && (club.slug === 'spikers' || club.clubId === 'spikers' || (!club.slug && !club.clubId && (!club.sport || club.sport.toLowerCase() === 'volleyball')));
-        if (isSpk) return '/spikers-logo.png';
+        var isSpk = club && !club._forceSvg && (club.slug === 'spikers' || club.clubId === 'spikers' || (!club.slug && !club.clubId && (!club.sport || club.sport.toLowerCase() === 'volleyball')));
+        if (isSpk) return 'spikers-logo.png';
         var name = (club && club.name) ? club.name : 'Club';
         var sport = (club && club.sport) ? club.sport : 'Athletics';
         var theme = getSportTheme(sport, club);
@@ -6657,7 +6660,7 @@
         var sportName = club.sport || 'Volleyball';
         var clubDesc = club.description || ('The official ' + sportName.toLowerCase() + ' club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.');
         var isSpikers = (club.slug === 'spikers' || club.clubId === 'spikers' || (!club.slug && !club.clubId));
-        var clubLogo = club.logo || (isSpikers ? '/spikers-logo.png' : '');
+        var clubLogo = club.logo || (isSpikers ? 'spikers-logo.png' : '');
         var defaultCrest = clubLogo || getSportCrestSVG(club || { sport: sportName, name: clubName });
         
         // 0. Apply Dynamic Theme CSS Variables
