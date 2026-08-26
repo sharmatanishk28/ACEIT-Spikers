@@ -535,16 +535,18 @@ async function authenticateUser(req, res, next) {
         user = await User.findOne({ username: String(decoded.username).toLowerCase().trim() }).select('-passwordHash');
       }
       if (user) {
-        if (user.active) {
-          req.user = user.toObject ? user.toObject() : user;
+        req.user = user.toObject ? user.toObject() : user;
+        if (user.active === false) {
+          req.userIsDisabled = true;
         }
       }
     } else {
       let user = localUsers.find(u => String(u._id) === String(decoded.id) || u.username === String(decoded.username).toLowerCase().trim());
       if (user) {
-        if (user.active) {
-          req.user = Object.assign({}, user);
-          delete req.user.passwordHash;
+        req.user = Object.assign({}, user);
+        delete req.user.passwordHash;
+        if (user.active === false) {
+          req.userIsDisabled = true;
         }
       }
     }
@@ -560,6 +562,9 @@ async function authenticateUser(req, res, next) {
 function requireAuth(req, res, next) {
   if (!req.user) {
     return res.status(401).json({ success: false, message: 'Authentication required. Please log in.' });
+  }
+  if (req.user.active === false || req.userIsDisabled) {
+    return res.status(403).json({ success: false, message: 'Account is disabled. Please contact the Owner.' });
   }
   next();
 }
@@ -592,21 +597,37 @@ function requirePermission(perm) {
 function hasClubAccess(user, clubId) {
   if (!user) return false;
   if (user.role === 'OWNER' || user.clubId === 'ALL') return true;
-  return String(user.clubId) === String(clubId);
+  if (!clubId) return true;
+  const norm = String(clubId || '').toLowerCase().trim();
+  if (Array.isArray(user.clubs)) {
+    const normClubs = user.clubs.map(c => String(c).toLowerCase().trim());
+    if (normClubs.includes(norm)) return true;
+    if ((norm === 'spikers' || norm === 'aceit-spikers') && (normClubs.includes('spikers') || normClubs.includes('aceit-spikers'))) return true;
+  }
+  const uClub = String(user.clubId || '').toLowerCase().trim();
+  if (uClub === norm) return true;
+  if ((norm === 'spikers' || norm === 'aceit-spikers') && (uClub === 'spikers' || uClub === 'aceit-spikers')) return true;
+  return false;
 }
 
 function requireClubAccess(req, res, next) {
   if (!req.user) {
-    return res.status(401).json({ success: false, message: 'Authentication required' });
+    return res.status(401).json({ success: false, message: 'Authentication required. Please log in.' });
+  }
+  if (!req.user.active) {
+    return res.status(403).json({ success: false, message: 'Account is disabled. Please contact the Owner.' });
   }
   if (req.user.role === 'OWNER' || req.user.clubId === 'ALL') {
     return next();
   }
-  const reqClub = req.query.clubId || req.body.clubId || req.params.clubId || req.params.id;
-  if (!reqClub || hasClubAccess(req.user, reqClub)) {
+  const reqClub = req.query.clubId || (req.body && req.body.clubId) || req.params.clubId || req.params.club || req.headers['x-club-id'];
+  if (!reqClub) {
     return next();
   }
-  return res.status(403).json({ success: false, message: `Access forbidden: No access to club '${reqClub}'` });
+  if (hasClubAccess(req.user, reqClub)) {
+    return next();
+  }
+  return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to access club '${reqClub}'` });
 }
 
 // Multi-Club Data Normalization & Filtering Helpers
@@ -842,17 +863,58 @@ app.get('/api/db', async (req, res) => {
   res.json({ success: true, data });
 });
 
-// 2. Save full database
-app.post('/api/save-all', authenticateUser, requireAuth, requirePermission('settings.*'), async (req, res) => {
-  const db = req.body;
-  if (!db || typeof db !== 'object') {
-    return res.status(400).json({ success: false, message: 'Invalid payload' });
+// 2. Save full database (scoped per club and permissions)
+app.post('/api/save-all', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    if (!req.user.active) {
+      return res.status(403).json({ success: false, message: 'Account is disabled. Please contact the Owner.' });
+    }
+    const db = req.body;
+    if (!db || typeof db !== 'object') {
+      return res.status(400).json({ success: false, message: 'Invalid payload' });
+    }
+
+    const targetClubId = req.query.clubId || db.clubId || (req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, targetClubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to manage club '${targetClubId}'` });
+    }
+
+    const isOwner = req.user.role === 'OWNER' || (Array.isArray(req.user.permissions) && req.user.permissions.includes('*'));
+    if (!isOwner && !req.user.permissions.includes('settings.*')) {
+      // If user has granular module permissions, merge only the allowed modules into current DB
+      const currentRes = await getDB();
+      const currentDB = currentRes.success ? currentRes.data : {};
+      const userPerms = req.user.permissions || [];
+
+      const modules = ['team', 'matches', 'events', 'news', 'gallery', 'training', 'sponsors', 'testimonials', 'stats', 'about', 'contact', 'slideshow'];
+      modules.forEach(mod => {
+        const permKey = mod === 'team' ? 'players' : mod;
+        if (userPerms.includes(`${permKey}.*`) || userPerms.includes(permKey)) {
+          if (Array.isArray(db[mod])) {
+            // Keep items from other clubs, replace items for target club
+            const others = (currentDB[mod] || []).filter(item => (item.clubId || 'spikers') !== targetClubId);
+            const targetItems = db[mod].map(item => Object.assign({}, item, { clubId: targetClubId }));
+            currentDB[mod] = others.concat(targetItems);
+          } else if (db[mod] && typeof db[mod] === 'object') {
+            currentDB[mod] = db[mod];
+          }
+        }
+      });
+      const result = await saveDB(currentDB);
+      if (!result.success) {
+        return res.status(500).json({ success: false, message: `Failed to save changes: ${result.error}`, error: result.error });
+      }
+      return res.json({ success: true, message: 'Club database updated successfully' });
+    }
+
+    const result = await saveDB(db);
+    if (!result.success) {
+      return res.status(500).json({ success: false, message: `Failed to save to MongoDB Atlas: ${result.error}`, error: result.error });
+    }
+    res.json({ success: true, message: 'Database saved online to MongoDB Atlas' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
-  const result = await saveDB(db);
-  if (!result.success) {
-    return res.status(500).json({ success: false, message: `Failed to save to MongoDB Atlas: ${result.error}`, error: result.error });
-  }
-  res.json({ success: true, message: 'Database saved online to MongoDB Atlas' });
 });
 
 // 3. Get players team array (supports ?clubId=)
@@ -879,6 +941,11 @@ app.post('/api/team', authenticateUser, requireAuth, requirePermission('players.
     }
     player.id = player.id || generateId();
     player.clubId = player.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    
+    if (!hasClubAccess(req.user, player.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add players to club '${player.clubId}'` });
+    }
+
     db.team = db.team || [];
     db.team.push(player);
 
@@ -911,10 +978,20 @@ app.put('/api/team/:id', authenticateUser, requireAuth, requirePermission('playe
       console.error(`[API Player Update Failed] Player ID not found: ${id}`);
       return res.status(404).json({ success: false, message: 'Player not found' });
     }
+    
+    const existingClub = db.team[idx].clubId || 'spikers';
+    if (!hasClubAccess(req.user, existingClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to modify players in club '${existingClub}'` });
+    }
+
     updatedPlayer.id = id;
     if (!updatedPlayer.clubId) {
-      updatedPlayer.clubId = db.team[idx].clubId || 'spikers';
+      updatedPlayer.clubId = existingClub;
     }
+    if (!hasClubAccess(req.user, updatedPlayer.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to assign player to club '${updatedPlayer.clubId}'` });
+    }
+
     db.team[idx] = updatedPlayer;
 
     const result = await saveDB(db);
@@ -940,11 +1017,17 @@ app.delete('/api/team/:id', authenticateUser, requireAuth, requirePermission('pl
     const db = dbRes.data;
     const { id } = req.params;
     db.team = db.team || [];
-    const initialLen = db.team.length;
-    db.team = db.team.filter(p => String(p.id) !== String(id));
-    if (db.team.length === initialLen) {
+    const playerToDelete = db.team.find(p => String(p.id) === String(id));
+    if (!playerToDelete) {
       return res.status(404).json({ success: false, message: 'Player not found' });
     }
+
+    const existingClub = playerToDelete.clubId || 'spikers';
+    if (!hasClubAccess(req.user, existingClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to delete players from club '${existingClub}'` });
+    }
+
+    db.team = db.team.filter(p => String(p.id) !== String(id));
 
     const result = await saveDB(db);
     if (!result.success) {
@@ -973,6 +1056,10 @@ app.post('/api/team/duplicate/:id', authenticateUser, requireAuth, requirePermis
     if (!orig) {
       return res.status(404).json({ success: false, message: 'Original player not found' });
     }
+    if (!hasClubAccess(req.user, orig.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to duplicate players in club '${orig.clubId || 'spikers'}'` });
+    }
+
     const copy = Object.assign({}, orig, { id: generateId(), n: orig.n + ' (Copy)' });
     const idx = db.team.findIndex(p => String(p.id) === String(id));
     db.team.splice(idx + 1, 0, copy);
@@ -1005,7 +1092,7 @@ app.get('/api/matches', async (req, res) => {
 });
 
 // POST /api/matches (Add Match)
-app.post('/api/matches', authenticateUser, requireAuth, async (req, res) => {
+app.post('/api/matches', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) {
@@ -1015,6 +1102,11 @@ app.post('/api/matches', authenticateUser, requireAuth, async (req, res) => {
     const match = req.body || {};
     match.id = match.id || generateId();
     match.clubId = match.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    
+    if (!hasClubAccess(req.user, match.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add matches for club '${match.clubId}'` });
+    }
+
     if (!match.team1) match.team1 = match.clubId === 'spikers' ? 'ACEIT Spikers' : 'Home Team';
     if (!match.opp && match.team2) match.opp = match.team2;
     if (!match.team2 && match.opp) match.team2 = match.opp;
@@ -1037,7 +1129,7 @@ app.post('/api/matches', authenticateUser, requireAuth, async (req, res) => {
 });
 
 // PUT /api/matches/:id (Update Match)
-app.put('/api/matches/:id', authenticateUser, requireAuth, async (req, res) => {
+app.put('/api/matches/:id', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) {
@@ -1051,10 +1143,20 @@ app.put('/api/matches/:id', authenticateUser, requireAuth, async (req, res) => {
     if (idx === -1) {
       return res.status(404).json({ success: false, message: 'Match not found' });
     }
+
+    const existingClub = db.matches[idx].clubId || 'spikers';
+    if (!hasClubAccess(req.user, existingClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to modify matches for club '${existingClub}'` });
+    }
+
     updatedMatch.id = id;
     if (!updatedMatch.clubId) {
-      updatedMatch.clubId = db.matches[idx].clubId || 'spikers';
+      updatedMatch.clubId = existingClub;
     }
+    if (!hasClubAccess(req.user, updatedMatch.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to assign matches to club '${updatedMatch.clubId}'` });
+    }
+
     if (!updatedMatch.team1) updatedMatch.team1 = updatedMatch.clubId === 'spikers' ? 'ACEIT Spikers' : 'Home Team';
     if (!updatedMatch.opp && updatedMatch.team2) updatedMatch.opp = updatedMatch.team2;
     if (!updatedMatch.team2 && updatedMatch.opp) updatedMatch.team2 = updatedMatch.opp;
@@ -1076,7 +1178,7 @@ app.put('/api/matches/:id', authenticateUser, requireAuth, async (req, res) => {
 });
 
 // DELETE /api/matches/:id (Delete Match)
-app.delete('/api/matches/:id', authenticateUser, requireAuth, async (req, res) => {
+app.delete('/api/matches/:id', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) {
@@ -1085,11 +1187,17 @@ app.delete('/api/matches/:id', authenticateUser, requireAuth, async (req, res) =
     const db = dbRes.data;
     const { id } = req.params;
     db.matches = db.matches || [];
-    const initialLen = db.matches.length;
-    db.matches = db.matches.filter(m => String(m.id) !== String(id));
-    if (db.matches.length === initialLen) {
+    const matchToDelete = db.matches.find(m => String(m.id) === String(id));
+    if (!matchToDelete) {
       return res.status(404).json({ success: false, message: 'Match not found' });
     }
+
+    const existingClub = matchToDelete.clubId || 'spikers';
+    if (!hasClubAccess(req.user, existingClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to delete matches from club '${existingClub}'` });
+    }
+
+    db.matches = db.matches.filter(m => String(m.id) !== String(id));
 
     const result = await saveDB(db);
     if (!result.success) {
@@ -1105,7 +1213,7 @@ app.delete('/api/matches/:id', authenticateUser, requireAuth, async (req, res) =
 });
 
 // POST /api/matches/duplicate/:id (Duplicate Match)
-app.post('/api/matches/duplicate/:id', authenticateUser, requireAuth, async (req, res) => {
+app.post('/api/matches/duplicate/:id', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) {
@@ -1118,6 +1226,10 @@ app.post('/api/matches/duplicate/:id', authenticateUser, requireAuth, async (req
     if (!orig) {
       return res.status(404).json({ success: false, message: 'Original match not found' });
     }
+    if (!hasClubAccess(req.user, orig.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to duplicate matches in club '${orig.clubId || 'spikers'}'` });
+    }
+
     const copy = Object.assign({}, orig, { id: generateId() });
     const idx = db.matches.findIndex(m => String(m.id) === String(id));
     db.matches.splice(idx + 1, 0, copy);
@@ -1136,7 +1248,7 @@ app.post('/api/matches/duplicate/:id', authenticateUser, requireAuth, async (req
 });
 
 // ==========================================
-// CONTENT API ENDPOINTS (News, Gallery, Sponsors, Achievements, About, Contact)
+// CONTENT API ENDPOINTS (News, Gallery, Events, Training, Sponsors, Testimonials, About, Contact)
 // ==========================================
 
 // GET /api/news (supports ?clubId=)
@@ -1156,6 +1268,9 @@ app.post('/api/news', authenticateUser, requireAuth, requirePermission('news.*')
     const item = req.body || {};
     item.id = item.id || generateId();
     item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, item.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add news to club '${item.clubId}'` });
+    }
     db.news = db.news || [];
     db.news.unshift(item);
     await saveDB(db);
@@ -1182,10 +1297,71 @@ app.post('/api/gallery', authenticateUser, requireAuth, requirePermission('galle
     const item = req.body || {};
     item.id = item.id || generateId();
     item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, item.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add gallery photos to club '${item.clubId}'` });
+    }
     db.gallery = db.gallery || [];
     db.gallery.unshift(item);
     await saveDB(db);
     res.json({ success: true, item, gallery: db.gallery });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/events (supports ?clubId=)
+app.get('/api/events', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) return res.status(500).json({ success: false, message: result.error });
+  let events = filterByClub(result.data.events || [], req.query.clubId || 'spikers');
+  res.json({ success: true, events });
+});
+
+// POST /api/events
+app.post('/api/events', authenticateUser, requireAuth, requirePermission('events.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const item = req.body || {};
+    item.id = item.id || generateId();
+    item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, item.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add events for club '${item.clubId}'` });
+    }
+    db.events = db.events || [];
+    db.events.unshift(item);
+    await saveDB(db);
+    res.json({ success: true, event: item, item, events: db.events });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/training (supports ?clubId=)
+app.get('/api/training', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) return res.status(500).json({ success: false, message: result.error });
+  let training = filterByClub(result.data.training || [], req.query.clubId || 'spikers');
+  res.json({ success: true, training });
+});
+
+// POST /api/training
+app.post('/api/training', authenticateUser, requireAuth, requirePermission('training.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const item = req.body || {};
+    item.id = item.id || generateId();
+    item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, item.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add training sessions for club '${item.clubId}'` });
+    }
+    db.training = db.training || [];
+    db.training.unshift(item);
+    await saveDB(db);
+    res.json({ success: true, training: item, item, trainingList: db.training });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1199,12 +1375,91 @@ app.get('/api/sponsors', async (req, res) => {
   res.json({ success: true, sponsors });
 });
 
+// POST /api/sponsors
+app.post('/api/sponsors', authenticateUser, requireAuth, requirePermission('sponsors.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const item = req.body || {};
+    item.id = item.id || generateId();
+    item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, item.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to manage sponsors for club '${item.clubId}'` });
+    }
+    db.sponsors = db.sponsors || [];
+    db.sponsors.push(item);
+    await saveDB(db);
+    res.json({ success: true, item, sponsors: db.sponsors });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /api/achievements (supports ?clubId=)
 app.get('/api/achievements', async (req, res) => {
   const result = await getDB();
   if (!result.success) return res.status(500).json({ success: false, message: result.error });
   let achievements = filterByClub(result.data.testimonials || result.data.achievements || [], req.query.clubId || 'spikers');
   res.json({ success: true, achievements });
+});
+
+// GET /api/testimonials (supports ?clubId=)
+app.get('/api/testimonials', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) return res.status(500).json({ success: false, message: result.error });
+  let testimonials = filterByClub(result.data.testimonials || [], req.query.clubId || 'spikers');
+  res.json({ success: true, testimonials });
+});
+
+// POST /api/testimonials
+app.post('/api/testimonials', authenticateUser, requireAuth, requirePermission('testimonials.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const item = req.body || {};
+    item.id = item.id || generateId();
+    item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, item.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add testimonials for club '${item.clubId}'` });
+    }
+    db.testimonials = db.testimonials || [];
+    db.testimonials.push(item);
+    await saveDB(db);
+    res.json({ success: true, item, testimonials: db.testimonials });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/stats (supports ?clubId=)
+app.get('/api/stats', async (req, res) => {
+  const result = await getDB();
+  if (!result.success) return res.status(500).json({ success: false, message: result.error });
+  let stats = filterByClub(result.data.stats || [], req.query.clubId || 'spikers');
+  res.json({ success: true, stats });
+});
+
+// POST /api/stats
+app.post('/api/stats', authenticateUser, requireAuth, requirePermission('stats.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const item = req.body || {};
+    item.id = item.id || generateId();
+    item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, item.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add stats for club '${item.clubId}'` });
+    }
+    db.stats = db.stats || [];
+    db.stats.push(item);
+    await saveDB(db);
+    res.json({ success: true, item, stats: db.stats });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // GET /api/about (supports ?clubId=)
@@ -1215,12 +1470,48 @@ app.get('/api/about', async (req, res) => {
   res.json({ success: true, about });
 });
 
+// POST /api/about
+app.post('/api/about', authenticateUser, requireAuth, requirePermission('about.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const targetClub = req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, targetClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to edit about details for club '${targetClub}'` });
+    }
+    db.about = Object.assign({}, db.about, req.body);
+    await saveDB(db);
+    res.json({ success: true, about: db.about });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /api/contact (supports ?clubId=)
 app.get('/api/contact', async (req, res) => {
   const result = await getDB();
   if (!result.success) return res.status(500).json({ success: false, message: result.error });
   let contact = result.data.contact || {};
   res.json({ success: true, contact });
+});
+
+// POST /api/contact
+app.post('/api/contact', authenticateUser, requireAuth, requirePermission('contact.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const targetClub = req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, targetClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to edit contact details for club '${targetClub}'` });
+    }
+    db.contact = Object.assign({}, db.contact, req.body);
+    await saveDB(db);
+    res.json({ success: true, contact: db.contact });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // 8. Admin PIN endpoints & verification
@@ -1242,7 +1533,10 @@ app.post('/api/verify-pin', async (req, res) => {
   res.status(401).json({ success: false, message: 'Incorrect PIN' });
 });
 
-app.post('/api/pin', authenticateUser, requireAuth, requirePermission('settings.*'), async (req, res) => {
+app.post('/api/pin', authenticateUser, requireAuth, async (req, res) => {
+  if (req.user.role !== 'OWNER') {
+    return res.status(403).json({ success: false, message: 'Only the OWNER can change the master PIN.' });
+  }
   const { pin } = req.body;
   if (!pin || pin.length < 4) {
     return res.status(400).json({ success: false, message: 'PIN must be at least 4 characters' });
@@ -2303,17 +2597,26 @@ app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('user
       const targetUser = localUsers.find(u => String(u._id) === String(id));
       if (!targetUser) return res.status(404).json({ success: false, message: 'User not found' });
 
-      if (targetUser.role === 'OWNER' && req.user.role !== 'OWNER') {
-        return res.status(403).json({ success: false, message: 'Only the OWNER can modify the OWNER account.' });
-      }
-      if (req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && String(targetUser.clubId) !== String(req.user.clubId) && String(targetUser._id) !== String(req.user._id)) {
-        return res.status(403).json({ success: false, message: 'Cannot modify a user outside your assigned club.' });
-      }
-      if (role && req.user.role !== 'OWNER' && role === 'OWNER') {
-        return res.status(403).json({ success: false, message: 'Only the OWNER can assign OWNER role.' });
-      }
-      if (clubId && req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && String(clubId) !== String(req.user.clubId)) {
-        return res.status(403).json({ success: false, message: 'Cannot assign a user to a club outside your access scope.' });
+      const isSelf = String(req.user._id || req.user.id) === String(targetUser._id || targetUser.id);
+      if (req.user.role !== 'OWNER') {
+        if (isSelf && role && role !== targetUser.role) {
+          return res.status(403).json({ success: false, message: 'You cannot change your own role.' });
+        }
+        if (isSelf && (permissions !== undefined || clubs !== undefined || (clubId !== undefined && clubId !== targetUser.clubId))) {
+          return res.status(403).json({ success: false, message: 'You cannot modify your own permissions or club assignments.' });
+        }
+        if (targetUser.role === 'OWNER') {
+          return res.status(403).json({ success: false, message: 'Only the OWNER can modify the OWNER account.' });
+        }
+        if (!isSelf && !hasClubAccess(req.user, targetUser.clubId)) {
+          return res.status(403).json({ success: false, message: 'Cannot modify a user outside your assigned club.' });
+        }
+        if (role && role === 'OWNER') {
+          return res.status(403).json({ success: false, message: 'Only the OWNER can assign OWNER role.' });
+        }
+        if (clubId && !hasClubAccess(req.user, clubId)) {
+          return res.status(403).json({ success: false, message: 'Cannot assign a user to a club outside your access scope.' });
+        }
       }
 
       if (name) targetUser.name = name;
@@ -2366,17 +2669,26 @@ app.put('/api/users/:id', authenticateUser, requireAuth, requirePermission('user
     }
     if (!targetUser) return res.status(404).json({ success: false, message: 'User not found' });
 
-    if (targetUser.role === 'OWNER' && req.user.role !== 'OWNER') {
-      return res.status(403).json({ success: false, message: 'Only the OWNER can modify the OWNER account.' });
-    }
-    if (req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && String(targetUser.clubId) !== String(req.user.clubId) && String(targetUser._id) !== String(req.user._id)) {
-      return res.status(403).json({ success: false, message: 'Cannot modify a user outside your assigned club.' });
-    }
-    if (role && req.user.role !== 'OWNER' && role === 'OWNER') {
-      return res.status(403).json({ success: false, message: 'Only the OWNER can assign OWNER role.' });
-    }
-    if (clubId && req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && String(clubId) !== String(req.user.clubId)) {
-      return res.status(403).json({ success: false, message: 'Cannot assign a user to a club outside your access scope.' });
+    const isSelf = String(req.user._id || req.user.id) === String(targetUser._id || targetUser.id);
+    if (req.user.role !== 'OWNER') {
+      if (isSelf && role && role !== targetUser.role) {
+        return res.status(403).json({ success: false, message: 'You cannot change your own role.' });
+      }
+      if (isSelf && (permissions !== undefined || clubs !== undefined || (clubId !== undefined && clubId !== targetUser.clubId))) {
+        return res.status(403).json({ success: false, message: 'You cannot modify your own permissions or club assignments.' });
+      }
+      if (targetUser.role === 'OWNER') {
+        return res.status(403).json({ success: false, message: 'Only the OWNER can modify the OWNER account.' });
+      }
+      if (!isSelf && !hasClubAccess(req.user, targetUser.clubId)) {
+        return res.status(403).json({ success: false, message: 'Cannot modify a user outside your assigned club.' });
+      }
+      if (role && role === 'OWNER') {
+        return res.status(403).json({ success: false, message: 'Only the OWNER can assign OWNER role.' });
+      }
+      if (clubId && !hasClubAccess(req.user, clubId)) {
+        return res.status(403).json({ success: false, message: 'Cannot assign a user to a club outside your access scope.' });
+      }
     }
 
     if (name) targetUser.name = name;
@@ -2448,9 +2760,9 @@ app.delete('/api/users/:id', authenticateUser, requireAuth, requirePermission('u
       const targetUser = localUsers.find(u => String(u._id) === String(id));
       if (!targetUser) return res.status(404).json({ success: false, message: 'User not found' });
       if (targetUser.role === 'OWNER') {
-        return res.status(400).json({ success: false, message: 'Cannot delete the OWNER account.' });
+        return res.status(403).json({ success: false, message: 'The OWNER account cannot be deleted.' });
       }
-      if (req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && String(targetUser.clubId) !== String(req.user.clubId)) {
+      if (req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && !hasClubAccess(req.user, targetUser.clubId)) {
         return res.status(403).json({ success: false, message: 'Cannot delete a user outside your assigned club.' });
       }
       localUsers = localUsers.filter(u => String(u._id) !== String(id));
@@ -2468,6 +2780,9 @@ app.delete('/api/users/:id', authenticateUser, requireAuth, requirePermission('u
 
     if (targetUser.role === 'OWNER') {
       return res.status(403).json({ success: false, message: 'The OWNER account cannot be deleted.' });
+    }
+    if (req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && !hasClubAccess(req.user, targetUser.clubId)) {
+      return res.status(403).json({ success: false, message: 'Cannot delete a user outside your assigned club.' });
     }
 
     await User.findByIdAndDelete(targetUser._id);
@@ -2670,15 +2985,21 @@ app.post('/api/profile/applications', authenticateUser, requireAuth, async (req,
 });
 
 // Applications: GET List (OWNER / ADMIN / COORDINATOR)
-app.get('/api/applications', authenticateUser, requireAuth, async (req, res) => {
+app.get('/api/applications', authenticateUser, requireAuth, requirePermission('applications.*'), async (req, res) => {
   try {
     const dbConn = await connectToDatabase();
     if (dbConn) {
-      const apps = await ApplicationDoc.find({}).sort({ createdAt: -1 });
+      let apps = await ApplicationDoc.find({}).sort({ createdAt: -1 });
+      if (req.user.role !== 'OWNER' && req.user.clubId !== 'ALL') {
+        apps = apps.filter(a => hasClubAccess(req.user, a.clubSlug || a.clubId));
+      }
       res.json({ success: true, applications: apps });
     } else {
       const dbRes = await getDB();
-      const apps = dbRes.data.applications || [];
+      let apps = (dbRes.success && dbRes.data.applications) || [];
+      if (req.user.role !== 'OWNER' && req.user.clubId !== 'ALL') {
+        apps = apps.filter(a => hasClubAccess(req.user, a.clubSlug || a.clubId));
+      }
       res.json({ success: true, applications: apps });
     }
   } catch (err) {
@@ -2687,7 +3008,7 @@ app.get('/api/applications', authenticateUser, requireAuth, async (req, res) => 
 });
 
 // Applications: PUT Update Status & Auto-Membership on Acceptance
-app.put('/api/applications/:id/status', authenticateUser, requireAuth, async (req, res) => {
+app.put('/api/applications/:id/status', authenticateUser, requireAuth, requirePermission('applications.*'), async (req, res) => {
   try {
     const { id } = req.params;
     const { status, adminFeedback } = req.body;
@@ -2695,6 +3016,18 @@ app.put('/api/applications/:id/status', authenticateUser, requireAuth, async (re
 
     const dbConn = await connectToDatabase();
     if (dbConn) {
+      let existingApp = null;
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        existingApp = await ApplicationDoc.findById(id);
+      }
+      if (!existingApp) {
+        existingApp = await ApplicationDoc.findOne({ _id: id });
+      }
+      if (!existingApp) return res.status(404).json({ success: false, message: 'Application not found' });
+      if (!hasClubAccess(req.user, existingApp.clubSlug || existingApp.clubId)) {
+        return res.status(403).json({ success: false, message: 'Access forbidden: You do not have permission to manage applications for this club.' });
+      }
+
       let doc = null;
       if (mongoose.Types.ObjectId.isValid(id)) {
         doc = await ApplicationDoc.findByIdAndUpdate(id, { status, adminFeedback: adminFeedback || '' }, { new: true });
@@ -2750,6 +3083,9 @@ app.put('/api/applications/:id/status', authenticateUser, requireAuth, async (re
       if (!Array.isArray(dbData.applications)) dbData.applications = [];
       const item = dbData.applications.find(a => String(a.id || a._id) === String(id));
       if (!item) return res.status(404).json({ success: false, message: 'Application not found' });
+      if (!hasClubAccess(req.user, item.clubSlug || item.clubId)) {
+        return res.status(403).json({ success: false, message: 'Access forbidden: You do not have permission to manage applications for this club.' });
+      }
       item.status = status;
       if (adminFeedback !== undefined) item.adminFeedback = adminFeedback;
       await saveDB(dbData);
@@ -2781,12 +3117,23 @@ app.put('/api/applications/:id/status', authenticateUser, requireAuth, async (re
 });
 
 // Applications: DELETE
-app.delete('/api/applications/:id', authenticateUser, requireAuth, async (req, res) => {
+app.delete('/api/applications/:id', authenticateUser, requireAuth, requirePermission('applications.*'), async (req, res) => {
   try {
     const { id } = req.params;
     const dbConn = await connectToDatabase();
 
     if (dbConn) {
+      let existingApp = null;
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        existingApp = await ApplicationDoc.findById(id);
+      }
+      if (!existingApp) {
+        existingApp = await ApplicationDoc.findOne({ _id: id });
+      }
+      if (existingApp && !hasClubAccess(req.user, existingApp.clubSlug || existingApp.clubId)) {
+        return res.status(403).json({ success: false, message: 'Access forbidden: You do not have permission to delete applications for this club.' });
+      }
+
       if (mongoose.Types.ObjectId.isValid(id)) {
         await ApplicationDoc.findByIdAndDelete(id);
       } else {
@@ -2803,6 +3150,10 @@ app.delete('/api/applications/:id', authenticateUser, requireAuth, async (req, r
       const dbRes = await getDB();
       const dbData = dbRes.data;
       if (Array.isArray(dbData.applications)) {
+        const item = dbData.applications.find(a => String(a.id || a._id) === String(id));
+        if (item && !hasClubAccess(req.user, item.clubSlug || item.clubId)) {
+          return res.status(403).json({ success: false, message: 'Access forbidden: You do not have permission to delete applications for this club.' });
+        }
         dbData.applications = dbData.applications.filter(a => String(a.id || a._id) !== String(id));
         await saveDB(dbData);
       }
@@ -2831,16 +3182,21 @@ app.get('/api/events', async (req, res) => {
 });
 
 // POST /api/events (Create event)
-app.post('/api/events', authenticateUser, requireAuth, async (req, res) => {
+app.post('/api/events', authenticateUser, requireAuth, requirePermission('events.*'), async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
     const dbData = dbRes.data;
     const events = dbData.events || [];
 
+    const targetClub = req.body.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, targetClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add events for club '${targetClub}'` });
+    }
+
     const newEvt = {
       id: req.body.id || generateId(),
-      clubId: req.body.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers'),
+      clubId: targetClub,
       title: req.body.title || 'Untitled Event',
       description: req.body.description || '',
       date: req.body.date || '',
@@ -2863,7 +3219,7 @@ app.post('/api/events', authenticateUser, requireAuth, async (req, res) => {
 });
 
 // PUT /api/events/:id (Update event)
-app.put('/api/events/:id', authenticateUser, requireAuth, async (req, res) => {
+app.put('/api/events/:id', authenticateUser, requireAuth, requirePermission('events.*'), async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
@@ -2872,6 +3228,11 @@ app.put('/api/events/:id', authenticateUser, requireAuth, async (req, res) => {
     const idx = events.findIndex(e => String(e.id || e._id) === String(req.params.id));
     if (idx === -1) {
       return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+
+    const currentClub = events[idx].clubId || 'spikers';
+    if (!hasClubAccess(req.user, currentClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to edit events for club '${currentClub}'` });
     }
 
     events[idx] = {
@@ -2890,17 +3251,20 @@ app.put('/api/events/:id', authenticateUser, requireAuth, async (req, res) => {
 });
 
 // DELETE /api/events/:id (Delete event)
-app.delete('/api/events/:id', authenticateUser, requireAuth, async (req, res) => {
+app.delete('/api/events/:id', authenticateUser, requireAuth, requirePermission('events.*'), async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
     const dbData = dbRes.data;
     const events = dbData.events || [];
-    const filtered = events.filter(e => String(e.id || e._id) !== String(req.params.id));
-    if (filtered.length === events.length) {
+    const target = events.find(e => String(e.id || e._id) === String(req.params.id));
+    if (!target) {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }
-    dbData.events = filtered;
+    if (!hasClubAccess(req.user, target.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to delete events for club '${target.clubId || 'spikers'}'` });
+    }
+    dbData.events = events.filter(e => String(e.id || e._id) !== String(req.params.id));
     await saveDB(dbData);
     res.json({ success: true, message: 'Event deleted successfully' });
   } catch (err) {
@@ -3242,12 +3606,20 @@ app.get('/api/matches/:matchId/lineup', async (req, res) => {
 });
 
 // PUT /api/matches/:matchId/lineup: Captain / Coordinator / Admin sets Starting 6
-app.put('/api/matches/:matchId/lineup', authenticateUser, requireAuth, async (req, res) => {
+app.put('/api/matches/:matchId/lineup', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
   try {
     const { matchId } = req.params;
     const { starters } = req.body; // Array of { userId, username, name, position }
     if (!Array.isArray(starters)) {
       return res.status(400).json({ success: false, message: 'Starters array is required' });
+    }
+
+    const dbRes = await getDB();
+    if (dbRes.success && Array.isArray(dbRes.data.matches)) {
+      const match = dbRes.data.matches.find(m => String(m.id || m._id) === String(matchId));
+      if (match && !hasClubAccess(req.user, match.clubId || 'spikers')) {
+        return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to manage lineup for club '${match.clubId || 'spikers'}'` });
+      }
     }
 
     const dbConn = await connectToDatabase();
@@ -3723,11 +4095,16 @@ app.get('/api/announcements', async (req, res) => {
 });
 
 // POST /api/announcements: Create new club announcement
-app.post('/api/announcements', authenticateUser, requireAuth, async (req, res) => {
+app.post('/api/announcements', authenticateUser, requireAuth, requirePermission('news.*'), async (req, res) => {
   try {
     const { title, content, clubId, category, isPinned, sendBroadcast } = req.body;
     if (!title || !content) {
       return res.status(400).json({ success: false, message: 'Title and content are required' });
+    }
+
+    const targetClub = clubId || 'all';
+    if (targetClub !== 'all' && !hasClubAccess(req.user, targetClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to create announcements for club '${targetClub}'` });
     }
 
     const authorName = req.user.name || req.user.username;
@@ -3741,7 +4118,7 @@ app.post('/api/announcements', authenticateUser, requireAuth, async (req, res) =
       newAnn = await Announcement.create({
         title,
         content,
-        clubId: clubId || 'all',
+        clubId: targetClub,
         category: category || 'General',
         isPinned: Boolean(isPinned),
         authorName,
@@ -3753,7 +4130,7 @@ app.post('/api/announcements', authenticateUser, requireAuth, async (req, res) =
         _id: 'ann_' + Date.now(),
         title,
         content,
-        clubId: clubId || 'all',
+        clubId: targetClub,
         category: category || 'General',
         isPinned: Boolean(isPinned),
         authorName,
@@ -3788,7 +4165,7 @@ app.post('/api/announcements', authenticateUser, requireAuth, async (req, res) =
 });
 
 // PUT /api/announcements/:id: Update an announcement
-app.put('/api/announcements/:id', authenticateUser, requireAuth, async (req, res) => {
+app.put('/api/announcements/:id', authenticateUser, requireAuth, requirePermission('news.*'), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, content, clubId, category, isPinned } = req.body;
@@ -3797,6 +4174,12 @@ app.put('/api/announcements/:id', authenticateUser, requireAuth, async (req, res
     if (dbConn) {
       const ann = await Announcement.findById(id);
       if (!ann) return res.status(404).json({ success: false, message: 'Announcement not found' });
+      if (ann.clubId && ann.clubId !== 'all' && !hasClubAccess(req.user, ann.clubId)) {
+        return res.status(403).json({ success: false, message: 'Access forbidden: You do not have permission to edit this announcement.' });
+      }
+      if (clubId && clubId !== 'all' && !hasClubAccess(req.user, clubId)) {
+        return res.status(403).json({ success: false, message: 'Access forbidden: You do not have permission for the target club.' });
+      }
       if (title !== undefined) ann.title = title;
       if (content !== undefined) ann.content = content;
       if (clubId !== undefined) ann.clubId = clubId;
@@ -3808,6 +4191,12 @@ app.put('/api/announcements/:id', authenticateUser, requireAuth, async (req, res
 
     const ann = localAnnouncements.find(a => String(a._id) === String(id));
     if (!ann) return res.status(404).json({ success: false, message: 'Announcement not found' });
+    if (ann.clubId && ann.clubId !== 'all' && !hasClubAccess(req.user, ann.clubId)) {
+      return res.status(403).json({ success: false, message: 'Access forbidden: You do not have permission to edit this announcement.' });
+    }
+    if (clubId && clubId !== 'all' && !hasClubAccess(req.user, clubId)) {
+      return res.status(403).json({ success: false, message: 'Access forbidden: You do not have permission for the target club.' });
+    }
     if (title !== undefined) ann.title = title;
     if (content !== undefined) ann.content = content;
     if (clubId !== undefined) ann.clubId = clubId;
@@ -3820,14 +4209,24 @@ app.put('/api/announcements/:id', authenticateUser, requireAuth, async (req, res
 });
 
 // DELETE /api/announcements/:id: Delete an announcement
-app.delete('/api/announcements/:id', authenticateUser, requireAuth, async (req, res) => {
+app.delete('/api/announcements/:id', authenticateUser, requireAuth, requirePermission('news.*'), async (req, res) => {
   try {
     const { id } = req.params;
     const dbConn = await connectToDatabase();
 
     if (dbConn) {
+      const ann = await Announcement.findById(id);
+      if (!ann) return res.status(404).json({ success: false, message: 'Announcement not found' });
+      if (ann.clubId && ann.clubId !== 'all' && !hasClubAccess(req.user, ann.clubId)) {
+        return res.status(403).json({ success: false, message: 'Access forbidden: You do not have permission to delete this announcement.' });
+      }
       await Announcement.findByIdAndDelete(id);
     } else {
+      const ann = localAnnouncements.find(a => String(a._id) === String(id));
+      if (!ann) return res.status(404).json({ success: false, message: 'Announcement not found' });
+      if (ann.clubId && ann.clubId !== 'all' && !hasClubAccess(req.user, ann.clubId)) {
+        return res.status(403).json({ success: false, message: 'Access forbidden: You do not have permission to delete this announcement.' });
+      }
       localAnnouncements = localAnnouncements.filter(a => String(a._id) !== String(id));
     }
 
@@ -3905,7 +4304,7 @@ app.get('/api/matches/:id/live', async (req, res) => {
 });
 
 // POST /api/matches/:id/live-start: Captain/Admin starts live scoring mode
-app.post('/api/matches/:id/live-start', authenticateUser, requireAuth, async (req, res) => {
+app.post('/api/matches/:id/live-start', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
   try {
     const { id } = req.params;
     const dbRes = await getDB();
@@ -3914,6 +4313,9 @@ app.post('/api/matches/:id/live-start', authenticateUser, requireAuth, async (re
     const matches = dbData.matches || [];
     const match = matches.find(m => String(m.id || m._id) === String(id));
     if (!match) return res.status(404).json({ success: false, message: 'Match not found' });
+    if (!hasClubAccess(req.user, match.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission for club '${match.clubId || 'spikers'}'` });
+    }
 
     // Mark match as live
     match.status = 'live';
@@ -3957,12 +4359,20 @@ app.post('/api/matches/:id/live-start', authenticateUser, requireAuth, async (re
 });
 
 // POST /api/matches/:id/live-score: Log point / spike / block / ace in real-time
-app.post('/api/matches/:id/live-score', authenticateUser, requireAuth, async (req, res) => {
+app.post('/api/matches/:id/live-score', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
   try {
     const { id } = req.params;
     const { scoringTeam, pointType, playerUsername, comment } = req.body;
     // scoringTeam: 'team1' | 'team2'
     // pointType: 'spike' | 'block' | 'ace' | 'error' | 'point'
+
+    const dbRes = await getDB();
+    if (dbRes.success && Array.isArray(dbRes.data.matches)) {
+      const match = dbRes.data.matches.find(m => String(m.id || m._id) === String(id));
+      if (match && !hasClubAccess(req.user, match.clubId || 'spikers')) {
+        return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission for club '${match.clubId || 'spikers'}'` });
+      }
+    }
 
     let state = localLiveMatches[String(id)];
     if (!state) {
@@ -4029,9 +4439,18 @@ app.post('/api/matches/:id/live-score', authenticateUser, requireAuth, async (re
 });
 
 // POST /api/matches/:id/live-set-end: End current set, record score and advance set
-app.post('/api/matches/:id/live-set-end', authenticateUser, requireAuth, async (req, res) => {
+app.post('/api/matches/:id/live-set-end', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
   try {
     const { id } = req.params;
+
+    const dbRes = await getDB();
+    if (dbRes.success && Array.isArray(dbRes.data.matches)) {
+      const match = dbRes.data.matches.find(m => String(m.id || m._id) === String(id));
+      if (match && !hasClubAccess(req.user, match.clubId || 'spikers')) {
+        return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission for club '${match.clubId || 'spikers'}'` });
+      }
+    }
+
     let state = localLiveMatches[String(id)];
     if (!state) return res.status(404).json({ success: false, message: 'Live match state not found' });
 
@@ -4067,7 +4486,7 @@ app.post('/api/matches/:id/live-set-end', authenticateUser, requireAuth, async (
 });
 
 // POST /api/matches/:id/live-finish: Finalize match, record winner and update player records
-app.post('/api/matches/:id/live-finish', authenticateUser, requireAuth, async (req, res) => {
+app.post('/api/matches/:id/live-finish', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
   try {
     const { id } = req.params;
     const { mvpUsername } = req.body;
@@ -4077,6 +4496,9 @@ app.post('/api/matches/:id/live-finish', authenticateUser, requireAuth, async (r
     const matches = dbData.matches || [];
     const match = matches.find(m => String(m.id || m._id) === String(id));
     if (!match) return res.status(404).json({ success: false, message: 'Match not found' });
+    if (!hasClubAccess(req.user, match.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission for club '${match.clubId || 'spikers'}'` });
+    }
 
     let state = localLiveMatches[String(id)] || {
       team1SetsWon: 3,

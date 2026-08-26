@@ -8258,15 +8258,39 @@
         var roleBadgeClass = isOwner ? 'background:#F39C12;color:#fff;' : 'background:#2980B9;color:#fff;';
 
         fetchSystemClubs().then(function () {
-          var clubOptions = '<option value="ALL">All Clubs</option>';
-          systemClubs.forEach(function (c) {
-            clubOptions += '<option value="' + (c._id || c.id) + '"' + (activeClubScope === (c._id || c.id) ? ' selected' : '') + '>' + esc(c.name) + ' (' + esc(c.sport || '') + ')</option>';
+          var userClubs = Array.isArray(currentUser.clubs) && currentUser.clubs.length > 0 ? currentUser.clubs : (currentUser.clubId ? [currentUser.clubId] : ['spikers']);
+          var allowedClubs = isOwner ? systemClubs : systemClubs.filter(function (c) {
+            var cSlug = (c.slug || c.clubId || c._id || c.id || '').toLowerCase();
+            return userClubs.some(function (uc) { return String(uc).toLowerCase() === cSlug; });
           });
+
+          var clubSelectHtml = '';
+          if (isOwner) {
+            var clubOptions = '<option value="ALL"' + (activeClubScope === 'ALL' ? ' selected' : '') + '>All Clubs</option>';
+            systemClubs.forEach(function (c) {
+              var val = c.slug || c.clubId || c._id || c.id;
+              clubOptions += '<option value="' + val + '"' + (activeClubScope === val ? ' selected' : '') + '>' + esc(c.name) + ' (' + esc(c.sport || '') + ')</option>';
+            });
+            clubSelectHtml = '<select id="adminClubScopeSelect" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:12px;font-weight:600;background:var(--bg-card);color:var(--charcoal);cursor:pointer;">' + clubOptions + '</select>';
+          } else if (allowedClubs.length > 1) {
+            if (activeClubScope === 'ALL' || !allowedClubs.some(function (c) { return (c.slug || c.clubId || c._id || c.id) === activeClubScope; })) {
+              activeClubScope = allowedClubs[0].slug || allowedClubs[0].clubId || allowedClubs[0]._id || allowedClubs[0].id;
+            }
+            var clubOptions = '';
+            allowedClubs.forEach(function (c) {
+              var val = c.slug || c.clubId || c._id || c.id;
+              clubOptions += '<option value="' + val + '"' + (activeClubScope === val ? ' selected' : '') + '>' + esc(c.name) + ' (' + esc(c.sport || '') + ')</option>';
+            });
+            clubSelectHtml = '<select id="adminClubScopeSelect" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:12px;font-weight:600;background:var(--bg-card);color:var(--charcoal);cursor:pointer;">' + clubOptions + '</select>';
+          } else if (allowedClubs.length === 1) {
+            activeClubScope = allowedClubs[0].slug || allowedClubs[0].clubId || allowedClubs[0]._id || allowedClubs[0].id;
+            clubSelectHtml = '<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--cream-2);color:var(--charcoal);border:1px solid var(--border);">' + esc(allowedClubs[0].name) + '</span>';
+          }
 
           var html = '<div style="display:flex;align-items:center;gap:8px;">' +
             '<span style="font-weight:600;font-size:13px;color:var(--charcoal);">' + esc(currentUser.name || currentUser.username) + '</span>' +
             '<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;' + roleBadgeClass + '">' + esc(currentUser.role) + '</span>' +
-            (isOwner ? '<select id="adminClubScopeSelect" style="padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-size:12px;font-weight:600;background:var(--bg-card);color:var(--charcoal);cursor:pointer;">' + clubOptions + '</select>' : '') +
+            clubSelectHtml +
             '<button class="btn btn-outline" id="adminLogoutBtn" style="padding:4px 10px;font-size:12px;">Log Out</button>' +
             '</div>';
 
@@ -8528,7 +8552,15 @@
         if (tab === 'livescore') { renderLiveScoreTab(); return; }
         if (tab === 'announcements') { renderAnnouncementsAdminTab(); return; }
         var schema = SCHEMAS[tab];
-        var items = DB[tab];
+        var allItems = DB[tab] || [];
+        var items = allItems;
+        if (activeClubScope && activeClubScope !== 'ALL') {
+          items = allItems.filter(function (it) {
+            var itemClub = (it.clubId || 'spikers').toLowerCase();
+            var targetScope = activeClubScope.toLowerCase();
+            return itemClub === targetScope || ((itemClub === 'spikers' || itemClub === 'c_spikers') && (targetScope === 'spikers' || targetScope === 'c_spikers'));
+          });
+        }
         var html = '<div class="admin-panel-head"><h3>' + schema.title + ' <span class="admin-count mono">' + items.length + '</span></h3><div>' +
           ((tab === 'gallery' || tab === 'team') ? '<button class="admin-btn" id="adminAddCategoryBtn" style="margin-right:8px;background:var(--cream-2);color:var(--charcoal);border:1px solid var(--border);">Manage / Delete Categories</button>' : '') +
           '<button class="admin-btn" id="adminAddBtn">+ Add ' + schema.label + '</button></div></div>';
@@ -8978,6 +9010,9 @@
         document.getElementById('adminCancelBtn').addEventListener('click', function () { formEl.classList.remove('open'); formEl.innerHTML = ''; });
         document.getElementById('adminSaveBtn').addEventListener('click', function () {
           var newItem = item ? Object.assign({}, item) : { id: uid() };
+          if (!newItem.clubId) {
+            newItem.clubId = (activeClubScope && activeClubScope !== 'ALL') ? activeClubScope : (currentUser && currentUser.clubId !== 'ALL' ? currentUser.clubId : (currentClubId || 'spikers'));
+          }
           schema.fields.forEach(function (f) {
             if (f.key === 'cat') return;
             var el = formEl.querySelector('[data-field="' + f.key + '"]');
@@ -9602,15 +9637,24 @@
         var userPerms = (user && Array.isArray(user.permissions)) ? user.permissions : [];
 
         var isOwner = user && user.role === 'OWNER';
+        var isCurrentOwner = currentUser && currentUser.role === 'OWNER';
+        var isSelf = user && ((currentUser._id && String(user._id || user.id) === String(currentUser._id)) || (currentUser.username && user.username === currentUser.username));
         var userClubs = (user && Array.isArray(user.clubs)) ? user.clubs : ['aceit-spikers'];
 
+        var adminAllowedClubs = isCurrentOwner ? systemClubs : systemClubs.filter(function (c) {
+          var cSlug = (c.slug || c.clubId || c._id || c.id || '').toLowerCase();
+          var myClubs = Array.isArray(currentUser.clubs) && currentUser.clubs.length > 0 ? currentUser.clubs : (currentUser.clubId ? [currentUser.clubId] : ['spikers']);
+          return myClubs.some(function (mc) { return String(mc).toLowerCase() === cSlug; });
+        });
+
         var clubsCheckboxes = '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));gap:8px;margin-top:6px;">';
-        if (Array.isArray(systemClubs)) {
-          systemClubs.forEach(function (c) {
-            var cSlug = c.slug || c._id || c.id;
+        if (Array.isArray(adminAllowedClubs)) {
+          adminAllowedClubs.forEach(function (c) {
+            var cSlug = c.slug || c.clubId || c._id || c.id;
             var checked = userClubs.indexOf(cSlug) !== -1 ? ' checked' : '';
+            var disabled = (isSelf && !isCurrentOwner) ? ' disabled' : '';
             clubsCheckboxes += '<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;">' +
-              '<input type="checkbox" class="user-club-cb" value="' + esc(cSlug) + '"' + checked + '> ' + esc(c.name) +
+              '<input type="checkbox" class="user-club-cb" value="' + esc(cSlug) + '"' + checked + disabled + '> ' + esc(c.name) +
               '</label>';
           });
         }
@@ -9619,7 +9663,7 @@
         var permGrid = '<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(130px, 1fr));gap:8px;margin-top:8px;">';
         allPerms.forEach(function (p) {
           var checked = isOwner || (!user && false) || userPerms.includes('*') || userPerms.includes(p.key) ? ' checked' : '';
-          var disabled = isOwner ? ' disabled' : '';
+          var disabled = (isOwner || (isSelf && !isCurrentOwner)) ? ' disabled' : '';
           permGrid += '<label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:normal;cursor:pointer;">' +
             '<input type="checkbox" class="user-perm-cb" value="' + p.key + '"' + checked + disabled + '> ' + p.label +
             '</label>';
@@ -9628,16 +9672,18 @@
 
         var roleOptions = '';
         var currentRoleKey = user ? user.role : 'STUDENT';
-        systemRoles.forEach(function (r) {
+        var selectableRoles = isCurrentOwner ? systemRoles : systemRoles.filter(function (r) { return r.name !== 'OWNER'; });
+        selectableRoles.forEach(function (r) {
           var sel = (r.name === currentRoleKey) ? ' selected' : '';
           roleOptions += '<option value="' + esc(r.name) + '"' + sel + '>' + esc(r.title || r.name) + ' (' + esc(r.name) + ')</option>';
         });
-        if (!systemRoles.some(function (r) { return r.name === currentRoleKey; })) {
+        if (!selectableRoles.some(function (r) { return r.name === currentRoleKey; })) {
           roleOptions += '<option value="' + esc(currentRoleKey) + '" selected>' + esc(currentRoleKey) + '</option>';
         }
 
         var html = '<div class="admin-form-box" style="margin-top:20px;padding:20px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg-card);">' +
           '<h4>' + (user ? 'Edit User: ' + esc(user.name) : 'Create New User') + '</h4>' +
+          (isSelf && !isCurrentOwner ? '<div class="admin-note" style="margin-bottom:12px;">Note: You cannot change your own role, permissions, or club assignments.</div>' : '') +
           '<div class="admin-form-grid">' +
           '<div class="admin-field"><label>Full Name *</label><input type="text" id="uModalName" value="' + esc(user ? user.name : '') + '"></div>' +
           '<div class="admin-field"><label>Username *</label><input type="text" id="uModalUsername" value="' + esc(user ? user.username : '') + '"' + (user ? ' readonly style="background:#eee;"' : '') + '></div>' +

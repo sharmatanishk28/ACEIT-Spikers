@@ -198,6 +198,122 @@
       "sport": "Football",
       "clubId": "strikers",
       "id": "id_mt9099zog9i9n"
+    },
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mt9yxw4cf2wbs"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mt9yxw4xdwaz8"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9yxw4z52t7r"
+    },
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mt9yygvuutwrp"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mt9yygwj569ny"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9yygwm4e72j"
+    },
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mt9yz8h8iqsps"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mt9yz8i2oh6vh"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9yz8i45btvt"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt9yzkbohn2h6"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt9z0jh8d09ox"
+    },
+    {
+      "n": "Lakshya Sen (Student)",
+      "num": 7,
+      "pos": "Men's Singles",
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "id": "id_mt9z177bafw4r",
+      "clubId": "smashers"
+    },
+    {
+      "n": "Lakshya Sen (Student)",
+      "num": 7,
+      "pos": "Men's Singles",
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "id": "id_mt9z1iv1e4w3y",
+      "clubId": "smashers"
+    },
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mt9z2ih1ytmd1"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mt9z2ihjq475r"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9z2ihlc9pr8"
     }
   ],
   "gallery": [
@@ -448,6 +564,100 @@
       "status": "Upcoming",
       "clubId": "strikers",
       "id": "id_mt9099zshv0jd"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9yxw4gyp0fi",
+      "team2": "City FC",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9yygvyz8oa2",
+      "team2": "City FC",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9yz8hed2u77",
+      "team2": "City FC",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9yzkbrss5uw"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9z0jhdq6717"
+    },
+    {
+      "opp": "MNIT Shuttlers",
+      "date": "2026-09-15",
+      "time": "11:00",
+      "venue": "ACEIT Indoor Badminton Arena",
+      "cat": "Inter-College Cup",
+      "status": "UPCOMING",
+      "id": "id_mt9z177f93dd8",
+      "clubId": "smashers",
+      "team1": "Home Team",
+      "team2": "MNIT Shuttlers",
+      "winner": "none"
+    },
+    {
+      "opp": "MNIT Shuttlers",
+      "date": "2026-09-15",
+      "time": "11:00",
+      "venue": "ACEIT Indoor Badminton Arena",
+      "cat": "Inter-College Cup",
+      "status": "UPCOMING",
+      "id": "id_mt9z1iv5kqyy7",
+      "clubId": "smashers",
+      "team1": "Home Team",
+      "team2": "MNIT Shuttlers",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9z2ih47do97",
+      "team2": "City FC",
+      "winner": "none"
     }
   ],
   "news": [
@@ -567,6 +777,22 @@
     }
   ],
   "events": [
+    {
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "venue": "ACEIT Football Stadium",
+      "date": "2026-10-05",
+      "clubId": "strikers",
+      "id": "id_mt9z0jhhgr37n"
+    },
+    {
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "venue": "ACEIT Football Stadium",
+      "date": "2026-10-05",
+      "clubId": "strikers",
+      "id": "id_mt9yzkbu7ylr8"
+    },
     {
       "id": "id_mt9099zw625gb",
       "clubId": "strikers",

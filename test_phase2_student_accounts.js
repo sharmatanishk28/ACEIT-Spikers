@@ -244,9 +244,9 @@ async function runTests() {
     });
     assert(disabledLogin.status === 403 && !disabledLogin.data.success, 'Disabled user login is BLOCKED with HTTP 403 Forbidden');
 
-    // Attempt protected API access with old student token -> MUST FAIL with 401
+    // Attempt protected API access with old student token -> MUST FAIL with 403 (or 401)
     const disabledApiAccess = await request('/api/profile/me', { headers: studentHeaders });
-    assert(disabledApiAccess.status === 401 && !disabledApiAccess.data.success, 'Disabled user API access is BLOCKED with HTTP 401 Unauthorized');
+    assert((disabledApiAccess.status === 403 || disabledApiAccess.status === 401) && !disabledApiAccess.data.success, 'Disabled user API access is BLOCKED with HTTP 403 Forbidden / 401 Unauthorized');
 
     // Re-enable student account
     const reEnableRes = await request(`/api/users/${studentDoc._id}`, {
