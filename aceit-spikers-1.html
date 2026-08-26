@@ -4595,6 +4595,65 @@
       gap: 8px;
     }
   </style>
+  <script>
+    window.getSportTheme = function(sport, club) {
+      if (club && (club.themeColor || club.accentColor)) {
+        var p = club.themeColor || '#F5A623';
+        var a = club.accentColor || '#D97706';
+        return { primary: p, accent: a, navy: '#0F1E36', navy2: '#162846' };
+      }
+      var s = (sport || '').toLowerCase();
+      if (s.includes('kabaddi') || s.includes('wrestl')) return { primary: '#E65100', accent: '#FF9800', navy: '#1E120A', navy2: '#2B1A0E' };
+      if (s.includes('basket') || s.includes('dunk')) return { primary: '#D35400', accent: '#E67E22', navy: '#1C130D', navy2: '#2A1D13' };
+      if (s.includes('foot') || s.includes('soccer') || s.includes('strik')) return { primary: '#1B5E20', accent: '#4CAF50', navy: '#0B1A0E', navy2: '#122B17' };
+      if (s.includes('cricket')) return { primary: '#0D47A1', accent: '#1976D2', navy: '#081426', navy2: '#0E213E' };
+      if (s.includes('badminton') || s.includes('shuttle')) return { primary: '#00695C', accent: '#26A69A', navy: '#081715', navy2: '#0D2724' };
+      return { primary: '#F5A623', accent: '#D97706', navy: '#0F1E36', navy2: '#162846' };
+    };
+    window.getSportIcon = function(sport) {
+      var s = (sport || '').toLowerCase();
+      if (s.includes('kabaddi') || s.includes('wrestl')) return '🤼';
+      if (s.includes('basket') || s.includes('dunk')) return '🏀';
+      if (s.includes('foot') || s.includes('soccer') || s.includes('strik')) return '⚽';
+      if (s.includes('cricket')) return '🏏';
+      if (s.includes('badminton') || s.includes('shuttle')) return '🏸';
+      if (s.includes('tennis')) return '🎾';
+      return '🏐';
+    };
+    window.getSportCrestSVG = function(club) {
+      if (!club) club = { sport: 'Volleyball', name: 'ACEIT Spikers' };
+      var isSpk = (club.slug === 'spikers' || club.clubId === 'spikers' || (!club.slug && !club.clubId && (!club.sport || club.sport.toLowerCase() === 'volleyball')));
+      if (club.logo && !club._forceSvg) return club.logo;
+      if (isSpk && !club._forceSvg) return 'spikers-logo.png';
+      var name = club.name || 'Club';
+      var sport = club.sport || 'Volleyball';
+      var theme = window.getSportTheme(sport, club);
+      var icon = window.getSportIcon(sport);
+      var initial = (name || 'C').charAt(0).toUpperCase();
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="100%" height="100%">' +
+        '<defs>' +
+          '<linearGradient id="crestGrad_' + initial + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
+            '<stop offset="0%" stop-color="' + theme.navy2 + '"/>' +
+            '<stop offset="100%" stop-color="' + theme.navy + '"/>' +
+          '</linearGradient>' +
+          '<linearGradient id="goldGrad_' + initial + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
+            '<stop offset="0%" stop-color="' + theme.primary + '"/>' +
+            '<stop offset="100%" stop-color="' + theme.accent + '"/>' +
+          '</linearGradient>' +
+        '</defs>' +
+        '<path d="M80 10 L140 35 L140 95 C140 125 80 150 80 150 C80 150 20 125 20 95 L20 35 Z" fill="url(#crestGrad_' + initial + ')" stroke="url(#goldGrad_' + initial + ')" stroke-width="4"/>' +
+        '<path d="M80 18 L132 40 L132 92 C132 118 80 140 80 140 C80 140 28 118 28 92 L28 40 Z" fill="none" stroke="' + theme.primary + '4D" stroke-width="1.5"/>' +
+        '<text x="80" y="78" font-size="34" text-anchor="middle" dominant-baseline="central">' + icon + '</text>' +
+        '<text x="80" y="112" font-family="sans-serif" font-size="14" font-weight="900" fill="' + theme.primary + '" text-anchor="middle" letter-spacing="1">' + initial + '</text>' +
+      '</svg>';
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    };
+    window.handleClubLogoError = function(img, sport, name) {
+      if (!img) return;
+      img.onerror = null;
+      img.src = window.getSportCrestSVG({ sport: sport || 'Volleyball', name: name || 'ACEIT Club', _forceSvg: true });
+    };
+  </script>
 </head>
 
 <body>
@@ -4603,7 +4662,7 @@
       id="loaderLogoImg"
       src="spikers-logo.png"
       alt="Loading ACEIT Spikers"
-      onerror="if(this.src!=='spikers-logo.png'){this.src='spikers-logo.png';}else{this.onerror=null;this.src=getSportCrestSVG({sport:'Volleyball',name:'ACEIT Spikers',_forceSvg:true});}"></div>
+      onerror="handleClubLogoError(this, 'Volleyball', 'ACEIT Spikers')"></div>
   <div class="progress-bar" id="progressBar"></div>
   <div class="mouse-glow" id="mouseGlow"></div>
 
@@ -4614,7 +4673,7 @@
           id="navBrandLogo"
           src="spikers-logo.png"
           alt="ACEIT Crest"
-          onerror="if(this.src!=='spikers-logo.png'){this.src='spikers-logo.png';}else{this.onerror=null;this.src=getSportCrestSVG({sport:'Volleyball',name:'ACEIT Spikers',_forceSvg:true});}"> <span id="navBrandText">ACEIT <span class="accent">SPIKERS</span></span></a>
+          onerror="handleClubLogoError(this, 'Volleyball', 'ACEIT Spikers')"> <span id="navBrandText">ACEIT <span class="accent">SPIKERS</span></span></a>
       <ul class="nav-links" id="navLinks">
         <li><a href="#about">About</a></li>
         <li><a href="#team">Team</a></li>
@@ -4678,10 +4737,7 @@
     <div class="floating-ball fb3"></div>
     <div class="container hero-inner">
       <div>
-        <div class="hero-eyebrow" id="heroEyebrow">Arya College of Engineering &amp; IT — Est. Club</div>
         <h1 id="heroTitle">ACEIT<br><span class="accent" id="heroAccent">SPIKERS</span></h1>
-        <p id="heroDesc">The official volleyball club of ACEIT. Built on discipline, driven by teamwork, and playing for every point
-          that matters.</p>
         <div class="hero-ctas">
           <a href="#join" class="btn btn-primary" id="heroJoinBtn">Join the Club</a>
           <a href="#team" class="btn btn-outline" id="heroExploreBtn">Explore Team</a>
@@ -4692,7 +4748,7 @@
           id="heroLogoImg"
           src="spikers-logo.png"
           alt="ACEIT Spikers official crest"
-          onerror="if(this.src!=='spikers-logo.png'){this.src='spikers-logo.png';}else{this.onerror=null;this.src=getSportCrestSVG({sport:'Volleyball',name:'ACEIT Spikers',_forceSvg:true});}">
+          onerror="handleClubLogoError(this, 'Volleyball', 'ACEIT Spikers')">
       </div>
     </div>
     <div class="hero-scroll"><span>SCROLL</span><span class="scroll-line"></span></div>
@@ -6682,7 +6738,8 @@
         // 2. Update Nav Brand & Loader
         var loaderLogoImg = document.getElementById('loaderLogoImg');
         if (loaderLogoImg) {
-          loaderLogoImg.src = defaultCrest;
+          loaderLogoImg.onerror = function() { window.handleClubLogoError(this, sportName, clubName); };
+          loaderLogoImg.src = clubLogo || defaultCrest;
         }
         var navBrandText = document.getElementById('navBrandText');
         if (navBrandText) {
@@ -6695,13 +6752,14 @@
         }
         var navBrandLogo = document.getElementById('navBrandLogo');
         if (navBrandLogo) {
-          navBrandLogo.src = club.logo || defaultCrest;
+          navBrandLogo.onerror = function() { window.handleClubLogoError(this, sportName, clubName); };
+          navBrandLogo.src = clubLogo || defaultCrest;
         }
         
-        // 3. Update Hero Section
+        // 3. Update Hero Section (Clean & Minimalist)
         var heroEyebrow = document.getElementById('heroEyebrow');
         if (heroEyebrow) {
-          heroEyebrow.textContent = 'Arya College of Engineering & IT — Official ' + sportName + ' Club';
+          heroEyebrow.style.display = 'none';
         }
         var heroTitle = document.getElementById('heroTitle');
         if (heroTitle) {
@@ -6714,11 +6772,12 @@
         }
         var heroDesc = document.getElementById('heroDesc');
         if (heroDesc) {
-          heroDesc.textContent = clubDesc;
+          heroDesc.style.display = 'none';
         }
         var heroLogoImg = document.getElementById('heroLogoImg');
         if (heroLogoImg) {
-          heroLogoImg.src = club.logo || defaultCrest;
+          heroLogoImg.onerror = function() { window.handleClubLogoError(this, sportName, clubName); };
+          heroLogoImg.src = clubLogo || defaultCrest;
         }
         
         // 4. Update Team Section Squad Title

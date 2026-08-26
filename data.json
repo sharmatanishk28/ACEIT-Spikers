@@ -338,6 +338,17 @@
       "id": "id_mtak427ekx0ze"
     },
     {
+      "n": "Pawan Sehrawat",
+      "pos": "Lead Raider",
+      "num": 7,
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "clubId": "kabaddi",
+      "id": "id_mtakxzpaad6x1"
+    },
+    {
       "id": "idmsozmogl1",
       "n": "Shubham Patidar",
       "num": 1,
@@ -509,17 +520,6 @@
       "r": "Libero",
       "clubId": "spikers",
       "id": "id_mtaalv3mpirx8"
-    },
-    {
-      "n": "Pawan Sehrawat",
-      "pos": "Lead Raider",
-      "num": 7,
-      "cat": "Boys Team",
-      "h": "5'11\"",
-      "exp": "3 yrs",
-      "cap": true,
-      "clubId": "kabaddi",
-      "id": "id_mtakxzpaad6x1"
     }
   ],
   "gallery": [
@@ -981,6 +981,17 @@
       "winner": "none"
     },
     {
+      "team1": "ACEIT Kabaddi",
+      "team2": "MNIT Raiders",
+      "opp": "MNIT Raiders",
+      "date": "2026-10-15",
+      "venue": "ACEIT Outdoor Kabaddi Arena",
+      "status": "upcoming",
+      "clubId": "kabaddi",
+      "id": "id_mtakxzpddf5e6",
+      "winner": "none"
+    },
+    {
       "id": "idmsozmogl21",
       "team1": "ACEIT Spikers",
       "team1Logo": "",
@@ -1053,17 +1064,6 @@
       "winner": "team1",
       "team2": "LPU Strikers",
       "clubId": "spikers"
-    },
-    {
-      "team1": "ACEIT Kabaddi",
-      "team2": "MNIT Raiders",
-      "opp": "MNIT Raiders",
-      "date": "2026-10-15",
-      "venue": "ACEIT Outdoor Kabaddi Arena",
-      "status": "upcoming",
-      "clubId": "kabaddi",
-      "id": "id_mtakxzpddf5e6",
-      "winner": "none"
     }
   ],
   "news": [
