@@ -22,7 +22,7 @@ let localClubs = [
     name: 'ACEIT Spikers',
     sport: 'Volleyball',
     slug: 'spikers',
-    logo: '',
+    logo: '/spikers-logo.png',
     coverImage: 'banner1.jpg',
     description: 'The official volleyball club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.',
     themeColor: '#F5A623',
