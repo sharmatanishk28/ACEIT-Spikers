@@ -1,6 +1,395 @@
 {
   "team": [
     {
+      "id": "idmsozmogl1",
+      "n": "Shubham Patidar",
+      "num": 1,
+      "pos": "Captain / Outside Hitter",
+      "h": "6'1\"",
+      "exp": "4 yrs",
+      "cap": true,
+      "insta": "",
+      "photo": "",
+      "cat": "Boys Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl2",
+      "n": "Arjun Verma",
+      "num": 5,
+      "pos": "Setter",
+      "h": "5'10\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Boys Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl3",
+      "n": "Rohan Mehta",
+      "num": 9,
+      "pos": "Middle Blocker",
+      "h": "6'3\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Girls Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl4",
+      "n": "Karan Singh",
+      "num": 11,
+      "pos": "Libero",
+      "h": "5'8\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Alumni",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl5",
+      "n": "Aditya Rao",
+      "num": 14,
+      "pos": "Opposite",
+      "h": "6'0\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "boys team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl6",
+      "n": "Vikram Joshi",
+      "num": 7,
+      "pos": "Outside Hitter",
+      "h": "5'11\"",
+      "exp": "1 yr",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Boys Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl7",
+      "n": "Nikhil Sharma",
+      "num": 3,
+      "pos": "Middle Blocker",
+      "h": "6'2\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Girls Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl8",
+      "n": "Devansh Rathore",
+      "num": 12,
+      "pos": "Setter",
+      "h": "5'9\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Alumni",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl_g1",
+      "n": "Ananya Sharma",
+      "num": 8,
+      "pos": "Outside Hitter",
+      "h": "5'9\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "cat": "Girls Team",
+      "insta": "",
+      "photo": "",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl_a1",
+      "n": "Vikramaditya Singh",
+      "num": 10,
+      "pos": "Setter (Pass-out)",
+      "h": "6'0\"",
+      "exp": "5 yrs",
+      "cap": false,
+      "cat": "Alumni",
+      "insta": "",
+      "photo": "",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmt7aagjz45",
+      "photo": "",
+      "n": "Rishabh Sen",
+      "num": 99,
+      "pos": "Outside Hitter",
+      "cat": "pass-out 2025",
+      "h": "",
+      "exp": "",
+      "cap": false,
+      "insta": "",
+      "clubId": "spikers"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt8zeo2cnz1v9"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt8zg7h70hhiw"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt8zm9gfbnhf6"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt8zu4c21wi7z"
+    },
+    {
+      "n": "Lakshya Sen (Student)",
+      "num": 7,
+      "pos": "Men's Singles",
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "id": "id_mt9098bz4iiul",
+      "clubId": "smashers"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt9099zog9i9n"
+    },
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mt9yxw4cf2wbs"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mt9yxw4xdwaz8"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9yxw4z52t7r"
+    },
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mt9yygvuutwrp"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mt9yygwj569ny"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9yygwm4e72j"
+    },
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mt9yz8h8iqsps"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mt9yz8i2oh6vh"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9yz8i45btvt"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt9yzkbohn2h6"
+    },
+    {
+      "n": "Alex Hunter",
+      "num": "9",
+      "pos": "Center Forward / Striker",
+      "role": "Captain",
+      "sport": "Football",
+      "clubId": "strikers",
+      "id": "id_mt9z0jh8d09ox"
+    },
+    {
+      "n": "Lakshya Sen (Student)",
+      "num": 7,
+      "pos": "Men's Singles",
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "id": "id_mt9z177bafw4r",
+      "clubId": "smashers"
+    },
+    {
+      "n": "Lakshya Sen (Student)",
+      "num": 7,
+      "pos": "Men's Singles",
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "id": "id_mt9z1iv1e4w3y",
+      "clubId": "smashers"
+    },
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mt9z2ih1ytmd1"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mt9z2ihjq475r"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9z2ihlc9pr8"
+    },
+    {
+      "n": "Pawan Sehrawat",
+      "pos": "Lead Raider",
+      "num": 7,
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "clubId": "kabaddi",
+      "id": "id_mtaaloc1lbmnk"
+    },
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mtaalv2zha8p1"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mtaalv3i9bqqj"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mtaalv3mpirx8"
+    },
+    {
+      "n": "Lakshya Sen (Student)",
+      "num": 7,
+      "pos": "Men's Singles",
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "id": "id_mtaastyp75pon",
+      "clubId": "smashers"
+    },
+    {
+      "n": "Pawan Sehrawat",
+      "pos": "Lead Raider",
+      "num": 7,
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "clubId": "kabaddi",
+      "id": "id_mtab5g2vzl4rn"
+    },
+    {
+      "n": "Pawan Sehrawat",
+      "pos": "Lead Raider",
+      "num": 7,
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "clubId": "kabaddi",
+      "id": "id_mtab5ync5wudi"
+    },
+    {
+      "n": "Pawan Sehrawat",
+      "pos": "Lead Raider",
+      "num": 7,
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "clubId": "kabaddi",
+      "id": "id_mtabo5lfgvdmn"
+    },
+    {
       "n": "Pawan Sehrawat",
       "pos": "Lead Raider",
       "num": 7,
@@ -23,17 +412,15 @@
       "id": "id_mtaf1hvc57o0b"
     },
     {
-      "n": "Shubham Patidar",
-      "num": 1,
-      "pos": "Captain / Outside Hitter",
+      "n": "Pawan Sehrawat",
+      "pos": "Lead Raider",
+      "num": 7,
       "cat": "Boys Team",
-      "h": "6'1\"",
-      "exp": "4 yrs",
+      "h": "5'11\"",
+      "exp": "3 yrs",
       "cap": true,
-      "insta": "",
-      "photo": "",
-      "clubId": "spikers",
-      "id": "id_spikers_1"
+      "clubId": "kabaddi",
+      "id": "id_mtag2zxp7jgg4"
     },
     {
       "n": "Pawan Sehrawat",
@@ -44,11 +431,442 @@
       "exp": "3 yrs",
       "cap": true,
       "clubId": "kabaddi",
-      "id": "id_mtag2zxp7jgg4"
+      "id": "id_mtah9bgu5nl3l"
+    },
+    {
+      "n": "Pawan Sehrawat",
+      "pos": "Lead Raider",
+      "num": 7,
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "clubId": "kabaddi",
+      "id": "id_mtaheht02nqnm"
+    },
+    {
+      "n": "Pawan Sehrawat",
+      "pos": "Lead Raider",
+      "num": 7,
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "clubId": "kabaddi",
+      "id": "id_mtahh2ru153mb"
     }
   ],
-  "gallery": [],
+  "gallery": [
+    {
+      "id": "idmsozmogl9",
+      "cat": "matches",
+      "h": 260,
+      "label": "Match Day",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl10",
+      "cat": "training",
+      "h": 180,
+      "label": "Training",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl11",
+      "cat": "team",
+      "h": 220,
+      "label": "Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl12",
+      "cat": "events",
+      "h": 200,
+      "label": "Event",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl13",
+      "cat": "matches",
+      "h": 200,
+      "label": "Match Day",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl14",
+      "cat": "training",
+      "h": 260,
+      "label": "Training",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl15",
+      "cat": "team",
+      "h": 180,
+      "label": "Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl16",
+      "cat": "matches",
+      "h": 220,
+      "label": "Match Day",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl17",
+      "cat": "events",
+      "h": 240,
+      "label": "Event",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl18",
+      "cat": "training",
+      "h": 200,
+      "label": "Training",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl19",
+      "cat": "team",
+      "h": 260,
+      "label": "Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl20",
+      "cat": "matches",
+      "h": 180,
+      "label": "Match Day",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl25",
+      "cat": "tournaments",
+      "h": 240,
+      "label": "Tournament Champions",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmt797zms45",
+      "photo": "",
+      "label": "Inter-College Final Match",
+      "cat": "inter-college cup 2026",
+      "h": 0,
+      "clubId": "spikers"
+    }
+  ],
   "matches": [
+    {
+      "id": "idmsozmogl21",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "Poornima University",
+      "team2": "Poornima University",
+      "team2Logo": "",
+      "date": "2026-08-16T18:22:28.437Z",
+      "venue": "ACEIT Indoor Court",
+      "status": "completed",
+      "winner": "team1",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm22",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "JECRC Titans",
+      "team2": "JECRC Titans",
+      "team2Logo": "",
+      "date": "2026-08-23T18:22:28.437Z",
+      "venue": "JECRC Arena, Jaipur",
+      "status": "completed",
+      "winner": "team1",
+      "isLive": false,
+      "sets": "1 - 0",
+      "setScores": [
+        {
+          "set": 1,
+          "team1": 2,
+          "team2": 0
+        }
+      ],
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm23",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "Manipal Smashers",
+      "team2": "Manipal Smashers",
+      "team2Logo": "",
+      "date": "2026-09-01T18:22:28.437Z",
+      "venue": "ACEIT Indoor Court",
+      "status": "upcoming",
+      "winner": "none",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm24",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "MNIT Warriors",
+      "team2": "MNIT Warriors",
+      "team2Logo": "",
+      "date": "2026-09-10T18:22:28.437Z",
+      "venue": "MNIT Sports Complex",
+      "status": "upcoming",
+      "winner": "none",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmt77sm8544",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "LPU Strikers",
+      "team2Logo": "",
+      "date": "2026-08-25T12:30:00.000Z",
+      "venue": "LPU Ground",
+      "status": "completed",
+      "winner": "team1",
+      "team2": "LPU Strikers",
+      "clubId": "spikers"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt8zeo2fqa7z9"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt8zg7hbs44ps"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt8zm9gk73x71"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt8zu4c620h9x"
+    },
+    {
+      "opp": "MNIT Shuttlers",
+      "date": "2026-09-15",
+      "time": "11:00",
+      "venue": "ACEIT Indoor Badminton Arena",
+      "cat": "Inter-College Cup",
+      "status": "UPCOMING",
+      "id": "id_mt9098c3conpp",
+      "clubId": "smashers",
+      "team1": "Home Team",
+      "team2": "MNIT Shuttlers",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9099zshv0jd"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9yxw4gyp0fi",
+      "team2": "City FC",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9yygvyz8oa2",
+      "team2": "City FC",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9yz8hed2u77",
+      "team2": "City FC",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9yzkbrss5uw"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "team2": "SKIT Football Club",
+      "opp": "SKIT Football Club",
+      "score1": "3",
+      "score2": "1",
+      "winner": "t1",
+      "date": "2026-09-15",
+      "status": "Upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9z0jhdq6717"
+    },
+    {
+      "opp": "MNIT Shuttlers",
+      "date": "2026-09-15",
+      "time": "11:00",
+      "venue": "ACEIT Indoor Badminton Arena",
+      "cat": "Inter-College Cup",
+      "status": "UPCOMING",
+      "id": "id_mt9z177f93dd8",
+      "clubId": "smashers",
+      "team1": "Home Team",
+      "team2": "MNIT Shuttlers",
+      "winner": "none"
+    },
+    {
+      "opp": "MNIT Shuttlers",
+      "date": "2026-09-15",
+      "time": "11:00",
+      "venue": "ACEIT Indoor Badminton Arena",
+      "cat": "Inter-College Cup",
+      "status": "UPCOMING",
+      "id": "id_mt9z1iv5kqyy7",
+      "clubId": "smashers",
+      "team1": "Home Team",
+      "team2": "MNIT Shuttlers",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mt9z2ih47do97",
+      "team2": "City FC",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Kabaddi",
+      "team2": "MNIT Raiders",
+      "opp": "MNIT Raiders",
+      "date": "2026-10-15",
+      "venue": "ACEIT Outdoor Kabaddi Arena",
+      "status": "upcoming",
+      "clubId": "kabaddi",
+      "id": "id_mtaaloc6fuzcc",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mtaalv32ndw98",
+      "team2": "City FC",
+      "winner": "none"
+    },
+    {
+      "opp": "MNIT Shuttlers",
+      "date": "2026-09-15",
+      "time": "11:00",
+      "venue": "ACEIT Indoor Badminton Arena",
+      "cat": "Inter-College Cup",
+      "status": "UPCOMING",
+      "id": "id_mtaastyu8txgg",
+      "clubId": "smashers",
+      "team1": "Home Team",
+      "team2": "MNIT Shuttlers",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Kabaddi",
+      "team2": "MNIT Raiders",
+      "opp": "MNIT Raiders",
+      "date": "2026-10-15",
+      "venue": "ACEIT Outdoor Kabaddi Arena",
+      "status": "upcoming",
+      "clubId": "kabaddi",
+      "id": "id_mtab5g2zp5pts",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Kabaddi",
+      "team2": "MNIT Raiders",
+      "opp": "MNIT Raiders",
+      "date": "2026-10-15",
+      "venue": "ACEIT Outdoor Kabaddi Arena",
+      "status": "upcoming",
+      "clubId": "kabaddi",
+      "id": "id_mtab5ynfsdsdz",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Kabaddi",
+      "team2": "MNIT Raiders",
+      "opp": "MNIT Raiders",
+      "date": "2026-10-15",
+      "venue": "ACEIT Outdoor Kabaddi Arena",
+      "status": "upcoming",
+      "clubId": "kabaddi",
+      "id": "id_mtabo5li77uw9",
+      "winner": "none"
+    },
     {
       "team1": "ACEIT Kabaddi",
       "team2": "MNIT Raiders",
@@ -81,12 +899,162 @@
       "clubId": "kabaddi",
       "id": "id_mtag2zxuiassj",
       "winner": "none"
+    },
+    {
+      "team1": "ACEIT Kabaddi",
+      "team2": "MNIT Raiders",
+      "opp": "MNIT Raiders",
+      "date": "2026-10-15",
+      "venue": "ACEIT Outdoor Kabaddi Arena",
+      "status": "upcoming",
+      "clubId": "kabaddi",
+      "id": "id_mtah9bgyfmnur",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Kabaddi",
+      "team2": "MNIT Raiders",
+      "opp": "MNIT Raiders",
+      "date": "2026-10-15",
+      "venue": "ACEIT Outdoor Kabaddi Arena",
+      "status": "upcoming",
+      "clubId": "kabaddi",
+      "id": "id_mtaheht4vrex2",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Kabaddi",
+      "team2": "MNIT Raiders",
+      "opp": "MNIT Raiders",
+      "date": "2026-10-15",
+      "venue": "ACEIT Outdoor Kabaddi Arena",
+      "status": "upcoming",
+      "clubId": "kabaddi",
+      "id": "id_mtahh2ryhc5cu",
+      "winner": "none"
     }
   ],
-  "news": [],
-  "sponsors": [],
-  "testimonials": [],
+  "news": [
+    {
+      "id": "idmsozmogm25",
+      "tag": "Featured",
+      "date": "20 Jul 2026",
+      "title": "Spikers clinch regional title after thrilling 5-set final",
+      "body": "ACEIT Spikers edged out a tightly contested final to bring home the regional championship trophy for the second year running.",
+      "featured": true,
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm26",
+      "tag": "Announcement",
+      "date": "14 Jul 2026",
+      "title": "New training block begins August 1",
+      "body": "An updated strength & conditioning block kicks off next month for all first-team players.",
+      "featured": false,
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm27",
+      "tag": "Tournament",
+      "date": "02 Jul 2026",
+      "title": "Spikers advance to inter-college semifinal",
+      "body": "A dominant straight-sets win books our place in the semifinal round.",
+      "featured": false,
+      "clubId": "spikers"
+    }
+  ],
+  "sponsors": [
+    {
+      "id": "idmsozmogm28",
+      "name": "Wonder Cement",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm29",
+      "name": "FireNodeX",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm30",
+      "name": "Arya College",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm31",
+      "name": "Sports Authority",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm32",
+      "name": "Nova Gear",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm33",
+      "name": "FireCraft Network",
+      "clubId": "spikers"
+    }
+  ],
+  "testimonials": [
+    {
+      "id": "idmsozmogm34",
+      "q": "Joining Spikers made me a better player and a better teammate. The discipline here is real.",
+      "n": "Arjun Verma",
+      "r": "Setter",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm35",
+      "q": "Our coaches push us hard, but they care harder. That balance is what wins matches.",
+      "n": "Karan Singh",
+      "r": "Libero",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm36",
+      "q": "This club taught me more about leadership than any classroom could.",
+      "n": "Shubham Patidar",
+      "r": "Team Captain",
+      "clubId": "spikers"
+    }
+  ],
   "stats": [
+    {
+      "id": "idmsozmogm37",
+      "label": "Championships",
+      "target": 7,
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm38",
+      "label": "Tournament Wins",
+      "target": 24,
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm39",
+      "label": "Players",
+      "target": 38,
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm40",
+      "label": "Coaches",
+      "target": 5,
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm41",
+      "label": "Training Sessions",
+      "target": 410,
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm42",
+      "label": "Years Active",
+      "target": 6,
+      "clubId": "spikers"
+    },
     {
       "id": "idmtafeg5c1",
       "label": "Matches",
@@ -112,7 +1080,120 @@
       "clubId": "cricket"
     }
   ],
-  "events": [],
+  "events": [
+    {
+      "id": "ev_spikers_1",
+      "title": "ACEIT Inter-College Volleyball Cup 2026",
+      "description": "Annual inter-college championship featuring top collegiate teams across Rajasthan.",
+      "date": "25 Sep 2026",
+      "time": "09:00 AM - 06:00 PM",
+      "venue": "ACEIT Sports Complex - Main Indoor Court",
+      "poster": "",
+      "regBtnText": "Register Now",
+      "regUrl": "https://tally.so/r/RGeGvd",
+      "regEnabled": true,
+      "clubId": "spikers"
+    },
+    {
+      "id": "ev_spikers_2",
+      "title": "National Sports Day Volleyball Showcase",
+      "description": "Special exhibition matches, skills challenges, and freshmen recruitment trials.",
+      "date": "29 Aug 2026",
+      "time": "05:00 PM - 08:00 PM",
+      "venue": "Outdoor Volleyball Arena",
+      "poster": "",
+      "regBtnText": "RSVP Online",
+      "regUrl": "https://tally.so/r/RGeGvd",
+      "regEnabled": true,
+      "clubId": "spikers"
+    },
+    {
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "venue": "ACEIT Football Stadium",
+      "date": "2026-10-05",
+      "clubId": "strikers",
+      "id": "id_mt9z0jhhgr37n"
+    },
+    {
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "venue": "ACEIT Football Stadium",
+      "date": "2026-10-05",
+      "clubId": "strikers",
+      "id": "id_mt9yzkbu7ylr8"
+    },
+    {
+      "id": "id_mt9099zw625gb",
+      "clubId": "strikers",
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "date": "2026-10-05",
+      "time": "",
+      "venue": "ACEIT Football Stadium",
+      "poster": "",
+      "regBtnText": "Register Now",
+      "regUrl": "",
+      "regEnabled": true,
+      "createdAt": "2026-08-25T18:35:26.300Z"
+    },
+    {
+      "id": "id_mt8zu4c9ul66l",
+      "clubId": "strikers",
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "date": "2026-10-05",
+      "time": "",
+      "venue": "ACEIT Football Stadium",
+      "poster": "",
+      "regBtnText": "Register Now",
+      "regUrl": "",
+      "regEnabled": true,
+      "createdAt": "2026-08-25T18:23:39.129Z"
+    },
+    {
+      "id": "id_mt8zm9gniub4o",
+      "clubId": "strikers",
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "date": "2026-10-05",
+      "time": "",
+      "venue": "ACEIT Football Stadium",
+      "poster": "",
+      "regBtnText": "Register Now",
+      "regUrl": "",
+      "regEnabled": true,
+      "createdAt": "2026-08-25T18:17:32.519Z"
+    },
+    {
+      "id": "id_mt8zg7hf6ata4",
+      "clubId": "strikers",
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "date": "2026-10-05",
+      "time": "",
+      "venue": "ACEIT Football Stadium",
+      "poster": "",
+      "regBtnText": "Register Now",
+      "regUrl": "",
+      "regEnabled": true,
+      "createdAt": "2026-08-25T18:12:50.019Z"
+    },
+    {
+      "id": "id_mt8zeo2j80k6t",
+      "clubId": "strikers",
+      "title": "ACEIT Inter-College Football League 2026",
+      "description": "Annual football championship hosted at ACEIT football grounds.",
+      "date": "2026-10-05",
+      "time": "",
+      "venue": "ACEIT Football Stadium",
+      "poster": "",
+      "regBtnText": "Register Now",
+      "regUrl": "",
+      "regEnabled": true,
+      "createdAt": "2026-08-25T18:11:38.203Z"
+    }
+  ],
   "about": {
     "eyebrow": "Who we are",
     "title": "Built on the court,\ndefined by character.",
@@ -122,7 +1203,7 @@
   },
   "contact": {
     "address": "Arya Campus 1, Kukas, Jaipur, Rajasthan 302028",
-    "email": "aceitsports@gmail.com",
+    "email": "spikers-official@aceit.edu.in",
     "phone": "+91 7067787571",
     "hours": "Mon–Sun, 5:00 AM – 9:00 PM",
     "insta": "https://instagram.com/aceit_spikers",
@@ -192,23 +1273,59 @@
     }
   ],
   "deletedCategories": {
-    "team": [],
+    "team": [
+      "2nd year"
+    ],
     "gallery": []
   },
   "categories": {
     "team": [
-      "first team",
-      "reserves",
+      "boys team",
+      "girls team",
       "alumni"
     ],
     "gallery": [
       "matches",
       "training",
       "team",
-      "events"
+      "events",
+      "tournaments"
     ]
   },
-  "training": [],
+  "training": [
+    {
+      "id": "tr_m1",
+      "icon": "🌅",
+      "title": "Morning Session",
+      "time": "06:00 – 07:30",
+      "desc": "Mon / Wed / Fri — footwork, serving accuracy, and reception drills.",
+      "clubId": "spikers"
+    },
+    {
+      "id": "tr_e1",
+      "icon": "🌆",
+      "title": "Evening Session",
+      "time": "17:30 – 19:30",
+      "desc": "Daily — full-court scrimmage, attack combinations, block timing.",
+      "clubId": "spikers"
+    },
+    {
+      "id": "tr_w1",
+      "icon": "🏆",
+      "title": "Weekend Practice",
+      "time": "Sat 09:00 – 12:00",
+      "desc": "Match simulation and set-play rehearsal ahead of fixtures.",
+      "clubId": "spikers"
+    },
+    {
+      "id": "tr_s1",
+      "icon": "💪",
+      "title": "Strength Training",
+      "time": "Tue / Thu 18:00",
+      "desc": "Conditioning, jump strength, and injury-prevention work in the gym.",
+      "clubId": "spikers"
+    }
+  ],
   "slideshow": [
     {
       "id": "slide_1",
@@ -281,6 +1398,60 @@
       "btnText": "View Fixtures",
       "clubId": "kabaddi",
       "id": "id_mtag30bn2wbsm"
+    },
+    {
+      "title": "ACEIT Dunkers Championship Final 2026",
+      "date": "Hardcourt Arena · 15 Oct 2026",
+      "image": "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1200",
+      "link": "#events",
+      "btnText": "View Match Replay",
+      "clubId": "dunkers",
+      "id": "id_mtah9bs0zokq7"
+    },
+    {
+      "title": "Maha-Raid Super Tackle Finals",
+      "date": "Main Outdoor Arena · 20 Oct 2026",
+      "image": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=1200",
+      "link": "#matches",
+      "btnText": "View Fixtures",
+      "clubId": "kabaddi",
+      "id": "id_mtah9bs3xs68d"
+    },
+    {
+      "title": "ACEIT Dunkers Championship Final 2026",
+      "date": "Hardcourt Arena · 15 Oct 2026",
+      "image": "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1200",
+      "link": "#events",
+      "btnText": "View Match Replay",
+      "clubId": "dunkers",
+      "id": "id_mtahei6lisu0j"
+    },
+    {
+      "title": "Maha-Raid Super Tackle Finals",
+      "date": "Main Outdoor Arena · 20 Oct 2026",
+      "image": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=1200",
+      "link": "#matches",
+      "btnText": "View Fixtures",
+      "clubId": "kabaddi",
+      "id": "id_mtahei6pqetoe"
+    },
+    {
+      "title": "ACEIT Dunkers Championship Final 2026",
+      "date": "Hardcourt Arena · 15 Oct 2026",
+      "image": "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1200",
+      "link": "#events",
+      "btnText": "View Match Replay",
+      "clubId": "dunkers",
+      "id": "id_mtahh34wvl6g1"
+    },
+    {
+      "title": "Maha-Raid Super Tackle Finals",
+      "date": "Main Outdoor Arena · 20 Oct 2026",
+      "image": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=1200",
+      "link": "#matches",
+      "btnText": "View Fixtures",
+      "clubId": "kabaddi",
+      "id": "id_mtahh3502fu3d"
     }
   ],
   "customCategories": {
@@ -321,7 +1492,7 @@
   "contacts": {
     "spikers": {
       "address": "Arya Campus 1, Kukas, Jaipur, Rajasthan 302028",
-      "email": "aceitsports@gmail.com",
+      "email": "spikers-official@aceit.edu.in",
       "phone": "+91 7067787571",
       "hours": "Mon–Sun, 5:00 AM – 9:00 PM",
       "insta": "https://instagram.com/aceit_spikers",
