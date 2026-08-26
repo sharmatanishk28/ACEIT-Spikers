@@ -937,42 +937,59 @@ app.post('/api/save-all', authenticateUser, requireAuth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid payload' });
     }
 
-    const targetClubId = (req.query.clubId || db.clubId || (req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers')).toLowerCase();
-    if (!hasClubAccess(req.user, targetClubId)) {
-      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to manage club '${targetClubId}'` });
+    const rawTarget = (req.query.clubId || db.clubId || (req.user.clubId !== 'ALL' ? req.user.clubId : 'ALL')).toLowerCase();
+    
+    if (rawTarget !== 'all' && !hasClubAccess(req.user, rawTarget)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to manage club '${rawTarget}'` });
     }
 
     const currentRes = await getDB();
     const currentDB = currentRes.success ? currentRes.data : {};
 
-    // Merge array modules scoped to targetClubId
     const arrayModules = ['team', 'matches', 'events', 'news', 'gallery', 'training', 'sponsors', 'testimonials', 'stats', 'slideshow'];
-    arrayModules.forEach(mod => {
-      if (Array.isArray(db[mod])) {
-        const others = (currentDB[mod] || []).filter(item => {
-          const itemClub = (item.clubId || 'spikers').toLowerCase();
-          return itemClub !== targetClubId && !((itemClub === 'spikers' || itemClub === 'c_spikers') && (targetClubId === 'spikers' || targetClubId === 'c_spikers'));
-        });
-        const targetItems = db[mod].map(item => Object.assign({}, item, { clubId: targetClubId }));
-        currentDB[mod] = others.concat(targetItems);
-      }
-    });
 
-    // Merge About scoped to targetClubId
-    if (db.about && typeof db.about === 'object') {
-      currentDB.abouts = currentDB.abouts || {};
-      currentDB.abouts[targetClubId] = db.about;
-      if (targetClubId === 'spikers' || targetClubId === 'c_spikers') {
-        currentDB.about = db.about;
-      }
-    }
+    if (rawTarget === 'all') {
+      // Global save across all clubs (Owner / Global Admin)
+      arrayModules.forEach(mod => {
+        if (Array.isArray(db[mod])) {
+          currentDB[mod] = db[mod].map(item => {
+            const cId = (item.clubId || (req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers')).toLowerCase();
+            return Object.assign({}, item, { clubId: cId });
+          });
+        }
+      });
+      if (db.about && typeof db.about === 'object') currentDB.about = db.about;
+      if (db.contact && typeof db.contact === 'object') currentDB.contact = db.contact;
+      if (db.abouts && typeof db.abouts === 'object') currentDB.abouts = Object.assign({}, currentDB.abouts, db.abouts);
+      if (db.contacts && typeof db.contacts === 'object') currentDB.contacts = Object.assign({}, currentDB.contacts, db.contacts);
+    } else {
+      // Scoped save for a specific club
+      const targetClubId = rawTarget;
+      arrayModules.forEach(mod => {
+        if (Array.isArray(db[mod])) {
+          const others = (currentDB[mod] || []).filter(item => {
+            const itemClub = (item.clubId || 'spikers').toLowerCase();
+            return itemClub !== targetClubId && !((itemClub === 'spikers' || itemClub === 'c_spikers') && (targetClubId === 'spikers' || targetClubId === 'c_spikers'));
+          });
+          const targetItems = db[mod].map(item => Object.assign({}, item, { clubId: targetClubId }));
+          currentDB[mod] = others.concat(targetItems);
+        }
+      });
 
-    // Merge Contact scoped to targetClubId
-    if (db.contact && typeof db.contact === 'object') {
-      currentDB.contacts = currentDB.contacts || {};
-      currentDB.contacts[targetClubId] = db.contact;
-      if (targetClubId === 'spikers' || targetClubId === 'c_spikers') {
-        currentDB.contact = db.contact;
+      if (db.about && typeof db.about === 'object') {
+        currentDB.abouts = currentDB.abouts || {};
+        currentDB.abouts[targetClubId] = db.about;
+        if (targetClubId === 'spikers' || targetClubId === 'c_spikers') {
+          currentDB.about = db.about;
+        }
+      }
+
+      if (db.contact && typeof db.contact === 'object') {
+        currentDB.contacts = currentDB.contacts || {};
+        currentDB.contacts[targetClubId] = db.contact;
+        if (targetClubId === 'spikers' || targetClubId === 'c_spikers') {
+          currentDB.contact = db.contact;
+        }
       }
     }
 
@@ -985,7 +1002,7 @@ app.post('/api/save-all', authenticateUser, requireAuth, async (req, res) => {
     if (!result.success) {
       return res.status(500).json({ success: false, message: `Failed to save changes: ${result.error}`, error: result.error });
     }
-    return res.json({ success: true, message: `Club database for '${targetClubId}' updated successfully` });
+    return res.json({ success: true, message: `Club database for '${rawTarget}' updated successfully`, data: currentDB });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

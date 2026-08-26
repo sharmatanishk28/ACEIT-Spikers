@@ -6522,29 +6522,24 @@
       }
 
       function loadDB() {
-        var fresh = defaultDB(getActiveClubId());
+        var currentClub = getActiveClubId();
+        var fresh = defaultDB(currentClub);
         try {
-          var raw = window.localStorage.getItem(DB_KEY);
+          var raw = window.localStorage.getItem('aceitSpikersDB_master') || 
+                    window.localStorage.getItem('aceitSpikersDB_' + currentClub) || 
+                    window.localStorage.getItem(DB_KEY);
           if (raw) {
             var parsed = JSON.parse(raw);
             if (parsed && typeof parsed === 'object') {
               var keys = ['training', 'team', 'gallery', 'matches', 'news', 'sponsors', 'testimonials', 'stats', 'events', 'slideshow'];
-              var anyData = false;
               keys.forEach(function (k) {
-                if (Array.isArray(parsed[k]) && parsed[k].length) { anyData = true; }
-              });
-              if (!anyData && !parsed.about && !parsed.contact) {
-                saveDB(fresh);
-                return fresh;
-              }
-              keys.forEach(function (k) {
-                if (!Array.isArray(parsed[k])) { parsed[k] = fresh[k]; }
+                if (!Array.isArray(parsed[k])) { parsed[k] = Array.isArray(fresh[k]) ? fresh[k] : []; }
               });
               if (!parsed.about || typeof parsed.about !== 'object') { parsed.about = fresh.about; }
               if (!parsed.contact || typeof parsed.contact !== 'object') { parsed.contact = fresh.contact; }
-              if (!parsed.categories || typeof parsed.categories !== 'object') { parsed.categories = fresh.categories; }
-              if (!parsed.deletedCategories || typeof parsed.deletedCategories !== 'object') { parsed.deletedCategories = fresh.deletedCategories; }
-              if (!parsed.customCategories || typeof parsed.customCategories !== 'object') { parsed.customCategories = fresh.customCategories; }
+              if (!parsed.categories || typeof parsed.categories !== 'object') { parsed.categories = fresh.categories || {}; }
+              if (!parsed.deletedCategories || typeof parsed.deletedCategories !== 'object') { parsed.deletedCategories = fresh.deletedCategories || {}; }
+              if (!parsed.customCategories || typeof parsed.customCategories !== 'object') { parsed.customCategories = fresh.customCategories || {}; }
               
               if (!parsed.deletedCategories.team) parsed.deletedCategories.team = [];
               if (!parsed.deletedCategories.gallery) parsed.deletedCategories.gallery = [];
@@ -6562,6 +6557,9 @@
         opts = opts || {};
         opts.credentials = opts.credentials || 'include';
         opts.headers = opts.headers || {};
+        if (opts.body && typeof opts.body === 'string' && !opts.headers['Content-Type'] && !opts.headers['content-type']) {
+          opts.headers['Content-Type'] = 'application/json';
+        }
         var token = null;
         try { token = localStorage.getItem('authToken'); } catch (e) { }
         if (token) {
@@ -6578,9 +6576,16 @@
         if (!db) db = DB;
         if (typeof targetClubId === 'function') { cb = targetClubId; targetClubId = null; }
         if (typeof db === 'function') { cb = db; db = DB; targetClubId = null; }
-        var activeClub = (targetClubId || ((activeClubScope && activeClubScope !== 'ALL') ? activeClubScope : getActiveClubId())).toLowerCase();
-        var storageKey = 'aceitSpikersDB_' + activeClub;
-        try { window.localStorage.setItem(storageKey, JSON.stringify(db)); } catch (e) { }
+        
+        var scope = targetClubId || activeClubScope || getActiveClubId() || 'ALL';
+        var activeClub = String(scope).toLowerCase();
+        
+        try {
+          window.localStorage.setItem('aceitSpikersDB_master', JSON.stringify(db));
+          window.localStorage.setItem('aceitSpikersDB_' + activeClub, JSON.stringify(db));
+          window.localStorage.setItem(DB_KEY, JSON.stringify(db));
+        } catch (e) { }
+
         try {
           authFetch(API_BASE + '/save-all?clubId=' + encodeURIComponent(activeClub), {
             method: 'POST',
@@ -6589,6 +6594,11 @@
           })
             .then(function (r) { return r.json(); })
             .then(function (res) {
+              if (res && res.success && res.data) {
+                if (activeClub === 'all') {
+                  DB = res.data;
+                }
+              }
               if (cb) cb(true);
             })
             .catch(function (err) {
@@ -7037,20 +7047,24 @@
             if (res && res.success && res.data) {
               var fresh = defaultDB(activeClub);
               DB = res.data;
-              if (!Array.isArray(DB.training)) { DB.training = fresh.training; }
-              if (!Array.isArray(DB.slideshow) || DB.slideshow.length === 0) { DB.slideshow = fresh.slideshow; }
-              if (!Array.isArray(DB.team)) { DB.team = fresh.team; }
-              if (!Array.isArray(DB.matches)) { DB.matches = fresh.matches; }
-              if (!Array.isArray(DB.news)) { DB.news = fresh.news; }
-              if (!Array.isArray(DB.sponsors)) { DB.sponsors = fresh.sponsors; }
-              if (!Array.isArray(DB.stats)) { DB.stats = fresh.stats; }
-              if (!Array.isArray(DB.events)) { DB.events = fresh.events; }
+              if (!Array.isArray(DB.training)) { DB.training = Array.isArray(fresh.training) ? fresh.training : []; }
+              if (!Array.isArray(DB.slideshow)) { DB.slideshow = Array.isArray(fresh.slideshow) ? fresh.slideshow : []; }
+              if (!Array.isArray(DB.team)) { DB.team = Array.isArray(fresh.team) ? fresh.team : []; }
+              if (!Array.isArray(DB.matches)) { DB.matches = Array.isArray(fresh.matches) ? fresh.matches : []; }
+              if (!Array.isArray(DB.news)) { DB.news = Array.isArray(fresh.news) ? fresh.news : []; }
+              if (!Array.isArray(DB.sponsors)) { DB.sponsors = Array.isArray(fresh.sponsors) ? fresh.sponsors : []; }
+              if (!Array.isArray(DB.stats)) { DB.stats = Array.isArray(fresh.stats) ? fresh.stats : []; }
+              if (!Array.isArray(DB.events)) { DB.events = Array.isArray(fresh.events) ? fresh.events : []; }
               if (!DB.about || typeof DB.about !== 'object') { DB.about = fresh.about; }
               if (!DB.contact || typeof DB.contact !== 'object') { DB.contact = fresh.contact; }
-              if (!DB.categories || typeof DB.categories !== 'object') { DB.categories = fresh.categories; }
-              if (!DB.deletedCategories || typeof DB.deletedCategories !== 'object') { DB.deletedCategories = fresh.deletedCategories; }
-              if (!DB.customCategories || typeof DB.customCategories !== 'object') { DB.customCategories = fresh.customCategories; }
-              try { window.localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch (e) { }
+              if (!DB.categories || typeof DB.categories !== 'object') { DB.categories = fresh.categories || {}; }
+              if (!DB.deletedCategories || typeof DB.deletedCategories !== 'object') { DB.deletedCategories = fresh.deletedCategories || {}; }
+              if (!DB.customCategories || typeof DB.customCategories !== 'object') { DB.customCategories = fresh.customCategories || {}; }
+              try { 
+                window.localStorage.setItem('aceitSpikersDB_master', JSON.stringify(DB)); 
+                window.localStorage.setItem('aceitSpikersDB_' + activeClub, JSON.stringify(DB));
+                window.localStorage.setItem(DB_KEY, JSON.stringify(DB)); 
+              } catch (e) { }
               if (onComplete) onComplete();
               renderAllPublic();
             }
@@ -8383,7 +8397,18 @@
               } else {
                 adminPinGate.classList.remove('open');
                 adminOverlay.classList.add('open');
-                renderAdminTab(currentAdminTab);
+                var targetScope = (activeClubScope || (currentUser.clubId !== 'ALL' ? currentUser.clubId : 'ALL'));
+                authFetch(API_BASE + '/db?clubId=' + encodeURIComponent(targetScope))
+                  .then(function (dbR) { return dbR.json(); })
+                  .then(function (dbRes) {
+                    if (dbRes && dbRes.success && dbRes.data) {
+                      DB = dbRes.data;
+                    }
+                    renderAdminTab(currentAdminTab);
+                  })
+                  .catch(function () {
+                    renderAdminTab(currentAdminTab);
+                  });
               }
             } else {
               currentUser = null;
@@ -9399,7 +9424,17 @@
           if (scopeSelect) {
             scopeSelect.addEventListener('change', function () {
               activeClubScope = scopeSelect.value;
-              renderAdminTab(currentAdminTab);
+              authFetch(API_BASE + '/db?clubId=' + encodeURIComponent(activeClubScope))
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                  if (res && res.success && res.data) {
+                    DB = res.data;
+                  }
+                  renderAdminTab(currentAdminTab);
+                })
+                .catch(function () {
+                  renderAdminTab(currentAdminTab);
+                });
             });
           }
 
@@ -9772,24 +9807,26 @@
         adminContent.querySelectorAll('[data-dup]').forEach(function (b) {
           b.addEventListener('click', function () {
             var id = b.getAttribute('data-dup');
-            var orig = DB[tab].find(function (it) { return it.id === id; });
+            var orig = (DB[tab] || []).find(function (it) { return it.id === id; });
             if (!orig) return;
             var copy = Object.assign({}, orig, { id: uid() });
             var idx = DB[tab].findIndex(function (it) { return it.id === id; });
             DB[tab].splice(idx + 1, 0, copy);
-            saveDB(DB);
-            renderAdminTab(tab);
-            refreshPublicFor(tab);
+            saveDB(DB, activeClubScope, function () {
+              renderAdminTab(tab);
+              refreshPublicFor(tab);
+            });
           });
         });
         adminContent.querySelectorAll('[data-del]').forEach(function (b) {
           b.addEventListener('click', function () {
             var id = b.getAttribute('data-del');
             showConfirm('Delete this ' + schema.label.toLowerCase() + '? This cannot be undone.', function () {
-              DB[tab] = DB[tab].filter(function (it) { return it.id !== id; });
-              saveDB(DB);
-              renderAdminTab(tab);
-              refreshPublicFor(tab);
+              DB[tab] = (DB[tab] || []).filter(function (it) { return it.id !== id; });
+              saveDB(DB, activeClubScope, function () {
+                renderAdminTab(tab);
+                refreshPublicFor(tab);
+              });
             });
           });
         });
@@ -10230,10 +10267,11 @@
           } else {
             DB[tab].push(newItem);
           }
-          saveDB(DB);
-          formEl.classList.remove('open');
-          renderAdminTab(tab);
-          refreshPublicFor(tab);
+          saveDB(DB, activeClubScope, function () {
+            formEl.classList.remove('open');
+            renderAdminTab(tab);
+            refreshPublicFor(tab);
+          });
         });
       }
 

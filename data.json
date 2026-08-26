@@ -1,149 +1,6 @@
 {
   "team": [
     {
-      "id": "idmsozmogl1",
-      "n": "Shubham Patidar",
-      "num": 1,
-      "pos": "Captain / Outside Hitter",
-      "h": "6'1\"",
-      "exp": "4 yrs",
-      "cap": true,
-      "insta": "",
-      "photo": "",
-      "cat": "Boys Team",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl2",
-      "n": "Arjun Verma",
-      "num": 5,
-      "pos": "Setter",
-      "h": "5'10\"",
-      "exp": "3 yrs",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "Boys Team",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl3",
-      "n": "Rohan Mehta",
-      "num": 9,
-      "pos": "Middle Blocker",
-      "h": "6'3\"",
-      "exp": "2 yrs",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "Girls Team",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl4",
-      "n": "Karan Singh",
-      "num": 11,
-      "pos": "Libero",
-      "h": "5'8\"",
-      "exp": "3 yrs",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "Alumni",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl5",
-      "n": "Aditya Rao",
-      "num": 14,
-      "pos": "Opposite",
-      "h": "6'0\"",
-      "exp": "2 yrs",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "boys team",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl6",
-      "n": "Vikram Joshi",
-      "num": 7,
-      "pos": "Outside Hitter",
-      "h": "5'11\"",
-      "exp": "1 yr",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "Boys Team",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl7",
-      "n": "Nikhil Sharma",
-      "num": 3,
-      "pos": "Middle Blocker",
-      "h": "6'2\"",
-      "exp": "3 yrs",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "Girls Team",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl8",
-      "n": "Devansh Rathore",
-      "num": 12,
-      "pos": "Setter",
-      "h": "5'9\"",
-      "exp": "2 yrs",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "Alumni",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl_g1",
-      "n": "Ananya Sharma",
-      "num": 8,
-      "pos": "Outside Hitter",
-      "h": "5'9\"",
-      "exp": "2 yrs",
-      "cap": false,
-      "cat": "Girls Team",
-      "insta": "",
-      "photo": "",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl_a1",
-      "n": "Vikramaditya Singh",
-      "num": 10,
-      "pos": "Setter (Pass-out)",
-      "h": "6'0\"",
-      "exp": "5 yrs",
-      "cap": false,
-      "cat": "Alumni",
-      "insta": "",
-      "photo": "",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmt7aagjz45",
-      "photo": "",
-      "n": "Rishabh Sen",
-      "num": 99,
-      "pos": "Outside Hitter",
-      "cat": "pass-out 2025",
-      "h": "",
-      "exp": "",
-      "cap": false,
-      "insta": "",
-      "clubId": "spikers"
-    },
-    {
       "n": "Alex Hunter",
       "num": "9",
       "pos": "Center Forward / Striker",
@@ -213,12 +70,6 @@
       "id": "id_mt9yxw4xdwaz8"
     },
     {
-      "n": "Owner Added Volleyballer",
-      "r": "Libero",
-      "clubId": "spikers",
-      "id": "id_mt9yxw4z52t7r"
-    },
-    {
       "n": "Carlos Silva",
       "r": "Striker",
       "no": 10,
@@ -232,12 +83,6 @@
       "id": "id_mt9yygwj569ny"
     },
     {
-      "n": "Owner Added Volleyballer",
-      "r": "Libero",
-      "clubId": "spikers",
-      "id": "id_mt9yygwm4e72j"
-    },
-    {
       "n": "Carlos Silva",
       "r": "Striker",
       "no": 10,
@@ -249,12 +94,6 @@
       "r": "Goalkeeper",
       "clubId": "strikers",
       "id": "id_mt9yz8i2oh6vh"
-    },
-    {
-      "n": "Owner Added Volleyballer",
-      "r": "Libero",
-      "clubId": "spikers",
-      "id": "id_mt9yz8i45btvt"
     },
     {
       "n": "Alex Hunter",
@@ -310,12 +149,6 @@
       "id": "id_mt9z2ihjq475r"
     },
     {
-      "n": "Owner Added Volleyballer",
-      "r": "Libero",
-      "clubId": "spikers",
-      "id": "id_mt9z2ihlc9pr8"
-    },
-    {
       "n": "Pawan Sehrawat",
       "pos": "Lead Raider",
       "num": 7,
@@ -338,12 +171,6 @@
       "r": "Goalkeeper",
       "clubId": "strikers",
       "id": "id_mtaalv3i9bqqj"
-    },
-    {
-      "n": "Owner Added Volleyballer",
-      "r": "Libero",
-      "clubId": "spikers",
-      "id": "id_mtaalv3mpirx8"
     },
     {
       "n": "Lakshya Sen (Student)",
@@ -509,6 +336,190 @@
       "cap": true,
       "clubId": "kabaddi",
       "id": "id_mtak427ekx0ze"
+    },
+    {
+      "id": "idmsozmogl1",
+      "n": "Shubham Patidar",
+      "num": 1,
+      "pos": "Captain / Outside Hitter",
+      "h": "6'1\"",
+      "exp": "4 yrs",
+      "cap": true,
+      "insta": "",
+      "photo": "",
+      "cat": "Boys Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl2",
+      "n": "Arjun Verma",
+      "num": 5,
+      "pos": "Setter",
+      "h": "5'10\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Boys Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl3",
+      "n": "Rohan Mehta",
+      "num": 9,
+      "pos": "Middle Blocker",
+      "h": "6'3\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Girls Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl4",
+      "n": "Karan Singh",
+      "num": 11,
+      "pos": "Libero",
+      "h": "5'8\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Alumni",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl5",
+      "n": "Aditya Rao",
+      "num": 14,
+      "pos": "Opposite",
+      "h": "6'0\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "boys team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl6",
+      "n": "Vikram Joshi",
+      "num": 7,
+      "pos": "Outside Hitter",
+      "h": "5'11\"",
+      "exp": "1 yr",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Boys Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl7",
+      "n": "Nikhil Sharma",
+      "num": 3,
+      "pos": "Middle Blocker",
+      "h": "6'2\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Girls Team",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl8",
+      "n": "Devansh Rathore",
+      "num": 12,
+      "pos": "Setter",
+      "h": "5'9\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "",
+      "photo": "",
+      "cat": "Alumni",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl_g1",
+      "n": "Ananya Sharma",
+      "num": 8,
+      "pos": "Outside Hitter",
+      "h": "5'9\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "cat": "Girls Team",
+      "insta": "",
+      "photo": "",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogl_a1",
+      "n": "Vikramaditya Singh",
+      "num": 10,
+      "pos": "Setter (Pass-out)",
+      "h": "6'0\"",
+      "exp": "5 yrs",
+      "cap": false,
+      "cat": "Alumni",
+      "insta": "",
+      "photo": "",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmt7aagjz45",
+      "photo": "",
+      "n": "Rishabh Sen",
+      "num": 99,
+      "pos": "Outside Hitter",
+      "cat": "pass-out 2025",
+      "h": "",
+      "exp": "",
+      "cap": false,
+      "insta": "",
+      "clubId": "spikers"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9yxw4z52t7r"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9yygwm4e72j"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9yz8i45btvt"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mt9z2ihlc9pr8"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mtaalv3mpirx8"
+    },
+    {
+      "n": "Pawan Sehrawat",
+      "pos": "Lead Raider",
+      "num": 7,
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "clubId": "kabaddi",
+      "id": "id_mtakxzpaad6x1"
     }
   ],
   "gallery": [
@@ -613,80 +624,6 @@
     }
   ],
   "matches": [
-    {
-      "id": "idmsozmogl21",
-      "team1": "ACEIT Spikers",
-      "team1Logo": "",
-      "opp": "Poornima University",
-      "team2": "Poornima University",
-      "team2Logo": "",
-      "date": "2026-08-16T18:22:28.437Z",
-      "venue": "ACEIT Indoor Court",
-      "status": "completed",
-      "winner": "team1",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogm22",
-      "team1": "ACEIT Spikers",
-      "team1Logo": "",
-      "opp": "JECRC Titans",
-      "team2": "JECRC Titans",
-      "team2Logo": "",
-      "date": "2026-08-23T18:22:28.437Z",
-      "venue": "JECRC Arena, Jaipur",
-      "status": "completed",
-      "winner": "team1",
-      "isLive": false,
-      "sets": "1 - 0",
-      "setScores": [
-        {
-          "set": 1,
-          "team1": 2,
-          "team2": 0
-        }
-      ],
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogm23",
-      "team1": "ACEIT Spikers",
-      "team1Logo": "",
-      "opp": "Manipal Smashers",
-      "team2": "Manipal Smashers",
-      "team2Logo": "",
-      "date": "2026-09-01T18:22:28.437Z",
-      "venue": "ACEIT Indoor Court",
-      "status": "upcoming",
-      "winner": "none",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogm24",
-      "team1": "ACEIT Spikers",
-      "team1Logo": "",
-      "opp": "MNIT Warriors",
-      "team2": "MNIT Warriors",
-      "team2Logo": "",
-      "date": "2026-09-10T18:22:28.437Z",
-      "venue": "MNIT Sports Complex",
-      "status": "upcoming",
-      "winner": "none",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmt77sm8544",
-      "team1": "ACEIT Spikers",
-      "team1Logo": "",
-      "opp": "LPU Strikers",
-      "team2Logo": "",
-      "date": "2026-08-25T12:30:00.000Z",
-      "venue": "LPU Ground",
-      "status": "completed",
-      "winner": "team1",
-      "team2": "LPU Strikers",
-      "clubId": "spikers"
-    },
     {
       "team1": "ACEIT Strikers",
       "team2": "SKIT Football Club",
@@ -1042,6 +979,91 @@
       "clubId": "kabaddi",
       "id": "id_mtak427lnsg4g",
       "winner": "none"
+    },
+    {
+      "id": "idmsozmogl21",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "Poornima University",
+      "team2": "Poornima University",
+      "team2Logo": "",
+      "date": "2026-08-16T18:22:28.437Z",
+      "venue": "ACEIT Indoor Court",
+      "status": "completed",
+      "winner": "team1",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm22",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "JECRC Titans",
+      "team2": "JECRC Titans",
+      "team2Logo": "",
+      "date": "2026-08-23T18:22:28.437Z",
+      "venue": "JECRC Arena, Jaipur",
+      "status": "completed",
+      "winner": "team1",
+      "isLive": false,
+      "sets": "1 - 0",
+      "setScores": [
+        {
+          "set": 1,
+          "team1": 2,
+          "team2": 0
+        }
+      ],
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm23",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "Manipal Smashers",
+      "team2": "Manipal Smashers",
+      "team2Logo": "",
+      "date": "2026-09-01T18:22:28.437Z",
+      "venue": "ACEIT Indoor Court",
+      "status": "upcoming",
+      "winner": "none",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmsozmogm24",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "MNIT Warriors",
+      "team2": "MNIT Warriors",
+      "team2Logo": "",
+      "date": "2026-09-10T18:22:28.437Z",
+      "venue": "MNIT Sports Complex",
+      "status": "upcoming",
+      "winner": "none",
+      "clubId": "spikers"
+    },
+    {
+      "id": "idmt77sm8544",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "LPU Strikers",
+      "team2Logo": "",
+      "date": "2026-08-25T12:30:00.000Z",
+      "venue": "LPU Ground",
+      "status": "completed",
+      "winner": "team1",
+      "team2": "LPU Strikers",
+      "clubId": "spikers"
+    },
+    {
+      "team1": "ACEIT Kabaddi",
+      "team2": "MNIT Raiders",
+      "opp": "MNIT Raiders",
+      "date": "2026-10-15",
+      "venue": "ACEIT Outdoor Kabaddi Arena",
+      "status": "upcoming",
+      "clubId": "kabaddi",
+      "id": "id_mtakxzpddf5e6",
+      "winner": "none"
     }
   ],
   "news": [
@@ -1130,6 +1152,30 @@
   ],
   "stats": [
     {
+      "id": "idmtafeg5c1",
+      "label": "Matches",
+      "target": 0,
+      "clubId": "cricket"
+    },
+    {
+      "id": "idmtafeg5c2",
+      "label": "Wins",
+      "target": 0,
+      "clubId": "cricket"
+    },
+    {
+      "id": "idmtafeg5c3",
+      "label": "Athletes",
+      "target": 0,
+      "clubId": "cricket"
+    },
+    {
+      "id": "idmtafeg5c4",
+      "label": "Coaches",
+      "target": 2,
+      "clubId": "cricket"
+    },
+    {
       "id": "idmsozmogm37",
       "label": "Championships",
       "target": 7,
@@ -1164,59 +1210,9 @@
       "label": "Years Active",
       "target": 6,
       "clubId": "spikers"
-    },
-    {
-      "id": "idmtafeg5c1",
-      "label": "Matches",
-      "target": 0,
-      "clubId": "cricket"
-    },
-    {
-      "id": "idmtafeg5c2",
-      "label": "Wins",
-      "target": 0,
-      "clubId": "cricket"
-    },
-    {
-      "id": "idmtafeg5c3",
-      "label": "Athletes",
-      "target": 0,
-      "clubId": "cricket"
-    },
-    {
-      "id": "idmtafeg5c4",
-      "label": "Coaches",
-      "target": 2,
-      "clubId": "cricket"
     }
   ],
   "events": [
-    {
-      "id": "ev_spikers_1",
-      "title": "ACEIT Inter-College Volleyball Cup 2026",
-      "description": "Annual inter-college championship featuring top collegiate teams across Rajasthan.",
-      "date": "25 Sep 2026",
-      "time": "09:00 AM - 06:00 PM",
-      "venue": "ACEIT Sports Complex - Main Indoor Court",
-      "poster": "",
-      "regBtnText": "Register Now",
-      "regUrl": "https://tally.so/r/RGeGvd",
-      "regEnabled": true,
-      "clubId": "spikers"
-    },
-    {
-      "id": "ev_spikers_2",
-      "title": "National Sports Day Volleyball Showcase",
-      "description": "Special exhibition matches, skills challenges, and freshmen recruitment trials.",
-      "date": "29 Aug 2026",
-      "time": "05:00 PM - 08:00 PM",
-      "venue": "Outdoor Volleyball Arena",
-      "poster": "",
-      "regBtnText": "RSVP Online",
-      "regUrl": "https://tally.so/r/RGeGvd",
-      "regEnabled": true,
-      "clubId": "spikers"
-    },
     {
       "title": "ACEIT Inter-College Football League 2026",
       "description": "Annual football championship hosted at ACEIT football grounds.",
@@ -1302,6 +1298,32 @@
       "regUrl": "",
       "regEnabled": true,
       "createdAt": "2026-08-25T18:11:38.203Z"
+    },
+    {
+      "id": "ev_spikers_1",
+      "title": "ACEIT Inter-College Volleyball Cup 2026",
+      "description": "Annual inter-college championship featuring top collegiate teams across Rajasthan.",
+      "date": "25 Sep 2026",
+      "time": "09:00 AM - 06:00 PM",
+      "venue": "ACEIT Sports Complex - Main Indoor Court",
+      "poster": "",
+      "regBtnText": "Register Now",
+      "regUrl": "https://tally.so/r/RGeGvd",
+      "regEnabled": true,
+      "clubId": "spikers"
+    },
+    {
+      "id": "ev_spikers_2",
+      "title": "National Sports Day Volleyball Showcase",
+      "description": "Special exhibition matches, skills challenges, and freshmen recruitment trials.",
+      "date": "29 Aug 2026",
+      "time": "05:00 PM - 08:00 PM",
+      "venue": "Outdoor Volleyball Arena",
+      "poster": "",
+      "regBtnText": "RSVP Online",
+      "regUrl": "https://tally.so/r/RGeGvd",
+      "regEnabled": true,
+      "clubId": "spikers"
     }
   ],
   "about": {
@@ -1438,42 +1460,6 @@
   ],
   "slideshow": [
     {
-      "id": "slide_1",
-      "title": "WINNER TEAM SPIKERS 2.0",
-      "date": "AI&DS 3RD YEAR TEAM · Champions",
-      "image": "banner1.jpg",
-      "link": "#matches",
-      "btnText": "View Highlights",
-      "clubId": "spikers"
-    },
-    {
-      "id": "slide_2",
-      "title": "Championship Season 2026",
-      "date": "Upcoming Tournament · 15 Sept 2026",
-      "image": "banner2.jpg",
-      "link": "#matches",
-      "btnText": "View Match Schedule",
-      "clubId": "spikers"
-    },
-    {
-      "id": "slide_3",
-      "title": "Intense Team Training & Practice",
-      "date": "Daily Practice · Arya Campus Grounds",
-      "image": "banner1.jpg",
-      "link": "#training",
-      "btnText": "View Timetable",
-      "clubId": "spikers"
-    },
-    {
-      "id": "slide_4",
-      "title": "ACEIT Inter-College Volleyball Cup",
-      "date": "Main Indoor Court · 25 Sep 2026",
-      "image": "banner2.jpg",
-      "link": "#events",
-      "btnText": "Explore Event",
-      "clubId": "spikers"
-    },
-    {
       "title": "ACEIT Dunkers Championship Final 2026",
       "date": "Hardcourt Arena · 15 Oct 2026",
       "image": "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1200",
@@ -1598,6 +1584,42 @@
       "btnText": "View Fixtures",
       "clubId": "kabaddi",
       "id": "id_mtaihganril8y"
+    },
+    {
+      "id": "slide_1",
+      "title": "WINNER TEAM SPIKERS 2.0",
+      "date": "AI&DS 3RD YEAR TEAM · Champions",
+      "image": "banner1.jpg",
+      "link": "#matches",
+      "btnText": "View Highlights",
+      "clubId": "spikers"
+    },
+    {
+      "id": "slide_2",
+      "title": "Championship Season 2026",
+      "date": "Upcoming Tournament · 15 Sept 2026",
+      "image": "banner2.jpg",
+      "link": "#matches",
+      "btnText": "View Match Schedule",
+      "clubId": "spikers"
+    },
+    {
+      "id": "slide_3",
+      "title": "Intense Team Training & Practice",
+      "date": "Daily Practice · Arya Campus Grounds",
+      "image": "banner1.jpg",
+      "link": "#training",
+      "btnText": "View Timetable",
+      "clubId": "spikers"
+    },
+    {
+      "id": "slide_4",
+      "title": "ACEIT Inter-College Volleyball Cup",
+      "date": "Main Indoor Court · 25 Sep 2026",
+      "image": "banner2.jpg",
+      "link": "#events",
+      "btnText": "Explore Event",
+      "clubId": "spikers"
     }
   ],
   "customCategories": {
