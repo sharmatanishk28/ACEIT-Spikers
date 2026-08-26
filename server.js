@@ -1646,9 +1646,11 @@ const handleSignup = async (req, res) => {
     const cleanJersey = jerseyNo ? String(jerseyNo).trim() : '';
     const cleanHeight = height ? String(height).trim() : '';
     const cleanSport = sport ? String(sport).trim() : 'Volleyball';
+    const initialClub = (req.body.clubId || (Array.isArray(clubs) && clubs.length > 0 ? clubs[0] : 'spikers')).toLowerCase().trim();
     const userClubs = Array.isArray(clubs) && clubs.length > 0
       ? clubs.map(c => String(c).toLowerCase().trim())
-      : ['spikers'];
+      : [initialClub];
+    if (!userClubs.includes(initialClub)) userClubs.unshift(initialClub);
 
     if (cleanUsername.length < 3) {
       return res.status(400).json({ success: false, message: 'Username must be at least 3 characters long.' });

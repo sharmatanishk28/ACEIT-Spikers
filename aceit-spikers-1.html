@@ -5166,6 +5166,19 @@
           </div>
         </div>
 
+        <div style="margin-bottom:10px;">
+          <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Primary Sports Club *</label>
+          <select id="signUpClub" style="width:100%;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--font-body);background:var(--bg-card);color:var(--charcoal);font-size:13px;font-weight:600;">
+            <option value="spikers">ACEIT Spikers (Volleyball)</option>
+            <option value="dunkers">ACEIT Dunkers (Basketball)</option>
+            <option value="strikers-fc">ACEIT Strikers FC (Football)</option>
+            <option value="kabaddi">ACEIT Kabaddi (Kabaddi)</option>
+            <option value="shuttlers">ACEIT Shuttlers (Badminton)</option>
+            <option value="cricket">ACEIT Cricket (Cricket)</option>
+          </select>
+          <div style="font-size:11px;color:var(--charcoal-soft);margin-top:3px;">⚡ Universal Student ID: You can join or follow all other clubs with this single account anytime!</div>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
           <div>
             <label style="display:block;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;color:var(--charcoal-soft);margin-bottom:4px;">Branch / Dept *</label>
@@ -7928,7 +7941,27 @@
         if (uInput) uInput.value = '';
         if (pInput) pInput.value = '';
         document.getElementById('adminPinMsg').innerHTML = 'Enter your username or email and password to log in.';
-        document.getElementById('signUpMsg').innerHTML = 'Register your student sports profile for ACEIT clubs.';
+        document.getElementById('signUpMsg').innerHTML = 'Register your universal student sports profile for all ACEIT clubs.';
+
+        var clubSelect = document.getElementById('signUpClub');
+        if (clubSelect) {
+          var activeC = getActiveClubId().toLowerCase();
+          var list = (systemClubs && systemClubs.length) ? systemClubs : [
+            { slug: 'spikers', name: 'ACEIT Spikers', sport: 'Volleyball' },
+            { slug: 'dunkers', name: 'ACEIT Dunkers', sport: 'Basketball' },
+            { slug: 'strikers-fc', name: 'ACEIT Strikers FC', sport: 'Football' },
+            { slug: 'kabaddi', name: 'ACEIT Kabaddi', sport: 'Kabaddi' },
+            { slug: 'shuttlers', name: 'ACEIT Shuttlers', sport: 'Badminton' },
+            { slug: 'cricket', name: 'ACEIT Cricket', sport: 'Cricket' }
+          ];
+          var optHtml = '';
+          list.forEach(function (c) {
+            var val = (c.slug || c.clubId || c._id || c.id || '').toLowerCase();
+            var isSel = (val === activeC) || (!optHtml && val === 'spikers');
+            optHtml += '<option value="' + val + '"' + (isSel ? ' selected' : '') + '>' + esc(c.name) + ' (' + esc(c.sport || 'Sports') + ')</option>';
+          });
+          clubSelect.innerHTML = optHtml;
+        }
 
         adminPinGate.classList.add('open');
         if ((initialTab || 'signin') === 'signin') {
@@ -8005,6 +8038,7 @@
         var mobile = (document.getElementById('signUpMobile').value || '').trim();
         var password = (document.getElementById('signUpPassword').value || '').trim();
         var photo = signUpPhotoData ? signUpPhotoData.value : '';
+        var primaryClub = (document.getElementById('signUpClub') ? document.getElementById('signUpClub').value : getActiveClubId()) || 'spikers';
 
         var msgEl = document.getElementById('signUpMsg');
 
@@ -8021,7 +8055,7 @@
         var branch = (document.getElementById('signUpBranch') ? document.getElementById('signUpBranch').value : 'Computer Science & Engineering');
         var year = (document.getElementById('signUpYear') ? document.getElementById('signUpYear').value : '3rd Year');
 
-        msgEl.innerHTML = '<span style="color:var(--amber);">Creating account...</span>';
+        msgEl.innerHTML = '<span style="color:var(--amber);">Creating universal student account...</span>';
 
         authFetch(API_BASE + '/auth/signup', {
           method: 'POST',
@@ -8035,7 +8069,9 @@
             password: password,
             photo: photo,
             branch: branch,
-            year: year
+            year: year,
+            clubId: primaryClub,
+            clubs: [primaryClub]
           })
         })
           .then(function (r) { return r.json(); })
@@ -8826,9 +8862,10 @@
               '<b style="font-size:14px;color:var(--charcoal);display:block;">' + esc(club.name) + ' <span style="font-weight:normal;color:var(--amber);font-size:12px;">(' + esc(club.sport || 'Sports') + ')</span></b>' +
               '<span style="font-size:12px;color:var(--charcoal-soft);">' + esc(club.description || 'College Sports Club') + '</span>' +
               '</div>' +
-              '<div>' +
+              '<div style="display:flex;gap:8px;align-items:center;">' +
+              '<a href="/?club=' + encodeURIComponent(cSlug) + '" class="btn btn-outline" style="font-size:11px;padding:5px 10px;">🌐 Visit Page</a>' +
               (isJoined
-                ? '<button class="btn btn-outline" data-leave-club="' + esc(cSlug) + '" style="font-size:12px;padding:5px 12px;color:#27AE60;border-color:#27AE60;">✓ Joined (Leave)</button>'
+                ? '<button class="btn btn-outline" data-leave-club="' + esc(cSlug) + '" style="font-size:12px;padding:5px 12px;color:#27AE60;border-color:#27AE60;">✓ Joined</button>'
                 : '<button class="btn btn-primary" data-join-club="' + esc(cSlug) + '" style="font-size:12px;padding:5px 14px;">+ Join Club</button>') +
               '</div>';
 
