@@ -2577,60 +2577,80 @@
     }
 
     /* ---------- Public Sports Clubs Directory & Horizontal Banners ---------- */
+    /* ============ CLUBS MOTION SLIDESHOW / CAROUSEL ============ */
     .sports-clubs-section {
       background: var(--cream-2);
       padding: 70px 0;
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
       position: relative;
+      overflow: hidden;
     }
-    .clubs-banner-grid {
+    .clubs-showcase-viewport {
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+      padding: 10px 0 16px 0;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .clubs-showcase-viewport:active {
+      cursor: grabbing;
+    }
+    .clubs-showcase-track {
       display: flex;
-      flex-direction: column;
-      gap: 20px;
+      gap: 22px;
+      width: max-content;
+      will-change: transform;
+      transition: transform 0.4s ease-out;
     }
     .club-banner-card {
+      width: 580px;
+      max-width: 88vw;
+      flex-shrink: 0;
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px 28px;
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 22px 26px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 24px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+      gap: 20px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
       transition: transform .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease);
       position: relative;
       overflow: hidden;
+      background-size: cover;
+      background-position: center;
     }
-    .club-banner-card::before {
+    .club-banner-card::after {
       content: '';
       position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 5px;
-      background: linear-gradient(180deg, var(--gold), var(--amber));
-      opacity: 0;
-      transition: opacity .3s var(--ease);
+      inset: 0;
+      background: linear-gradient(90deg, var(--bg-card) 0%, var(--bg-card) 72%, rgba(255, 255, 255, 0.85) 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
+    [data-theme="dark"] .club-banner-card::after {
+      background: linear-gradient(90deg, var(--bg-card) 0%, var(--bg-card) 75%, rgba(18, 18, 18, 0.9) 100%);
+    }
+    .club-banner-card > * {
+      position: relative;
+      z-index: 2;
     }
     .club-banner-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-      border-color: rgba(245, 166, 35, 0.4);
-    }
-    .club-banner-card:hover::before,
-    .club-banner-card.active-club-card::before {
-      opacity: 1;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.1);
     }
     .club-banner-card.active-club-card {
       border-color: var(--gold);
-      box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.25);
+      box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.35);
     }
     .club-banner-left {
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 18px;
       flex: 1;
       min-width: 0;
     }
@@ -2660,19 +2680,19 @@
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
     .club-banner-title {
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 800;
       color: var(--charcoal);
       margin: 0;
       letter-spacing: -0.3px;
     }
     .club-banner-desc {
-      font-size: 13.5px;
+      font-size: 13px;
       color: var(--charcoal-soft);
-      line-height: 1.5;
+      line-height: 1.45;
       margin: 0;
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -2686,15 +2706,34 @@
       flex-shrink: 0;
     }
     .club-banner-btn-visit {
-      padding: 10px 22px;
-      font-size: 13px;
+      padding: 9px 18px;
+      font-size: 12px;
       font-weight: 700;
       border-radius: 8px;
       letter-spacing: 0.5px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       text-transform: uppercase;
+    }
+    .clubs-showcase-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .clubs-showcase-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: all .3s var(--ease);
+      cursor: pointer;
+    }
+    .clubs-showcase-dot.active {
+      width: 24px;
+      border-radius: 4px;
+      background: var(--amber);
     }
     .empty-state-roster {
       grid-column: 1 / -1;
@@ -4678,12 +4717,17 @@
   <!-- ============ COLLEGE SPORTS CLUBS ============ -->
   <section id="clubs" class="sports-clubs-section">
     <div class="container">
-      <div class="reveal" style="text-align:center;margin-bottom:36px;">
-        <span class="eyebrow">College Athletics</span>
+      <div class="reveal" style="text-align:center;margin-bottom:30px;">
+        <span class="eyebrow"><span class="pulse-dot"></span>College Athletics</span>
         <h2 class="section-title">Explore <span class="gradient-text">Sports Clubs</span></h2>
         <p class="section-sub" style="margin:0 auto;max-width:680px;">Discover official college sports clubs across campus. Follow your favorite clubs or visit their dedicated public pages to view rosters, matches, and season updates.</p>
       </div>
-      <div class="clubs-banner-grid" id="publicClubsGrid"></div>
+      
+      <!-- Continuous Motion Slideshow Carousel of All Clubs -->
+      <div class="clubs-showcase-viewport" id="clubsShowcaseViewport">
+        <div class="clubs-showcase-track" id="clubsShowcaseTrack"></div>
+      </div>
+      <div class="clubs-showcase-dots" id="clubsShowcaseDots"></div>
     </div>
   </section>
 
@@ -6699,61 +6743,128 @@
           var raw = localStorage.getItem(SYSTEM_CLUBS_KEY);
           if (raw) {
             var parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            if (Array.isArray(parsed) && parsed.length >= 4) return parsed;
           }
         } catch (e) {}
         return [
-          { clubId: 'spikers', slug: 'spikers', name: 'ACEIT Spikers', sport: 'Volleyball', description: 'The official volleyball club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.', active: true, logo: '' },
-          { clubId: 'kabaddi', slug: 'kabaddi', name: 'ACEIT Kabaddi', sport: 'Kabaddi', description: 'Official Kabaddi Club of Arya College of Engineering & IT. Unstoppable raid power, impenetrable defense, and collegiate champions.', active: true, logo: '' }
+          { clubId: 'spikers', slug: 'spikers', name: 'ACEIT Spikers', sport: 'Volleyball', coverImage: 'banner1.jpg', description: 'The official volleyball club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.', active: true, logo: '' },
+          { clubId: 'kabaddi', slug: 'kabaddi', name: 'ACEIT Kabaddi', sport: 'Kabaddi', coverImage: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=1200&q=80', description: 'Official Kabaddi Club of Arya College of Engineering & IT. Unstoppable raid power, impenetrable defense, and collegiate champions.', active: true, logo: '' },
+          { clubId: 'dunkers', slug: 'dunkers', name: 'ACEIT Dunkers', sport: 'Basketball', coverImage: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80', description: 'Official Basketball Club of ACEIT. Fast-break offenses, lockdown defense, and soaring collegiate hoopers.', active: true, logo: '' },
+          { clubId: 'strikers-fc', slug: 'strikers-fc', name: 'ACEIT Strikers FC', sport: 'Football', coverImage: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80', description: 'Official Football Club of ACEIT. Tactical mastery, relentless stamina, and championship collegiate soccer.', active: true, logo: '' },
+          { clubId: 'shuttlers', slug: 'shuttlers', name: 'ACEIT Shuttlers', sport: 'Badminton', coverImage: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=80', description: 'Official Badminton Club of ACEIT. Lightning reflexes, precision smashes, and tournament agility.', active: true, logo: '' },
+          { clubId: 'cricket', slug: 'cricket', name: 'ACEIT Cricket', sport: 'Cricket', coverImage: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80', description: 'Official Cricket Club of ACEIT. Powerful strokeplay, lethal bowling spells, and collegiate derby champions.', active: true, logo: '' }
         ];
       }
 
+      var clubsSlideshowIndex = 0;
+      var clubsSlideshowTimer = null;
+      var clubsSlideshowIsPaused = false;
+      var _lastRenderedClubsHash = '';
+
       function renderPublicClubs() {
-        var grid = document.getElementById('publicClubsGrid');
-        if (!grid) return;
+        var viewport = document.getElementById('clubsShowcaseViewport');
+        var track = document.getElementById('clubsShowcaseTrack');
+        var dotsContainer = document.getElementById('clubsShowcaseDots');
+        if (!viewport || !track) {
+          // Fallback if legacy grid element exists
+          var legacyGrid = document.getElementById('publicClubsGrid');
+          if (legacyGrid) legacyGrid.id = 'clubsShowcaseTrack';
+        }
+
+        viewport = document.getElementById('clubsShowcaseViewport');
+        track = document.getElementById('clubsShowcaseTrack');
+        if (!track) return;
 
         function drawClubs(clubs) {
           if (!Array.isArray(clubs) || clubs.length === 0) {
             clubs = getCachedSystemClubs();
           }
-          grid.innerHTML = '';
-          var activeClubId = getActiveClubId();
 
-          clubs.forEach(function (club) {
+          var hash = clubs.map(function (c) { return (c.slug || c.clubId || '') + '_' + (c.name || ''); }).join('|');
+          if (hash === _lastRenderedClubsHash && track.children.length > 0) {
+            return; // Already cleanly rendered, do not disrupt ongoing animation
+          }
+          _lastRenderedClubsHash = hash;
+
+          var activeClubId = getActiveClubId();
+          var cardHtml = '';
+
+          // Duplicate items for continuous seamless loop right-to-left
+          var repeatCount = clubs.length < 4 ? 3 : 2;
+          var displayClubs = [];
+          for (var r = 0; r < repeatCount; r++) {
+            displayClubs = displayClubs.concat(clubs);
+          }
+
+          displayClubs.forEach(function (club, idx) {
+            var origIndex = idx % clubs.length;
             var cId = club.slug || club.clubId || String(club._id);
             var isCurrent = (cId === activeClubId || club.slug === activeClubId || (activeClubId === 'spikers' && (cId === 'spikers' || cId === 'c_spikers')));
-            var card = document.createElement('div');
-            card.className = 'club-banner-card reveal visible' + (isCurrent ? ' active-club-card' : '');
             var cTheme = getSportTheme(club.sport, club);
-            card.style.borderLeft = '4px solid ' + cTheme.primary;
             var sportIcon = getSportIcon(club.sport);
             var crestStyle = club.logo ? ('background-image:url(\'' + esc(club.logo) + '\');color:transparent;') : '';
             var crestContent = club.logo ? '' : sportIcon;
             var clubUrl = (cId === 'spikers' || cId === 'c_spikers') ? '/?club=spikers' : ('/?club=' + encodeURIComponent(club.slug || cId));
+            
+            var bgStyle = '';
+            if (club.coverImage) {
+              bgStyle = 'background-image:url(\'' + esc(club.coverImage) + '\');';
+            } else {
+              var sThemes = {
+                Volleyball: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=1200&q=80',
+                Basketball: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80',
+                Football: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80',
+                Kabaddi: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=1200&q=80',
+                Badminton: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=80',
+                Cricket: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80'
+              };
+              var fallbackCover = sThemes[club.sport] || 'banner1.jpg';
+              bgStyle = 'background-image:url(\'' + fallbackCover + '\');';
+            }
 
-            card.innerHTML = 
-              '<div class="club-banner-left">' +
-                '<div class="club-banner-crest" style="' + crestStyle + '">' + crestContent + '</div>' +
-                '<div class="club-banner-content">' +
-                  '<div class="club-banner-title-row">' +
-                    '<h3 class="club-banner-title">' + esc(club.name) + '</h3>' +
-                    '<span class="pill" style="font-size:11px;padding:3px 10px;background:linear-gradient(135deg,' + cTheme.primary + ',' + cTheme.accent + ');color:#fff;font-weight:700;box-shadow:0 2px 8px ' + cTheme.primary + '44;">' + sportIcon + ' ' + esc(club.sport || 'Sport') + '</span>' +
-                    (isCurrent ? ' <span class="pill" style="font-size:10px;padding:3px 8px;background:#27AE60;color:#fff;">Active Club Page</span>' : '') +
+            cardHtml += 
+              '<div class="club-banner-card' + (isCurrent ? ' active-club-card' : '') + '" style="' + bgStyle + 'border-left:5px solid ' + cTheme.primary + ';" data-club-index="' + origIndex + '">' +
+                '<div class="club-banner-left">' +
+                  '<div class="club-banner-crest" style="' + crestStyle + '">' + crestContent + '</div>' +
+                  '<div class="club-banner-content">' +
+                    '<div class="club-banner-title-row">' +
+                      '<h3 class="club-banner-title">' + esc(club.name) + '</h3>' +
+                      '<span class="pill" style="font-size:11px;padding:3px 10px;background:linear-gradient(135deg,' + cTheme.primary + ',' + cTheme.accent + ');color:#fff;font-weight:700;box-shadow:0 2px 8px ' + cTheme.primary + '44;">' + sportIcon + ' ' + esc(club.sport || 'Sport') + '</span>' +
+                      (isCurrent ? ' <span class="pill" style="font-size:10px;padding:3px 8px;background:#27AE60;color:#fff;">Active Club Page</span>' : '') +
+                    '</div>' +
+                    '<p class="club-banner-desc">' + esc(club.description || ('Official ' + (club.sport || 'sports') + ' club of Arya College of Engineering & IT.')) + '</p>' +
                   '</div>' +
-                  '<p class="club-banner-desc">' + esc(club.description || ('Official ' + (club.sport || 'sports') + ' club of Arya College of Engineering & IT.')) + '</p>' +
                 '</div>' +
-              '</div>' +
-              '<div class="club-banner-actions">' +
-                '<a href="' + esc(clubUrl) + '" class="btn btn-primary club-banner-btn-visit" style="background:linear-gradient(135deg,' + cTheme.primary + ',' + cTheme.accent + ');color:#fff;box-shadow:0 4px 14px ' + cTheme.primary + '55;">Visit Club <span style="font-size:14px;margin-left:2px;">›</span></a>' +
-                '<button class="btn btn-outline" data-toggle-club="' + esc(cId) + '" style="font-size:12px;padding:9px 14px;white-space:nowrap;">' + (club.isFollowing ? '✓ Following' : '+ Follow') + '</button>' +
+                '<div class="club-banner-actions">' +
+                  '<a href="' + esc(clubUrl) + '" class="btn btn-primary club-banner-btn-visit" style="background:linear-gradient(135deg,' + cTheme.primary + ',' + cTheme.accent + ');color:#fff;box-shadow:0 4px 14px ' + cTheme.primary + '55;">Visit Club <span style="font-size:14px;margin-left:2px;">›</span></a>' +
+                  '<button class="btn btn-outline" data-toggle-club="' + esc(cId) + '" style="font-size:12px;padding:9px 14px;white-space:nowrap;background:var(--bg-card);">' + (club.isFollowing ? '✓ Following' : '+ Follow') + '</button>' +
+                '</div>' +
               '</div>';
-
-            grid.appendChild(card);
           });
 
-          grid.querySelectorAll('[data-toggle-club]').forEach(function (btn) {
+          track.innerHTML = cardHtml;
+
+          // Render Dots
+          if (dotsContainer) {
+            var dotsHtml = '';
+            clubs.forEach(function (_, i) {
+              dotsHtml += '<span class="clubs-showcase-dot' + (i === 0 ? ' active' : '') + '" data-goto="' + i + '"></span>';
+            });
+            dotsContainer.innerHTML = dotsHtml;
+
+            dotsContainer.querySelectorAll('.clubs-showcase-dot').forEach(function (dot) {
+              dot.addEventListener('click', function () {
+                var targetIdx = parseInt(dot.getAttribute('data-goto'), 10) || 0;
+                clubsSlideshowIndex = targetIdx;
+                updateClubsSliderPosition(true);
+              });
+            });
+          }
+
+          track.querySelectorAll('[data-toggle-club]').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
               e.preventDefault();
+              e.stopPropagation();
               var targetId = btn.getAttribute('data-toggle-club');
               authFetch(API_BASE + '/clubs/' + encodeURIComponent(targetId) + '/toggle-follow', { method: 'POST' })
                 .then(function (r) { return r.json(); })
@@ -6768,6 +6879,91 @@
                 })
                 .catch(function () { openAuthModal('signin'); });
             });
+          });
+
+          initClubsSlideshowMotion(clubs.length);
+        }
+
+        function updateClubsSliderPosition(animate) {
+          var firstCard = track.querySelector('.club-banner-card');
+          if (!firstCard) return;
+          var cardWidth = firstCard.offsetWidth + 22; // width + gap
+          var offset = clubsSlideshowIndex * cardWidth;
+          track.style.transition = animate ? 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)' : 'none';
+          track.style.transform = 'translateX(-' + offset + 'px)';
+
+          if (dotsContainer) {
+            var dots = dotsContainer.querySelectorAll('.clubs-showcase-dot');
+            var origIndex = clubsSlideshowIndex % (dots.length || 1);
+            dots.forEach(function (d, i) {
+              d.classList.toggle('active', i === origIndex);
+            });
+          }
+        }
+
+        function initClubsSlideshowMotion(numOriginalClubs) {
+          if (clubsSlideshowTimer) clearInterval(clubsSlideshowTimer);
+          if (!viewport) return;
+
+          // Auto-scroll loop
+          clubsSlideshowTimer = setInterval(function () {
+            if (clubsSlideshowIsPaused) return;
+            var totalCards = track.querySelectorAll('.club-banner-card').length;
+            if (totalCards === 0) return;
+
+            clubsSlideshowIndex++;
+            if (clubsSlideshowIndex >= totalCards - 1) {
+              // Seamless reset
+              clubsSlideshowIndex = 0;
+              updateClubsSliderPosition(false);
+              setTimeout(function () {
+                clubsSlideshowIndex = 1;
+                updateClubsSliderPosition(true);
+              }, 50);
+            } else {
+              updateClubsSliderPosition(true);
+            }
+          }, 3200);
+
+          // Interactive Pause on Tap, Touch, Click or Hover
+          viewport.onmouseenter = function () { clubsSlideshowIsPaused = true; };
+          viewport.onmouseleave = function () { clubsSlideshowIsPaused = false; };
+          
+          viewport.ontouchstart = function () { clubsSlideshowIsPaused = true; };
+          viewport.ontouchend = function () {
+            setTimeout(function () { clubsSlideshowIsPaused = false; }, 2500);
+          };
+
+          // Drag / Swipe Gesture support
+          var isDragging = false;
+          var startX = 0;
+          var currentTranslate = 0;
+
+          viewport.onpointerdown = function (e) {
+            isDragging = true;
+            startX = e.pageX;
+            clubsSlideshowIsPaused = true;
+          };
+
+          window.addEventListener('pointermove', function (e) {
+            if (!isDragging) return;
+            var diff = e.pageX - startX;
+            if (Math.abs(diff) > 40) {
+              if (diff < 0) {
+                clubsSlideshowIndex++;
+              } else if (clubsSlideshowIndex > 0) {
+                clubsSlideshowIndex--;
+              }
+              updateClubsSliderPosition(true);
+              isDragging = false;
+            }
+          });
+
+          window.addEventListener('pointerup', function () {
+            if (isDragging) {
+              isDragging = false;
+              setTimeout(function () { clubsSlideshowIsPaused = false; }, 2000);
+            }
           });
         }
 
