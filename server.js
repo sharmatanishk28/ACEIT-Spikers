@@ -23,6 +23,7 @@ let localClubs = [
     sport: 'Volleyball',
     slug: 'spikers',
     logo: 'spikers-logo.png',
+    loaderLogo: 'volleyball-loader.png',
     coverImage: 'banner1.jpg',
     description: 'The official volleyball club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.',
     themeColor: '#F5A623',
@@ -280,13 +281,14 @@ const clubItemSchema = new mongoose.Schema({
   sport: { type: String, required: true, trim: true },
   slug: { type: String, required: true, lowercase: true, trim: true },
   logo: { type: String, default: '' },
+  loaderLogo: { type: String, default: '' },
   coverImage: { type: String, default: '' },
   description: { type: String, default: '' },
   themeColor: { type: String, default: '' },
   accentColor: { type: String, default: '' },
   active: { type: Boolean, default: true },
   status: { type: String, default: 'active' }
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 const Club = mongoose.models.Club || mongoose.model('Club', clubItemSchema);
 
@@ -755,7 +757,7 @@ function readLocalFileDB() {
         parsed.clubs.forEach(pc => {
           const idx = localClubs.findIndex(lc => (lc.slug && pc.slug && lc.slug.toLowerCase() === pc.slug.toLowerCase()) || (lc.clubId && pc.clubId && lc.clubId.toLowerCase() === pc.clubId.toLowerCase()));
           if (idx !== -1) {
-            localClubs[idx] = pc;
+            localClubs[idx] = Object.assign({}, localClubs[idx], pc);
           } else {
             localClubs.push(pc);
           }
@@ -2483,7 +2485,7 @@ app.get('/api/clubs/:id', async (req, res) => {
 // 5. Clubs: POST Create
 app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.create'), async (req, res) => {
   try {
-    const { clubId, name, sport, slug, logo, coverImage, description, themeColor, accentColor, active, status } = req.body;
+    const { clubId, name, sport, slug, logo, loaderLogo, coverImage, description, themeColor, accentColor, active, status } = req.body;
     if (!name || !sport) {
       return res.status(400).json({ success: false, message: 'Club Name and Sport are required' });
     }
@@ -2506,6 +2508,7 @@ app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.c
         sport: String(sport).trim(),
         slug: cleanSlug,
         logo: logo || '',
+        loaderLogo: loaderLogo || '',
         coverImage: coverImage || '',
         description: description || '',
         themeColor: themeColor || '',
@@ -2515,6 +2518,7 @@ app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.c
         createdAt: new Date()
       };
       localClubs.unshift(newClub);
+      writeLocalFileDB(readLocalFileDB());
       return res.json({ success: true, club: newClub, message: 'Club created successfully' });
     }
 
@@ -2529,6 +2533,7 @@ app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.c
       sport: String(sport).trim(),
       slug: cleanSlug,
       logo: logo || '',
+      loaderLogo: loaderLogo || '',
       coverImage: coverImage || '',
       description: description || '',
       themeColor: themeColor || '',
@@ -2547,7 +2552,7 @@ app.post('/api/clubs', authenticateUser, requireAuth, requirePermission('clubs.c
 app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('clubs.edit'), requireClubAccess, async (req, res) => {
   try {
     const { id } = req.params;
-    const { clubId, name, sport, slug, logo, coverImage, description, themeColor, accentColor, active, status } = req.body;
+    const { clubId, name, sport, slug, logo, loaderLogo, coverImage, description, themeColor, accentColor, active, status } = req.body;
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
@@ -2558,12 +2563,14 @@ app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('club
       if (clubId) club.clubId = String(clubId).toLowerCase().trim();
       if (slug) club.slug = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       if (logo !== undefined) club.logo = logo;
+      if (loaderLogo !== undefined) club.loaderLogo = loaderLogo;
       if (coverImage !== undefined) club.coverImage = coverImage;
       if (description !== undefined) club.description = description;
       if (themeColor !== undefined) club.themeColor = themeColor;
       if (accentColor !== undefined) club.accentColor = accentColor;
       if (active !== undefined) club.active = !!active;
       if (status !== undefined) club.status = status;
+      writeLocalFileDB(readLocalFileDB());
       return res.json({ success: true, club, message: 'Club updated successfully' });
     }
 
@@ -2578,32 +2585,22 @@ app.put('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('club
 
     if (slug) {
       const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const duplicate = await Club.findOne({ slug: cleanSlug, _id: { $ne: club._id } });
-      if (duplicate) {
-        return res.status(400).json({ success: false, message: `Slug '${cleanSlug}' is already in use by another club.` });
-      }
+      const existing = await Club.findOne({ slug: cleanSlug, _id: { $ne: club._id } });
+      if (existing) return res.status(400).json({ success: false, message: 'Club slug already taken.' });
       club.slug = cleanSlug;
     }
-    if (clubId) {
-      const cleanClubId = String(clubId).toLowerCase().trim();
-      const duplicate = await Club.findOne({ clubId: cleanClubId, _id: { $ne: club._id } });
-      if (duplicate) {
-        return res.status(400).json({ success: false, message: `ClubId '${cleanClubId}' is already in use by another club.` });
-      }
-      club.clubId = cleanClubId;
-    }
-
     if (name) club.name = String(name).trim();
     if (sport) club.sport = String(sport).trim();
     if (logo !== undefined) club.logo = logo;
+    if (loaderLogo !== undefined) club.loaderLogo = loaderLogo;
     if (coverImage !== undefined) club.coverImage = coverImage;
     if (description !== undefined) club.description = description;
     if (themeColor !== undefined) club.themeColor = themeColor;
     if (accentColor !== undefined) club.accentColor = accentColor;
     if (active !== undefined) club.active = !!active;
     if (status !== undefined) club.status = status;
-
     await club.save();
+
     res.json({ success: true, club, message: 'Club updated successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

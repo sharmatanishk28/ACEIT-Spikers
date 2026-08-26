@@ -1681,6 +1681,53 @@
   },
   "users": [
     {
+      "_id": "u_1787781387869",
+      "name": "Universal Student 1787781387797",
+      "username": "student_1787781387797",
+      "rtuRollNo": "23EARYA7797",
+      "email": "student_1787781387797@aceit.edu.in",
+      "mobile": "9876543210",
+      "photo": "",
+      "passwordHash": "$2b$10$KstCzPhIyHyGbf/IgfDmNuChrSBKuaBeC4t1C8ZpeMEagi1PDscLG",
+      "role": "STUDENT",
+      "clubId": "spikers",
+      "clubs": [
+        "spikers"
+      ],
+      "bio": "",
+      "sport": "Volleyball",
+      "branch": "Computer Science & Engineering",
+      "year": "3rd Year",
+      "position": "Athlete",
+      "jerseyNo": "",
+      "height": "",
+      "achievements": [],
+      "permissions": [
+        "profile.view",
+        "profile.edit",
+        "clubs.join"
+      ],
+      "active": true,
+      "createdAt": "2026-08-26T21:56:27.869Z",
+      "lastLoginAt": "2026-08-26T21:56:27.869Z"
+    },
+    {
+      "_id": "owner_local",
+      "name": "Founder / Owner",
+      "username": "founder",
+      "passwordHash": "$2b$10$vWX5EpSW3sXchTkATuTesekfj4cmgfz6ZlxlbiHRotVPtkQ919L52",
+      "role": "OWNER",
+      "clubId": "ALL",
+      "clubs": [
+        "aceit-spikers"
+      ],
+      "permissions": [
+        "*"
+      ],
+      "active": true,
+      "createdAt": "2026-08-26T21:33:15.490Z"
+    },
+    {
       "_id": "u_1787780182788",
       "name": "Universal Student 1787780182707",
       "username": "student_1787780182707",
@@ -1741,22 +1788,6 @@
       "active": true,
       "createdAt": "2026-08-26T21:34:39.874Z",
       "lastLoginAt": "2026-08-26T21:34:39.874Z"
-    },
-    {
-      "_id": "owner_local",
-      "name": "Founder / Owner",
-      "username": "founder",
-      "passwordHash": "$2b$10$vWX5EpSW3sXchTkATuTesekfj4cmgfz6ZlxlbiHRotVPtkQ919L52",
-      "role": "OWNER",
-      "clubId": "ALL",
-      "clubs": [
-        "aceit-spikers"
-      ],
-      "permissions": [
-        "*"
-      ],
-      "active": true,
-      "createdAt": "2026-08-26T21:33:15.490Z"
     }
   ],
   "clubs": [
@@ -1767,6 +1798,7 @@
       "sport": "Volleyball",
       "slug": "spikers",
       "logo": "spikers-logo.png",
+      "loaderLogo": "volleyball-loader.png",
       "coverImage": "banner1.jpg",
       "description": "The official volleyball club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.",
       "themeColor": "#F5A623",
