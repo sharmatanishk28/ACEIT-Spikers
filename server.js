@@ -735,12 +735,32 @@ function filterByClub(items, reqClubId = 'spikers') {
   });
 }
 
-// Helper: Read default data.json fallback (used ONLY for initial empty collection seeding or local standalone dev)
+// Helper: Read default data.json fallback (used for local standalone dev and persistence)
 function readLocalFileDB() {
   try {
     if (fs.existsSync(DATA_FILE)) {
       const raw = fs.readFileSync(DATA_FILE, 'utf-8');
       const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.users) && parsed.users.length) {
+        parsed.users.forEach(pu => {
+          const idx = localUsers.findIndex(lu => (lu.username && pu.username && lu.username.toLowerCase() === pu.username.toLowerCase()) || (lu._id && pu._id && String(lu._id) === String(pu._id)));
+          if (idx !== -1) {
+            localUsers[idx] = pu;
+          } else {
+            localUsers.push(pu);
+          }
+        });
+      }
+      if (Array.isArray(parsed.clubs) && parsed.clubs.length) {
+        parsed.clubs.forEach(pc => {
+          const idx = localClubs.findIndex(lc => (lc.slug && pc.slug && lc.slug.toLowerCase() === pc.slug.toLowerCase()) || (lc.clubId && pc.clubId && lc.clubId.toLowerCase() === pc.clubId.toLowerCase()));
+          if (idx !== -1) {
+            localClubs[idx] = pc;
+          } else {
+            localClubs.push(pc);
+          }
+        });
+      }
       if (Array.isArray(parsed.team)) parsed.team.forEach(i => normalizeItemClubId(i, 'spikers'));
       if (Array.isArray(parsed.matches)) parsed.matches.forEach(i => normalizeItemClubId(i, 'spikers'));
       if (Array.isArray(parsed.events)) parsed.events.forEach(i => normalizeItemClubId(i, 'spikers'));
@@ -754,6 +774,8 @@ function readLocalFileDB() {
   } catch (err) { }
   return {
     team: [], matches: [], news: [], sponsors: [], testimonials: [], stats: [], gallery: [], events: [], training: [], slideshow: [],
+    users: localUsers,
+    clubs: localClubs,
     about: {
       eyebrow: 'Who we are',
       title: 'Built on the court,\ndefined by character.',
@@ -776,7 +798,11 @@ function readLocalFileDB() {
 
 function writeLocalFileDB(data) {
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    const fullData = Object.assign({}, data, {
+      users: localUsers,
+      clubs: localClubs
+    });
+    fs.writeFileSync(DATA_FILE, JSON.stringify(fullData, null, 2), 'utf-8');
   } catch (err) { }
 }
 
@@ -1795,6 +1821,7 @@ const handleSignup = async (req, res) => {
         lastLoginAt: new Date()
       };
       localUsers.unshift(newUser);
+      writeLocalFileDB(readLocalFileDB());
 
       const token = jwt.sign(
         { id: String(newUser._id), username: newUser.username, role: newUser.role, clubId: newUser.clubId, permissions: newUser.permissions },
@@ -1863,30 +1890,35 @@ const handleSignup = async (req, res) => {
 app.post('/api/auth/signup', handleSignup);
 app.post('/api/signup', handleSignup);
 
-// 2. Auth: Login (supports Username or Email)
+// 2. Auth: Login (Universal Single-ID Login across ALL Clubs)
 const handleLogin = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ success: false, message: 'Username/Email and Password are required' });
+    const inputVal = (req.body.username || req.body.login || req.body.email || '').trim();
+    const password = req.body.password;
+    if (!inputVal || !password) {
+      return res.status(400).json({ success: false, message: 'Username/Email/Roll No and Password are required' });
     }
 
-    const cleanInput = String(username).toLowerCase().trim();
+    const cleanInput = String(inputVal).toLowerCase().trim();
     const dbConn = await connectToDatabase();
 
     let user = null;
     if (dbConn) {
       user = await User.findOne({
-        $or: [{ username: cleanInput }, { email: cleanInput }]
+        $or: [{ username: cleanInput }, { email: cleanInput }, { rtuRollNo: cleanInput }]
       });
       if (!user) {
         await seedInitialAuthAndClubs();
         user = await User.findOne({
-          $or: [{ username: cleanInput }, { email: cleanInput }]
+          $or: [{ username: cleanInput }, { email: cleanInput }, { rtuRollNo: cleanInput }]
         });
       }
     } else {
-      user = localUsers.find(u => u.username === cleanInput || (u.email && u.email.toLowerCase() === cleanInput));
+      user = localUsers.find(u => 
+        (u.username && u.username.toLowerCase().trim() === cleanInput) || 
+        (u.email && u.email.toLowerCase().trim() === cleanInput) ||
+        (u.rtuRollNo && u.rtuRollNo.toLowerCase().trim() === cleanInput)
+      );
     }
 
     if (!user) {

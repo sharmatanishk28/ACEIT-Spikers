@@ -1678,5 +1678,177 @@
       "yt": "#",
       "wa": "#"
     }
-  }
+  },
+  "users": [
+    {
+      "_id": "u_1787780182788",
+      "name": "Universal Student 1787780182707",
+      "username": "student_1787780182707",
+      "rtuRollNo": "23EARYA2707",
+      "email": "student_1787780182707@aceit.edu.in",
+      "mobile": "9876543210",
+      "photo": "",
+      "passwordHash": "$2b$10$by6rgOMK9GzvdQE6/OAUKOPYx0WjMEqITHG2zRqUpDsFuNmbfS4pm",
+      "role": "STUDENT",
+      "clubId": "spikers",
+      "clubs": [
+        "spikers"
+      ],
+      "bio": "",
+      "sport": "Volleyball",
+      "branch": "Computer Science & Engineering",
+      "year": "3rd Year",
+      "position": "Athlete",
+      "jerseyNo": "",
+      "height": "",
+      "achievements": [],
+      "permissions": [
+        "profile.view",
+        "profile.edit",
+        "clubs.join"
+      ],
+      "active": true,
+      "createdAt": "2026-08-26T21:36:22.788Z",
+      "lastLoginAt": "2026-08-26T21:36:22.788Z"
+    },
+    {
+      "_id": "u_1787780079874",
+      "name": "Universal Student 1787780079787",
+      "username": "student_1787780079787",
+      "rtuRollNo": "23EARYA9787",
+      "email": "student_1787780079787@aceit.edu.in",
+      "mobile": "9876543210",
+      "photo": "",
+      "passwordHash": "$2b$10$1HzfmejSr2xYojtFkNvWMuChHxrvRTxXB43se.9WyyvJHf5jY6/PK",
+      "role": "STUDENT",
+      "clubId": "spikers",
+      "clubs": [
+        "spikers"
+      ],
+      "bio": "",
+      "sport": "Volleyball",
+      "branch": "Computer Science & Engineering",
+      "year": "3rd Year",
+      "position": "Athlete",
+      "jerseyNo": "",
+      "height": "",
+      "achievements": [],
+      "permissions": [
+        "profile.view",
+        "profile.edit",
+        "clubs.join"
+      ],
+      "active": true,
+      "createdAt": "2026-08-26T21:34:39.874Z",
+      "lastLoginAt": "2026-08-26T21:34:39.874Z"
+    },
+    {
+      "_id": "owner_local",
+      "name": "Founder / Owner",
+      "username": "founder",
+      "passwordHash": "$2b$10$vWX5EpSW3sXchTkATuTesekfj4cmgfz6ZlxlbiHRotVPtkQ919L52",
+      "role": "OWNER",
+      "clubId": "ALL",
+      "clubs": [
+        "aceit-spikers"
+      ],
+      "permissions": [
+        "*"
+      ],
+      "active": true,
+      "createdAt": "2026-08-26T21:33:15.490Z"
+    }
+  ],
+  "clubs": [
+    {
+      "_id": "c_spikers",
+      "clubId": "spikers",
+      "name": "ACEIT Spikers",
+      "sport": "Volleyball",
+      "slug": "spikers",
+      "logo": "spikers-logo.png",
+      "coverImage": "banner1.jpg",
+      "description": "The official volleyball club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.",
+      "themeColor": "#F5A623",
+      "accentColor": "#D97706",
+      "active": true,
+      "status": "active",
+      "createdAt": "2026-08-26T21:33:15.432Z"
+    },
+    {
+      "_id": "c_kabaddi",
+      "clubId": "kabaddi",
+      "name": "ACEIT Kabaddi",
+      "sport": "Kabaddi",
+      "slug": "kabaddi",
+      "logo": "",
+      "coverImage": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=1200&q=80",
+      "description": "Official Kabaddi Club of Arya College of Engineering & IT. Unstoppable raid power, impenetrable defense, and collegiate champions.",
+      "themeColor": "#C0392B",
+      "accentColor": "#E74C3C",
+      "active": true,
+      "status": "active",
+      "createdAt": "2026-08-26T21:33:15.432Z"
+    },
+    {
+      "_id": "c_dunkers",
+      "clubId": "dunkers",
+      "name": "ACEIT Dunkers",
+      "sport": "Basketball",
+      "slug": "dunkers",
+      "logo": "",
+      "coverImage": "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80",
+      "description": "Official Basketball Club of ACEIT. Fast-break offenses, lockdown defense, and soaring collegiate hoopers.",
+      "themeColor": "#E67E22",
+      "accentColor": "#D35400",
+      "active": true,
+      "status": "active",
+      "createdAt": "2026-08-26T21:33:15.432Z"
+    },
+    {
+      "_id": "c_strikers",
+      "clubId": "strikers-fc",
+      "name": "ACEIT Strikers FC",
+      "sport": "Football",
+      "slug": "strikers-fc",
+      "logo": "",
+      "coverImage": "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80",
+      "description": "Official Football Club of ACEIT. Tactical mastery, relentless stamina, and championship collegiate soccer.",
+      "themeColor": "#27AE60",
+      "accentColor": "#2ECC71",
+      "active": true,
+      "status": "active",
+      "createdAt": "2026-08-26T21:33:15.432Z"
+    },
+    {
+      "_id": "c_shuttlers",
+      "clubId": "shuttlers",
+      "name": "ACEIT Shuttlers",
+      "sport": "Badminton",
+      "slug": "shuttlers",
+      "logo": "",
+      "coverImage": "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=80",
+      "description": "Official Badminton Club of ACEIT. Lightning reflexes, precision smashes, and tournament agility.",
+      "themeColor": "#16A085",
+      "accentColor": "#1ABC9C",
+      "active": true,
+      "status": "active",
+      "createdAt": "2026-08-26T21:33:15.432Z"
+    },
+    {
+      "_id": "c_cricket",
+      "clubId": "cricket",
+      "name": "ACEIT Cricket",
+      "sport": "Cricket",
+      "slug": "cricket",
+      "logo": "",
+      "coverImage": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80",
+      "description": "Official Cricket Club of ACEIT. Powerful strokeplay, lethal bowling spells, and collegiate derby champions.",
+      "themeColor": "#2980B9",
+      "accentColor": "#3498DB",
+      "active": true,
+      "status": "active",
+      "createdAt": "2026-08-26T21:33:15.432Z"
+    }
+  ]
 }
