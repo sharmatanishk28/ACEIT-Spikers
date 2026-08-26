@@ -314,6 +314,47 @@
       "r": "Libero",
       "clubId": "spikers",
       "id": "id_mt9z2ihlc9pr8"
+    },
+    {
+      "n": "Pawan Sehrawat",
+      "pos": "Lead Raider",
+      "num": 7,
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "clubId": "kabaddi",
+      "id": "id_mtaaloc1lbmnk"
+    },
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mtaalv2zha8p1"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mtaalv3i9bqqj"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mtaalv3mpirx8"
+    },
+    {
+      "n": "Lakshya Sen (Student)",
+      "num": 7,
+      "pos": "Men's Singles",
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "id": "id_mtaastyp75pon",
+      "clubId": "smashers"
     }
   ],
   "gallery": [
@@ -657,6 +698,41 @@
       "clubId": "strikers",
       "id": "id_mt9z2ih47do97",
       "team2": "City FC",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Kabaddi",
+      "team2": "MNIT Raiders",
+      "opp": "MNIT Raiders",
+      "date": "2026-10-15",
+      "venue": "ACEIT Outdoor Kabaddi Arena",
+      "status": "upcoming",
+      "clubId": "kabaddi",
+      "id": "id_mtaaloc6fuzcc",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mtaalv32ndw98",
+      "team2": "City FC",
+      "winner": "none"
+    },
+    {
+      "opp": "MNIT Shuttlers",
+      "date": "2026-09-15",
+      "time": "11:00",
+      "venue": "ACEIT Indoor Badminton Arena",
+      "cat": "Inter-College Cup",
+      "status": "UPCOMING",
+      "id": "id_mtaastyu8txgg",
+      "clubId": "smashers",
+      "team1": "Home Team",
+      "team2": "MNIT Shuttlers",
       "winner": "none"
     }
   ],

@@ -2576,48 +2576,150 @@
       transform: translateY(-4px);
     }
 
-    /* ---------- Public Sports Clubs Directory ---------- */
-    .club-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 24px;
+    /* ---------- Public Sports Clubs Directory & Horizontal Banners ---------- */
+    .sports-clubs-section {
+      background: var(--cream-2);
+      padding: 70px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .clubs-banner-grid {
       display: flex;
       flex-direction: column;
+      gap: 20px;
+    }
+    .club-banner-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
       justify-content: space-between;
-      box-shadow: var(--shadow-sm);
+      gap: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
       transition: transform .3s var(--ease), box-shadow .3s var(--ease), border-color .3s var(--ease);
+      position: relative;
+      overflow: hidden;
     }
-    .club-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--gold);
+    .club-banner-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: linear-gradient(180deg, var(--gold), var(--amber));
+      opacity: 0;
+      transition: opacity .3s var(--ease);
     }
-    .club-card.active-club-card {
+    .club-banner-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      border-color: rgba(245, 166, 35, 0.4);
+    }
+    .club-banner-card:hover::before,
+    .club-banner-card.active-club-card::before {
+      opacity: 1;
+    }
+    .club-banner-card.active-club-card {
       border-color: var(--gold);
       box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.25);
     }
-    .club-card-head {
+    .club-banner-left {
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 12px;
+      gap: 20px;
+      flex: 1;
+      min-width: 0;
     }
-    .club-card-crest {
-      width: 52px;
-      height: 52px;
-      border-radius: 12px;
+    .club-banner-crest {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
       background: var(--cream-2);
-      border: 1.5px solid var(--border);
+      border: 2px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      font-size: 28px;
       font-weight: 800;
       color: var(--amber);
       background-size: cover;
       background-position: center;
       flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .club-banner-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .club-banner-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .club-banner-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--charcoal);
+      margin: 0;
+      letter-spacing: -0.3px;
+    }
+    .club-banner-desc {
+      font-size: 13.5px;
+      color: var(--charcoal-soft);
+      line-height: 1.5;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .club-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .club-banner-btn-visit {
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+    }
+    .empty-state-roster {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 48px 24px;
+      background: var(--bg-card);
+      border: 1.5px dashed var(--border);
+      border-radius: 16px;
+      margin: 20px 0;
+    }
+    @media (max-width: 768px) {
+      .club-banner-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px;
+      }
+      .club-banner-actions {
+        width: 100%;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      .club-banner-btn-visit {
+        flex: 1;
+        justify-content: center;
+      }
     }
 
     /* ---------- Loader ---------- */
@@ -4573,6 +4675,18 @@
     </div>
   </section>
 
+  <!-- ============ COLLEGE SPORTS CLUBS ============ -->
+  <section id="clubs" class="sports-clubs-section">
+    <div class="container">
+      <div class="reveal" style="text-align:center;margin-bottom:36px;">
+        <span class="eyebrow">College Athletics</span>
+        <h2 class="section-title">Explore <span class="gradient-text">Sports Clubs</span></h2>
+        <p class="section-sub" style="margin:0 auto;max-width:680px;">Discover official college sports clubs across campus. Follow your favorite clubs or visit their dedicated public pages to view rosters, matches, and season updates.</p>
+      </div>
+      <div class="clubs-banner-grid" id="publicClubsGrid"></div>
+    </div>
+  </section>
+
   <!-- ============ ABOUT ============ -->
   <section id="about">
     <div class="container">
@@ -4624,7 +4738,7 @@
     <div class="container">
       <div class="reveal">
         <span class="eyebrow">The Roster</span>
-        <h2 class="section-title">Meet the <span class="gradient-text">Spikers</span></h2>
+        <h2 class="section-title">Meet the <span class="gradient-text" id="teamAccentTitle">Spikers</span></h2>
         <p class="section-sub">The athletes representing ACEIT this season.</p>
       </div>
       <div class="team-filters reveal" id="teamFilters"></div>
@@ -4806,18 +4920,6 @@
         <h2 class="section-title">What Our People Say</h2>
       </div>
       <div class="testi-wrap reveal" id="testiWrap"></div>
-    </div>
-  </section>
-
-  <!-- ============ COLLEGE SPORTS CLUBS ============ -->
-  <section id="clubs" style="background:var(--cream-2);padding:80px 0;">
-    <div class="container">
-      <div class="reveal" style="text-align:center;margin-bottom:32px;">
-        <span class="eyebrow">College Athletics</span>
-        <h2 class="section-title">Explore <span class="gradient-text">Sports Clubs</span></h2>
-        <p class="section-sub" style="margin:0 auto;max-width:640px;">Discover official college sports clubs across campus. Follow your favorite clubs or visit their dedicated public pages to view rosters, matches, and updates.</p>
-      </div>
-      <div class="clubs-grid" id="publicClubsGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:24px;"></div>
     </div>
   </section>
 
@@ -5603,7 +5705,90 @@
       var uidCounter = 1;
       function uid() { return 'id' + (Date.now().toString(36)) + (uidCounter++); }
 
-      function defaultDB() {
+      function getSportIcon(sport) {
+        var s = String(sport || '').toLowerCase();
+        if (s.indexOf('volley') !== -1) return '🏐';
+        if (s.indexOf('foot') !== -1 || s.indexOf('soccer') !== -1) return '⚽';
+        if (s.indexOf('badminton') !== -1 || s.indexOf('shuttle') !== -1) return '🏸';
+        if (s.indexOf('kabad') !== -1) return '🤼';
+        if (s.indexOf('basket') !== -1) return '🏀';
+        if (s.indexOf('cricket') !== -1) return '🏏';
+        if (s.indexOf('table') !== -1 || s.indexOf('tennis') !== -1 || s.indexOf('ping') !== -1) return '🏓';
+        if (s.indexOf('chess') !== -1) return '♟️';
+        if (s.indexOf('carrom') !== -1) return '🎯';
+        if (s.indexOf('athletics') !== -1 || s.indexOf('run') !== -1 || s.indexOf('track') !== -1) return '🏃';
+        return '🏆';
+      }
+
+      function getSportCrestSVG(club) {
+        var name = (club && club.name) ? club.name : 'Club';
+        var sport = (club && club.sport) ? club.sport : 'Athletics';
+        var icon = getSportIcon(sport);
+        var initial = name.charAt(0).toUpperCase();
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="100%" height="100%">' +
+          '<defs>' +
+            '<linearGradient id="crestGrad_' + esc(initial) + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
+              '<stop offset="0%" stop-color="#1B2A4A"/>' +
+              '<stop offset="100%" stop-color="#0B132B"/>' +
+            '</linearGradient>' +
+            '<linearGradient id="goldGrad_' + esc(initial) + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
+              '<stop offset="0%" stop-color="#F5A623"/>' +
+              '<stop offset="100%" stop-color="#D97706"/>' +
+            '</linearGradient>' +
+          '</defs>' +
+          '<path d="M80 10 L140 35 L140 95 C140 125 80 150 80 150 C80 150 20 125 20 95 L20 35 Z" fill="url(#crestGrad_' + esc(initial) + ')" stroke="url(#goldGrad_' + esc(initial) + ')" stroke-width="4"/>' +
+          '<path d="M80 18 L132 40 L132 92 C132 118 80 140 80 140 C80 140 28 118 28 92 L28 40 Z" fill="none" stroke="rgba(245,166,35,0.3)" stroke-width="1.5"/>' +
+          '<text x="80" y="78" font-size="34" text-anchor="middle" dominant-baseline="central">' + icon + '</text>' +
+          '<text x="80" y="112" font-family="sans-serif" font-size="14" font-weight="900" fill="#F5A623" text-anchor="middle" letter-spacing="1">' + esc(initial) + '</text>' +
+        '</svg>';
+        return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+      }
+
+      function defaultDB(clubId) {
+        clubId = (clubId || getActiveClubId()).toLowerCase();
+        var isSpikers = (clubId === 'spikers' || clubId === 'c_spikers');
+        if (!isSpikers) {
+          return {
+            training: [],
+            team: [],
+            gallery: [],
+            categories: {
+              team: ['first team', 'reserves', 'alumni'],
+              gallery: ['matches', 'training', 'team', 'events']
+            },
+            deletedCategories: { team: [], gallery: [] },
+            customCategories: { team: [], gallery: [] },
+            matches: [],
+            news: [],
+            sponsors: [],
+            testimonials: [],
+            events: [],
+            stats: [
+              { id: uid(), label: 'Matches', target: 0 },
+              { id: uid(), label: 'Wins', target: 0 },
+              { id: uid(), label: 'Athletes', target: 0 },
+              { id: uid(), label: 'Coaches', target: 2 }
+            ],
+            about: {
+              eyebrow: 'Who we are',
+              title: 'Built with dedication,\ndefined by teamwork.',
+              sub: 'Bringing together student athletes who train hard, compete fair, and represent ACEIT with honor.',
+              mission: 'To build a competitive athletics program that develops skilled, disciplined athletes.',
+              vision: 'To be recognised as a leading collegiate sports club at Arya College of Engineering & IT.'
+            },
+            contact: {
+              address: 'Arya College of Engineering & IT, Jaipur, Rajasthan',
+              email: 'sports@aceit.edu.in',
+              phone: '+91 98765 43210',
+              hours: 'Mon–Sat, 6:00 AM – 8:00 PM',
+              insta: '#',
+              fb: '#',
+              yt: '#',
+              wa: '#'
+            },
+            slideshow: []
+          };
+        }
         return {
           training: [
             { id: uid(), icon: '🌅', title: 'Morning Session', time: '06:00 – 07:30', desc: 'Mon / Wed / Fri — footwork, serving accuracy, and reception drills.' },
@@ -5743,7 +5928,7 @@
       }
 
       function loadDB() {
-        var fresh = defaultDB();
+        var fresh = defaultDB(getActiveClubId());
         try {
           var raw = window.localStorage.getItem(DB_KEY);
           if (raw) {
@@ -5827,9 +6012,10 @@
         var clubName = club.name || 'ACEIT Spikers';
         var sportName = club.sport || 'Volleyball';
         var clubDesc = club.description || ('The official ' + sportName.toLowerCase() + ' club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.');
+        var isSpikers = (club.slug === 'spikers' || club.clubId === 'spikers' || (!club.slug && !club.clubId));
         
         // 1. Update Title & Tab
-        document.title = clubName + ' — Official ' + sportName + ' Club';
+        document.title = clubName + ' — Official ' + sportName + ' Club | Arya College of Engineering & IT';
         
         // 2. Update Nav Brand
         var navBrandText = document.getElementById('navBrandText');
@@ -5842,8 +6028,12 @@
           }
         }
         var navBrandLogo = document.getElementById('navBrandLogo');
-        if (navBrandLogo && club.logo) {
-          navBrandLogo.src = club.logo;
+        if (navBrandLogo) {
+          if (club.logo) {
+            navBrandLogo.src = club.logo;
+          } else if (!isSpikers) {
+            navBrandLogo.src = getSportCrestSVG(club);
+          }
         }
         
         // 3. Update Hero Section
@@ -5865,29 +6055,42 @@
           heroDesc.textContent = clubDesc;
         }
         var heroLogoImg = document.getElementById('heroLogoImg');
-        if (heroLogoImg && club.logo) {
-          heroLogoImg.src = club.logo;
+        if (heroLogoImg) {
+          if (club.logo) {
+            heroLogoImg.src = club.logo;
+          } else if (!isSpikers) {
+            heroLogoImg.src = getSportCrestSVG(club);
+          }
         }
         
-        // 4. Update About Section
+        // 4. Update Team Section Squad Title
+        var teamAccentTitle = document.getElementById('teamAccentTitle');
+        if (teamAccentTitle) {
+          teamAccentTitle.textContent = isSpikers ? 'Spikers' : (sportName + ' Squad');
+        }
+
+        // 5. Update About Section
         var aboutSub = document.getElementById('aboutSub');
-        if (aboutSub && (!DB.about || !DB.about.p1)) {
+        if (aboutSub && (!DB.about || !DB.about.p1 || !isSpikers)) {
           aboutSub.textContent = clubName + ' brings together athletes who train hard, compete fair, and represent ACEIT in ' + sportName + '.';
         }
         var aboutMission = document.getElementById('aboutMission');
-        if (aboutMission && (!DB.about || !DB.about.mission)) {
+        if (aboutMission && (!DB.about || !DB.about.mission || !isSpikers)) {
           aboutMission.textContent = 'To build a competitive ' + sportName.toLowerCase() + ' program that develops skilled, disciplined athletes while creating a home for anyone who wants to play, grow, and belong.';
         }
         var aboutVision = document.getElementById('aboutVision');
-        if (aboutVision && (!DB.about || !DB.about.vision)) {
+        if (aboutVision && (!DB.about || !DB.about.vision || !isSpikers)) {
           aboutVision.textContent = 'To be recognised as the standard-bearer for collegiate ' + sportName.toLowerCase() + ' at ACEIT — a club that wins with class and trains the next generation of captains.';
         }
 
-        // 5. Update Position Selector on Join Form
+        // 6. Update Position Selector on Join Form
         var posSelect = document.getElementById('in-position');
         if (posSelect) {
           var sLower = sportName.toLowerCase();
-          if (sLower.indexOf('football') !== -1 || sLower.indexOf('soccer') !== -1) {
+          if (sLower.indexOf('kabad') !== -1) {
+            posSelect.innerHTML = '<option value="">Select role</option>' +
+              '<option>Raider</option><option>Corner Defender</option><option>Cover Defender</option><option>All-Rounder</option><option>Right Corner</option><option>Left Corner</option>';
+          } else if (sLower.indexOf('football') !== -1 || sLower.indexOf('soccer') !== -1) {
             posSelect.innerHTML = '<option value="">Select position</option>' +
               '<option>Goalkeeper</option><option>Centre Back</option><option>Full Back</option><option>Midfielder</option><option>Winger</option><option>Striker / Forward</option>';
           } else if (sLower.indexOf('badminton') !== -1) {
@@ -5922,28 +6125,30 @@
             var activeClubId = getActiveClubId();
             
             clubs.forEach(function (club) {
-              var cId = club.clubId || club.slug || String(club._id);
-              var isCurrent = (cId === activeClubId || club.slug === activeClubId);
+              var cId = club.slug || club.clubId || String(club._id);
+              var isCurrent = (cId === activeClubId || club.slug === activeClubId || (activeClubId === 'spikers' && (cId === 'spikers' || cId === 'c_spikers')));
               var card = document.createElement('div');
-              card.className = 'club-card reveal visible' + (isCurrent ? ' active-club-card' : '');
-              var crestLetter = (club.name || 'C').charAt(0).toUpperCase();
+              card.className = 'club-banner-card reveal visible' + (isCurrent ? ' active-club-card' : '');
+              var sportIcon = getSportIcon(club.sport);
               var crestStyle = club.logo ? ('background-image:url(\'' + esc(club.logo) + '\');color:transparent;') : '';
+              var crestContent = club.logo ? '' : sportIcon;
+              var clubUrl = (cId === 'spikers' || cId === 'c_spikers') ? '/' : ('/club/' + encodeURIComponent(club.slug || cId));
               
               card.innerHTML = 
-                '<div>' +
-                  '<div class="club-card-head">' +
-                    '<div class="club-card-crest" style="' + crestStyle + '">' + crestLetter + '</div>' +
-                    '<div>' +
-                      '<h3 style="font-size:18px;margin:0 0 2px 0;color:var(--charcoal);">' + esc(club.name) + '</h3>' +
-                      '<span class="pill" style="font-size:10px;padding:2px 8px;background:var(--amber);color:#fff;">' + esc(club.sport || 'Sport') + '</span>' +
-                      (isCurrent ? ' <span class="pill" style="font-size:10px;padding:2px 8px;background:#27AE60;color:#fff;">Active View</span>' : '') +
+                '<div class="club-banner-left">' +
+                  '<div class="club-banner-crest" style="' + crestStyle + '">' + crestContent + '</div>' +
+                  '<div class="club-banner-content">' +
+                    '<div class="club-banner-title-row">' +
+                      '<h3 class="club-banner-title">' + esc(club.name) + '</h3>' +
+                      '<span class="pill" style="font-size:11px;padding:3px 10px;background:var(--amber);color:#fff;font-weight:700;">' + sportIcon + ' ' + esc(club.sport || 'Sport') + '</span>' +
+                      (isCurrent ? ' <span class="pill" style="font-size:10px;padding:3px 8px;background:#27AE60;color:#fff;">Active Club Page</span>' : '') +
                     '</div>' +
+                    '<p class="club-banner-desc">' + esc(club.description || ('Official ' + (club.sport || 'sports') + ' club of Arya College of Engineering & IT.')) + '</p>' +
                   '</div>' +
-                  '<p style="font-size:13px;color:var(--charcoal-soft);line-height:1.5;margin:8px 0 16px 0;">' + esc(club.description || 'ACEIT Official Sports Club') + '</p>' +
                 '</div>' +
-                '<div style="display:flex;gap:8px;align-items:center;margin-top:auto;">' +
-                  '<a href="?club=' + encodeURIComponent(cId) + '" class="btn btn-outline" style="flex:1;text-align:center;font-size:12px;padding:7px 12px;">Visit Club Page ›</a>' +
-                  '<button class="btn btn-primary" data-toggle-club="' + esc(cId) + '" style="font-size:12px;padding:7px 14px;">' + (club.isFollowing ? '✓ Following' : '+ Follow') + '</button>' +
+                '<div class="club-banner-actions">' +
+                  '<a href="' + esc(clubUrl) + '" class="btn btn-primary club-banner-btn-visit">Visit Club <span style="font-size:14px;margin-left:2px;">›</span></a>' +
+                  '<button class="btn btn-outline" data-toggle-club="' + esc(cId) + '" style="font-size:12px;padding:9px 14px;white-space:nowrap;">' + (club.isFollowing ? '✓ Following' : '+ Follow') + '</button>' +
                 '</div>';
                 
               grid.appendChild(card);
@@ -5991,7 +6196,7 @@
           .then(function (res) { return res.json(); })
           .then(function (res) {
             if (res && res.success && res.data) {
-              var fresh = defaultDB();
+              var fresh = defaultDB(activeClub);
               DB = res.data;
               if (!Array.isArray(DB.training)) { DB.training = fresh.training; }
               if (!Array.isArray(DB.slideshow) || DB.slideshow.length === 0) { DB.slideshow = fresh.slideshow; }
@@ -6177,25 +6382,41 @@
         renderTeamFilters();
         if (!teamGrid) return;
         teamGrid.innerHTML = '';
-        (DB.team || []).filter(function (p) {
+        var players = (DB.team || []).filter(function (p) {
           var pCats = getCategories(p);
           if (!pCats.length) pCats = ['boys team'];
           var filter = (currentTeamFilter || 'all').trim().toLowerCase();
           return filter === 'all' || pCats.indexOf(filter) !== -1;
-        }).forEach(function (p) {
+        });
+
+        if (players.length === 0) {
+          var clubName = (currentActiveClub && currentActiveClub.name) ? currentActiveClub.name : 'Club';
+          var sportName = (currentActiveClub && currentActiveClub.sport) ? currentActiveClub.sport : 'Athletics';
+          var icon = getSportIcon(sportName);
+          teamGrid.innerHTML = '<div class="empty-state-roster reveal visible" style="grid-column:1/-1;text-align:center;padding:48px 24px;background:var(--bg-card);border:1.5px dashed var(--border);border-radius:16px;">' +
+            '<div style="font-size:42px;margin-bottom:12px;">' + icon + '</div>' +
+            '<h3 style="font-size:20px;font-weight:800;color:var(--charcoal);margin-bottom:8px;">' + esc(clubName) + ' Roster Announcement</h3>' +
+            '<p style="font-size:14px;color:var(--charcoal-soft);max-width:500px;margin:0 auto 18px auto;">Official ' + esc(sportName.toLowerCase()) + ' team player rosters are currently being finalized for the upcoming inter-collegiate season.</p>' +
+            '<a href="#join" class="btn btn-primary" style="font-size:13px;padding:8px 18px;">Apply to Join Roster ›</a>' +
+            '</div>';
+          return;
+        }
+
+        players.forEach(function (p) {
           var el = document.createElement('div');
           el.className = 'player-card card reveal visible tilt';
           var instaLink = instaUrl(p.insta);
           var hasPhoto = !!p.photo;
           var pCats = getCategories(p);
           var catBadge = pCats.length ? ' &middot; ' + esc(formatCategories(pCats)) : '';
+          var jerseyNum = p.num !== undefined && p.num !== null && p.num !== '' ? p.num : (p.no !== undefined && p.no !== null && p.no !== '' ? p.no : (p.jerseyNo || '—'));
           el.innerHTML =
             '<div class="player-photo' + (hasPhoto ? ' has-photo' : '') + '"' + (hasPhoto ? ' style="background-image:url(\'' + p.photo + '\')"' : '') + '>' +
-            '<span class="jersey-num mono">#' + p.num + '</span><div class="silhouette"></div>' +
+            '<span class="jersey-num mono">#' + jerseyNum + '</span><div class="silhouette"></div>' +
             (p.cap ? '<span class="captain-badge">Captain</span>' : '') +
             '</div>' +
-            '<div class="player-info"><h3>' + esc(p.n) + '</h3><div class="player-pos">' + esc(p.pos) + catBadge + '</div>' +
-            '<div class="player-stats"><span>Height<b>' + esc(p.h) + '</b></span><span>Experience<b>' + esc(p.exp) + '</b></span><span>Jersey<b>#' + p.num + '</b></span></div>' +
+            '<div class="player-info"><h3>' + esc(p.n) + '</h3><div class="player-pos">' + esc(p.pos || p.r || 'Player') + catBadge + '</div>' +
+            '<div class="player-stats"><span>Height<b>' + esc(p.h || '—') + '</b></span><span>Experience<b>' + esc(p.exp || '—') + '</b></span><span>Jersey<b>#' + jerseyNum + '</b></span></div>' +
             (instaLink ? '<a class="player-insta" href="' + esc(instaLink) + '" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c2.7 0 3.05.01 4.12.06 1.07.05 1.79.22 2.43.46.66.26 1.22.6 1.77 1.15.55.55.9 1.11 1.15 1.77.24.64.41 1.36.46 2.43.05 1.07.06 1.42.06 4.12s-.01 3.05-.06 4.12c-.05 1.07-.22 1.79-.46 2.43a4.9 4.9 0 0 1-1.15 1.77 4.9 4.9 0 0 1-1.77 1.15c-.64.24-1.36.41-2.43.46-1.07.05-1.42.06-4.12.06s-3.05-.01-4.12-.06c-1.07-.05-1.79-.22-2.43-.46a4.9 4.9 0 0 1-1.77-1.15 4.9 4.9 0 0 1-1.15-1.77c-.24-.64-.41-1.36-.46-2.43C2.01 15.05 2 14.7 2 12s.01-3.05.06-4.12c.05-1.07.22-1.79.46-2.43.26-.66.6-1.22 1.15-1.77A4.9 4.9 0 0 1 5.44 2.52c.64-.24 1.36-.41 2.43-.46C8.95 2.01 9.3 2 12 2zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4zm5.2-8.4a1.2 1.2 0 1 1-2.4 0 1.2 1.2 0 0 1 2.4 0z"/></svg> Instagram</a>' : '') +
             '</div>';
           teamGrid.appendChild(el);
@@ -8391,6 +8612,18 @@
         });
       });
 
+      function switchAdminTab(tabName) {
+        document.querySelectorAll('.admin-tab').forEach(function (b) {
+          if (b.getAttribute('data-tab') === tabName) {
+            b.classList.add('active');
+          } else {
+            b.classList.remove('active');
+          }
+        });
+        currentAdminTab = tabName;
+        renderAdminTab(tabName);
+      }
+
       /* Field schemas per section, used to auto-build add/edit forms */
       var SCHEMAS = {
         slideshow: {
@@ -8412,7 +8645,7 @@
             { key: 'photo', label: 'Player Photo', type: 'image', full: true },
             { key: 'n', label: 'Name', type: 'text', full: true },
             { key: 'num', label: 'Jersey Number', type: 'number' },
-            { key: 'pos', label: 'Position', type: 'select', options: ['Setter', 'Outside Hitter', 'Middle Blocker', 'Opposite', 'Libero', 'Captain / Outside Hitter'] },
+            { key: 'pos', label: 'Position / Role (e.g. Raider, Striker, Setter, Defender, Winger)', type: 'text', full: true },
             { key: 'cat', label: 'Category / Squad (e.g. Boys Team, Girls Team, Alumni, 1st Year)', type: 'select', options: ['boys team', 'girls team', 'alumni'] },
             { key: 'h', label: "Height (e.g. 6'1\")", type: 'text' },
             { key: 'exp', label: 'Experience (e.g. 3 yrs)', type: 'text' },
@@ -10122,37 +10355,57 @@
             systemClubs = clubs;
 
             var html = '<div class="admin-panel-head"><h3>Dynamic Club Management <span class="admin-count mono">' + clubs.length + '</span></h3>' +
-              '<button class="admin-btn" id="adminAddClubBtn">+ Add New Club/Sport</button></div>' +
-              '<div class="admin-note">Create and manage ANY sport or club dynamically (Volleyball, Basketball, Kabaddi, Badminton, Football, Carrom, etc.)</div>' +
+              '<button class="admin-btn" id="adminAddClubBtn">+ Add New Club / Sport</button></div>' +
+              '<div class="admin-note">Create and manage ANY sport or club dynamically (Kabaddi, Volleyball, Basketball, Badminton, Football, Cricket, etc.). Every club automatically gets a dedicated public page at <code>/club/{slug}</code>.</div>' +
               '<div class="admin-list" id="clubList">';
 
             clubs.forEach(function (c) {
               var cid = String(c._id || c.id);
-              html += '<div class="admin-item" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;">' +
-                '<div class="info" style="display:flex;align-items:center;gap:12px;">' +
-                (c.logo ? '<img src="' + esc(c.logo) + '" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">' : '<div style="width:40px;height:40px;background:#eee;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#777;">🏆</div>') +
+              var cSlug = c.slug || c.clubId || cid;
+              var sportIcon = getSportIcon(c.sport);
+              var pageUrl = (cSlug === 'spikers' || cSlug === 'c_spikers') ? '/' : ('/club/' + encodeURIComponent(cSlug));
+              html += '<div class="admin-item" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;gap:12px;flex-wrap:wrap;">' +
+                '<div class="info" style="display:flex;align-items:center;gap:14px;flex:1;min-width:240px;">' +
+                (c.logo ? '<img src="' + esc(c.logo) + '" style="width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">' : '<div style="width:46px;height:46px;background:var(--cream-2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;">' + sportIcon + '</div>') +
                 '<div>' +
-                '<b>' + esc(c.name) + '</b>' +
-                '<div style="margin-top:2px;font-size:12px;color:var(--charcoal-soft);">' +
-                'Sport: <b>' + esc(c.sport || 'Unspecified') + '</b> &middot; Slug: <code class="mono">' + esc(c.slug || '') + '</code> &middot; ' +
-                '<span style="color:' + (c.active !== false ? '#27AE60' : '#E74C3C') + ';">' + (c.active !== false ? 'Active' : 'Disabled') + '</span>' +
+                '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">' +
+                '<b style="font-size:15px;color:var(--charcoal);">' + esc(c.name) + '</b>' +
+                '<span class="pill" style="font-size:10px;padding:2px 8px;background:var(--amber);color:#fff;font-weight:700;">' + sportIcon + ' ' + esc(c.sport || 'Sport') + '</span>' +
+                '<span style="font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;' + (c.active !== false ? 'background:rgba(39,174,96,0.15);color:#27AE60;' : 'background:rgba(231,76,60,0.15);color:#E74C3C;') + '">' + (c.active !== false ? 'Active' : 'Disabled') + '</span>' +
+                '</div>' +
+                '<div style="margin-top:4px;font-size:12px;color:var(--charcoal-soft);">' +
+                'Public URL: <code class="mono" style="background:var(--cream-2);padding:1px 5px;border-radius:3px;">' + esc(pageUrl) + '</code> &middot; ' +
+                '<span style="opacity:0.85;">' + esc(c.description ? (c.description.slice(0, 60) + '...') : 'No description') + '</span>' +
                 '</div>' +
                 '</div>' +
                 '</div>' +
-                '<div class="actions" style="display:flex;gap:8px;">' +
+                '<div class="actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
+                '<button class="admin-btn" data-scope-club="' + esc(cSlug) + '" style="background:linear-gradient(135deg,#F5A623,#D97706);color:#fff;font-weight:700;border:none;box-shadow:0 2px 8px rgba(245,166,35,0.3);">Manage Scope ⚡</button>' +
+                '<a href="' + esc(pageUrl) + '" target="_blank" class="admin-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">View Page ↗</a>' +
                 '<button class="admin-btn" data-edit-club="' + esc(cid) + '">Edit</button>' +
                 '<button class="admin-btn danger" data-del-club="' + esc(cid) + '">Delete</button>' +
                 '</div>' +
                 '</div>';
             });
 
-            if (clubs.length === 0) { html += '<p style="color:var(--charcoal-soft);padding:16px;">No clubs found. Click "+ Add New Club/Sport" to create one.</p>'; }
+            if (clubs.length === 0) { html += '<p style="color:var(--charcoal-soft);padding:16px;">No clubs found. Click "+ Add New Club / Sport" to create one.</p>'; }
             html += '</div><div class="admin-form" id="clubFormArea"></div>';
 
             adminContent.innerHTML = html;
             adminContent.scrollTop = 0;
 
             document.getElementById('adminAddClubBtn').addEventListener('click', function () { openClubModal(null); });
+
+            adminContent.querySelectorAll('[data-scope-club]').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var scope = btn.getAttribute('data-scope-club');
+                activeClubScope = scope;
+                var scopeSelect = document.getElementById('adminClubScopeSelect');
+                if (scopeSelect) scopeSelect.value = scope;
+                switchAdminTab('team');
+                showAlert('Admin dashboard is now scoped to ' + scope.toUpperCase() + '. You can now view and edit ' + scope.toUpperCase() + ' roster, matches, news, and events.');
+              });
+            });
 
             adminContent.querySelectorAll('[data-edit-club]').forEach(function (btn) {
               btn.addEventListener('click', function () {
@@ -10172,6 +10425,7 @@
                       if (res && res.success) {
                         showAlert('Club deleted successfully.');
                         renderClubsTab();
+                        updateAdminUserBadge();
                       } else {
                         showAlert(res && res.message ? res.message : 'Error deleting club.');
                       }
@@ -10190,21 +10444,33 @@
         var formArea = document.getElementById('clubFormArea');
         if (!formArea) return;
 
-        var html = '<div class="admin-form-box" style="margin-top:20px;padding:20px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg-card);">' +
-          '<h4>' + (club ? 'Edit Club: ' + esc(club.name) : 'Add New Club / Sport') + '</h4>' +
+        var html = '<div class="admin-form-box" style="margin-top:20px;padding:24px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg-card);box-shadow:0 4px 20px rgba(0,0,0,0.06);">' +
+          '<h4 style="font-size:18px;font-weight:800;color:var(--charcoal);margin-bottom:16px;">' + (club ? 'Edit Club: ' + esc(club.name) : 'Add New Sports Club') + '</h4>' +
           '<div class="admin-form-grid">' +
-          '<div class="admin-field"><label>Club Name</label><input type="text" id="cModalName" value="' + esc(club ? club.name : '') + '" placeholder="e.g. ACEIT Spikers"></div>' +
-          '<div class="admin-field"><label>Sport (Free-Text Input)</label><input type="text" id="cModalSport" value="' + esc(club ? club.sport : '') + '" placeholder="e.g. Volleyball, Basketball, Kabaddi, Carrom, Football"></div>' +
-          '<div class="admin-field"><label>Slug (URL key)</label><input type="text" id="cModalSlug" value="' + esc(club ? club.slug : '') + '" placeholder="e.g. aceit-spikers"></div>' +
-          '<div class="admin-field"><label>Logo URL / Image Data</label><input type="text" id="cModalLogo" value="' + esc(club ? club.logo || '' : '') + '" placeholder="https://... or base64 image data"></div>' +
-          '<div class="admin-field full"><label>Description</label><textarea id="cModalDesc" rows="3" placeholder="Brief description of the club or team...">' + esc(club ? club.description || '' : '') + '</textarea></div>' +
+          '<div class="admin-field"><label>Club Name *</label><input type="text" id="cModalName" value="' + esc(club ? club.name : '') + '" placeholder="e.g. ACEIT Kabaddi, ACEIT Strikers"></div>' +
+          '<div class="admin-field">' +
+          '<label>Sport (Free-Text or Click Preset) *</label>' +
+          '<input type="text" id="cModalSport" value="' + esc(club ? club.sport : '') + '" placeholder="e.g. Kabaddi, Football, Badminton, Basketball">' +
+          '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;">' +
+          '<button type="button" class="btn btn-ghost sport-preset-btn" data-s="Kabaddi" style="font-size:10px;padding:2px 6px;">🤼 Kabaddi</button>' +
+          '<button type="button" class="btn btn-ghost sport-preset-btn" data-s="Football" style="font-size:10px;padding:2px 6px;">⚽ Football</button>' +
+          '<button type="button" class="btn btn-ghost sport-preset-btn" data-s="Badminton" style="font-size:10px;padding:2px 6px;">🏸 Badminton</button>' +
+          '<button type="button" class="btn btn-ghost sport-preset-btn" data-s="Basketball" style="font-size:10px;padding:2px 6px;">🏀 Basketball</button>' +
+          '<button type="button" class="btn btn-ghost sport-preset-btn" data-s="Cricket" style="font-size:10px;padding:2px 6px;">🏏 Cricket</button>' +
+          '<button type="button" class="btn btn-ghost sport-preset-btn" data-s="Volleyball" style="font-size:10px;padding:2px 6px;">🏐 Volleyball</button>' +
+          '</div>' +
+          '</div>' +
+          '<div class="admin-field"><label>Slug (URL path key)</label><input type="text" id="cModalSlug" value="' + esc(club ? club.slug : '') + '" placeholder="e.g. kabaddi (URL: /club/kabaddi)"></div>' +
+          '<div class="admin-field"><label>Logo URL / Image Data</label><input type="text" id="cModalLogo" value="' + esc(club ? club.logo || '' : '') + '" placeholder="https://... (or leave blank for dynamic sport crest)"></div>' +
+          '<div class="admin-field"><label>Cover Banner Image URL</label><input type="text" id="cModalCover" value="' + esc(club ? club.coverImage || '' : '') + '" placeholder="https://... cover image for club banner"></div>' +
+          '<div class="admin-field full"><label>Club Description</label><textarea id="cModalDesc" rows="3" placeholder="Brief description of the club, its mission, achievements, and training ethos...">' + esc(club ? club.description || '' : '') + '</textarea></div>' +
           '<div class="admin-field" style="display:flex;align-items:center;gap:8px;padding-top:12px;">' +
           '<input type="checkbox" id="cModalActive"' + (club && club.active === false ? '' : ' checked') + '>' +
-          '<label for="cModalActive" style="margin:0;cursor:pointer;">Club Active</label>' +
+          '<label for="cModalActive" style="margin:0;cursor:pointer;font-weight:700;">Club Active &amp; Publicly Listed</label>' +
           '</div>' +
           '</div>' +
-          '<div style="display:flex;gap:12px;margin-top:16px;">' +
-          '<button class="btn btn-primary" id="saveClubBtn">Save Club</button>' +
+          '<div style="display:flex;gap:12px;margin-top:20px;">' +
+          '<button class="btn btn-primary" id="saveClubBtn" style="padding:10px 24px;font-weight:700;">Save &amp; Publish Club</button>' +
           '<button class="btn btn-outline" id="cancelClubBtn">Cancel</button>' +
           '</div>' +
           '</div>';
@@ -10214,7 +10480,19 @@
         formArea.scrollIntoView({ behavior: 'smooth' });
 
         var nameInput = document.getElementById('cModalName');
+        var sportInput = document.getElementById('cModalSport');
         var slugInput = document.getElementById('cModalSlug');
+
+        formArea.querySelectorAll('.sport-preset-btn').forEach(function (pBtn) {
+          pBtn.addEventListener('click', function () {
+            sportInput.value = pBtn.getAttribute('data-s');
+            if (!club && !nameInput.value.trim()) {
+              nameInput.value = 'ACEIT ' + sportInput.value;
+              slugInput.value = sportInput.value.toLowerCase();
+            }
+          });
+        });
+
         nameInput.addEventListener('input', function () {
           if (!club) {
             slugInput.value = nameInput.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -10225,11 +10503,13 @@
           formArea.classList.remove('open');
           formArea.innerHTML = '';
         });
+
         document.getElementById('saveClubBtn').addEventListener('click', function () {
           var name = (document.getElementById('cModalName').value || '').trim();
           var sport = (document.getElementById('cModalSport').value || '').trim();
           var slug = (document.getElementById('cModalSlug').value || '').trim();
           var logo = (document.getElementById('cModalLogo').value || '').trim();
+          var coverImage = (document.getElementById('cModalCover').value || '').trim();
           var description = (document.getElementById('cModalDesc').value || '').trim();
           var active = document.getElementById('cModalActive').checked;
 
@@ -10243,6 +10523,7 @@
             sport: sport,
             slug: slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
             logo: logo,
+            coverImage: coverImage,
             description: description,
             active: active
           };
@@ -10259,7 +10540,7 @@
             .then(function (r) { return r.json(); })
             .then(function (res) {
               if (res && res.success) {
-                showAlert(club ? 'Club updated successfully.' : 'Club created successfully.');
+                showAlert(club ? 'Club updated successfully.' : 'Club created successfully! Public page ready at /club/' + (payload.slug));
                 formArea.classList.remove('open');
                 renderClubsTab();
                 updateAdminUserBadge();
