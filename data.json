@@ -377,6 +377,17 @@
       "cap": true,
       "clubId": "kabaddi",
       "id": "id_mtab5ync5wudi"
+    },
+    {
+      "n": "Pawan Sehrawat",
+      "pos": "Lead Raider",
+      "num": 7,
+      "cat": "Boys Team",
+      "h": "5'11\"",
+      "exp": "3 yrs",
+      "cap": true,
+      "clubId": "kabaddi",
+      "id": "id_mtabo5lfgvdmn"
     }
   ],
   "gallery": [
@@ -777,6 +788,17 @@
       "status": "upcoming",
       "clubId": "kabaddi",
       "id": "id_mtab5ynfsdsdz",
+      "winner": "none"
+    },
+    {
+      "team1": "ACEIT Kabaddi",
+      "team2": "MNIT Raiders",
+      "opp": "MNIT Raiders",
+      "date": "2026-10-15",
+      "venue": "ACEIT Outdoor Kabaddi Arena",
+      "status": "upcoming",
+      "clubId": "kabaddi",
+      "id": "id_mtabo5li77uw9",
       "winner": "none"
     }
   ],

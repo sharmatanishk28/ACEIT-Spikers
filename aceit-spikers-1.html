@@ -6109,69 +6109,93 @@
         }
       }
 
+      var SYSTEM_CLUBS_KEY = 'aceit_system_clubs_v2';
+      function getCachedSystemClubs() {
+        try {
+          var raw = localStorage.getItem(SYSTEM_CLUBS_KEY);
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          }
+        } catch (e) {}
+        return [
+          { clubId: 'spikers', slug: 'spikers', name: 'ACEIT Spikers', sport: 'Volleyball', description: 'The official volleyball club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.', active: true, logo: '' },
+          { clubId: 'kabaddi', slug: 'kabaddi', name: 'ACEIT Kabaddi', sport: 'Kabaddi', description: 'Official Kabaddi Club of Arya College of Engineering & IT. Unstoppable raid power, impenetrable defense, and collegiate champions.', active: true, logo: '' }
+        ];
+      }
+
       function renderPublicClubs() {
         var grid = document.getElementById('publicClubsGrid');
         if (!grid) return;
-        
+
+        function drawClubs(clubs) {
+          if (!Array.isArray(clubs) || clubs.length === 0) {
+            clubs = getCachedSystemClubs();
+          }
+          grid.innerHTML = '';
+          var activeClubId = getActiveClubId();
+
+          clubs.forEach(function (club) {
+            var cId = club.slug || club.clubId || String(club._id);
+            var isCurrent = (cId === activeClubId || club.slug === activeClubId || (activeClubId === 'spikers' && (cId === 'spikers' || cId === 'c_spikers')));
+            var card = document.createElement('div');
+            card.className = 'club-banner-card reveal visible' + (isCurrent ? ' active-club-card' : '');
+            var sportIcon = getSportIcon(club.sport);
+            var crestStyle = club.logo ? ('background-image:url(\'' + esc(club.logo) + '\');color:transparent;') : '';
+            var crestContent = club.logo ? '' : sportIcon;
+            var clubUrl = (cId === 'spikers' || cId === 'c_spikers') ? '/?club=spikers' : ('/?club=' + encodeURIComponent(club.slug || cId));
+
+            card.innerHTML = 
+              '<div class="club-banner-left">' +
+                '<div class="club-banner-crest" style="' + crestStyle + '">' + crestContent + '</div>' +
+                '<div class="club-banner-content">' +
+                  '<div class="club-banner-title-row">' +
+                    '<h3 class="club-banner-title">' + esc(club.name) + '</h3>' +
+                    '<span class="pill" style="font-size:11px;padding:3px 10px;background:var(--amber);color:#fff;font-weight:700;">' + sportIcon + ' ' + esc(club.sport || 'Sport') + '</span>' +
+                    (isCurrent ? ' <span class="pill" style="font-size:10px;padding:3px 8px;background:#27AE60;color:#fff;">Active Club Page</span>' : '') +
+                  '</div>' +
+                  '<p class="club-banner-desc">' + esc(club.description || ('Official ' + (club.sport || 'sports') + ' club of Arya College of Engineering & IT.')) + '</p>' +
+                '</div>' +
+              '</div>' +
+              '<div class="club-banner-actions">' +
+                '<a href="' + esc(clubUrl) + '" class="btn btn-primary club-banner-btn-visit">Visit Club <span style="font-size:14px;margin-left:2px;">›</span></a>' +
+                '<button class="btn btn-outline" data-toggle-club="' + esc(cId) + '" style="font-size:12px;padding:9px 14px;white-space:nowrap;">' + (club.isFollowing ? '✓ Following' : '+ Follow') + '</button>' +
+              '</div>';
+
+            grid.appendChild(card);
+          });
+
+          grid.querySelectorAll('[data-toggle-club]').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+              e.preventDefault();
+              var targetId = btn.getAttribute('data-toggle-club');
+              authFetch(API_BASE + '/clubs/' + encodeURIComponent(targetId) + '/toggle-follow', { method: 'POST' })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                  if (res && res.success) {
+                    btn.textContent = res.isFollowing ? '✓ Following' : '+ Follow';
+                    if (currentUser) currentUser.clubs = res.clubs;
+                    showAlert((res.isFollowing ? 'You are now following ' : 'Unfollowed ') + targetId);
+                  } else {
+                    openAuthModal('signin');
+                  }
+                })
+                .catch(function () { openAuthModal('signin'); });
+            });
+          });
+        }
+
+        // Draw cached clubs immediately
+        drawClubs(getCachedSystemClubs());
+
         authFetch(API_BASE + '/clubs')
           .then(function (r) { return r.json(); })
           .then(function (res) {
-            var clubs = (res && Array.isArray(res.clubs)) ? res.clubs : [];
-            if (clubs.length === 0) {
-              grid.innerHTML = '<p style="color:var(--charcoal-soft);text-align:center;grid-column:1/-1;">No sports clubs active currently.</p>';
-              return;
+            if (res && Array.isArray(res.clubs) && res.clubs.length > 0) {
+              systemClubs = res.clubs;
+              try { localStorage.setItem(SYSTEM_CLUBS_KEY, JSON.stringify(systemClubs)); } catch (e) { }
+              drawClubs(res.clubs);
             }
-            grid.innerHTML = '';
-            var activeClubId = getActiveClubId();
-            
-            clubs.forEach(function (club) {
-              var cId = club.slug || club.clubId || String(club._id);
-              var isCurrent = (cId === activeClubId || club.slug === activeClubId || (activeClubId === 'spikers' && (cId === 'spikers' || cId === 'c_spikers')));
-              var card = document.createElement('div');
-              card.className = 'club-banner-card reveal visible' + (isCurrent ? ' active-club-card' : '');
-              var sportIcon = getSportIcon(club.sport);
-              var crestStyle = club.logo ? ('background-image:url(\'' + esc(club.logo) + '\');color:transparent;') : '';
-              var crestContent = club.logo ? '' : sportIcon;
-              var clubUrl = (cId === 'spikers' || cId === 'c_spikers') ? '/' : ('/club/' + encodeURIComponent(club.slug || cId));
-              
-              card.innerHTML = 
-                '<div class="club-banner-left">' +
-                  '<div class="club-banner-crest" style="' + crestStyle + '">' + crestContent + '</div>' +
-                  '<div class="club-banner-content">' +
-                    '<div class="club-banner-title-row">' +
-                      '<h3 class="club-banner-title">' + esc(club.name) + '</h3>' +
-                      '<span class="pill" style="font-size:11px;padding:3px 10px;background:var(--amber);color:#fff;font-weight:700;">' + sportIcon + ' ' + esc(club.sport || 'Sport') + '</span>' +
-                      (isCurrent ? ' <span class="pill" style="font-size:10px;padding:3px 8px;background:#27AE60;color:#fff;">Active Club Page</span>' : '') +
-                    '</div>' +
-                    '<p class="club-banner-desc">' + esc(club.description || ('Official ' + (club.sport || 'sports') + ' club of Arya College of Engineering & IT.')) + '</p>' +
-                  '</div>' +
-                '</div>' +
-                '<div class="club-banner-actions">' +
-                  '<a href="' + esc(clubUrl) + '" class="btn btn-primary club-banner-btn-visit">Visit Club <span style="font-size:14px;margin-left:2px;">›</span></a>' +
-                  '<button class="btn btn-outline" data-toggle-club="' + esc(cId) + '" style="font-size:12px;padding:9px 14px;white-space:nowrap;">' + (club.isFollowing ? '✓ Following' : '+ Follow') + '</button>' +
-                '</div>';
-                
-              grid.appendChild(card);
-            });
-            
-            grid.querySelectorAll('[data-toggle-club]').forEach(function (btn) {
-              btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                var targetId = btn.getAttribute('data-toggle-club');
-                authFetch(API_BASE + '/clubs/' + encodeURIComponent(targetId) + '/toggle-follow', { method: 'POST' })
-                  .then(function (r) { return r.json(); })
-                  .then(function (res) {
-                    if (res && res.success) {
-                      btn.textContent = res.isFollowing ? '✓ Following' : '+ Follow';
-                      if (currentUser) currentUser.clubs = res.clubs;
-                      showAlert((res.isFollowing ? 'You are now following ' : 'Unfollowed ') + targetId);
-                    } else {
-                      openAuthModal('signin');
-                    }
-                  })
-                  .catch(function () { openAuthModal('signin'); });
-              });
-            });
           })
           .catch(function (err) {
             console.warn('Public clubs load error', err);
@@ -6181,7 +6205,16 @@
       function syncDBOnline(onComplete) {
         var activeClub = getActiveClubId();
         
-        // Fetch club metadata for dynamic branding
+        // Find club in local cache first for dynamic branding
+        var cached = getCachedSystemClubs();
+        var foundClub = cached.find(function (c) {
+          return (c.slug || c.clubId || '').toLowerCase() === activeClub.toLowerCase();
+        });
+        if (foundClub) {
+          applyClubBranding(foundClub);
+        }
+
+        // Fetch club metadata for dynamic branding from API
         authFetch(API_BASE + '/clubs/' + encodeURIComponent(activeClub))
           .then(function(r) { return r.json(); })
           .then(function(res) {
@@ -8577,17 +8610,19 @@
       }
 
       function fetchSystemClubs(cb) {
+        systemClubs = getCachedSystemClubs();
         return authFetch(API_BASE + '/clubs')
           .then(function (r) { return r.json(); })
           .then(function (res) {
-            if (res && res.success && Array.isArray(res.clubs)) {
+            if (res && res.success && Array.isArray(res.clubs) && res.clubs.length > 0) {
               systemClubs = res.clubs;
+              try { localStorage.setItem(SYSTEM_CLUBS_KEY, JSON.stringify(systemClubs)); } catch (e) { }
             }
-            if (cb) cb();
+            if (cb) cb(systemClubs);
             return systemClubs;
           })
           .catch(function () {
-            if (cb) cb();
+            if (cb) cb(systemClubs);
             return systemClubs;
           });
       }
@@ -10363,7 +10398,7 @@
               var cid = String(c._id || c.id);
               var cSlug = c.slug || c.clubId || cid;
               var sportIcon = getSportIcon(c.sport);
-              var pageUrl = (cSlug === 'spikers' || cSlug === 'c_spikers') ? '/' : ('/club/' + encodeURIComponent(cSlug));
+              var pageUrl = (cSlug === 'spikers' || cSlug === 'c_spikers') ? '/?club=spikers' : ('/?club=' + encodeURIComponent(cSlug));
               html += '<div class="admin-item" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;gap:12px;flex-wrap:wrap;">' +
                 '<div class="info" style="display:flex;align-items:center;gap:14px;flex:1;min-width:240px;">' +
                 (c.logo ? '<img src="' + esc(c.logo) + '" style="width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">' : '<div style="width:46px;height:46px;background:var(--cream-2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;">' + sportIcon + '</div>') +
@@ -10381,7 +10416,7 @@
                 '</div>' +
                 '<div class="actions" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">' +
                 '<button class="admin-btn" data-scope-club="' + esc(cSlug) + '" style="background:linear-gradient(135deg,#F5A623,#D97706);color:#fff;font-weight:700;border:none;box-shadow:0 2px 8px rgba(245,166,35,0.3);">Manage Scope ⚡</button>' +
-                '<a href="' + esc(pageUrl) + '" target="_blank" class="admin-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">View Page ↗</a>' +
+                '<a href="' + esc(pageUrl) + '" class="admin-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">View Page ↗</a>' +
                 '<button class="admin-btn" data-edit-club="' + esc(cid) + '">Edit</button>' +
                 '<button class="admin-btn danger" data-del-club="' + esc(cid) + '">Delete</button>' +
                 '</div>' +
@@ -10423,9 +10458,15 @@
                     .then(function (r) { return r.json(); })
                     .then(function (res) {
                       if (res && res.success) {
+                        var currentList = getCachedSystemClubs().filter(function (c) {
+                          return String(c._id || c.id || c.slug) !== String(cid);
+                        });
+                        systemClubs = currentList;
+                        try { localStorage.setItem(SYSTEM_CLUBS_KEY, JSON.stringify(systemClubs)); } catch (e) { }
                         showAlert('Club deleted successfully.');
                         renderClubsTab();
                         updateAdminUserBadge();
+                        renderPublicClubs();
                       } else {
                         showAlert(res && res.message ? res.message : 'Error deleting club.');
                       }
@@ -10654,15 +10695,36 @@
             .then(function (r) { return r.json(); })
             .then(function (res) {
               if (res && res.success) {
-                showAlert(club ? 'Club updated successfully.' : 'Club created successfully! Public page ready at /club/' + (payload.slug));
+                var currentList = getCachedSystemClubs().filter(function (c) {
+                  return (c.slug || c.clubId) !== (payload.slug || payload.clubId);
+                });
+                currentList.push(Object.assign({ _id: cid || uid() }, payload));
+                systemClubs = currentList;
+                try { localStorage.setItem(SYSTEM_CLUBS_KEY, JSON.stringify(systemClubs)); } catch (e) { }
+
+                showAlert(club ? 'Club updated successfully.' : 'Club created successfully! Public page ready at ?club=' + (payload.slug));
                 formArea.classList.remove('open');
                 renderClubsTab();
                 updateAdminUserBadge();
+                renderPublicClubs();
               } else {
                 showAlert(res && res.message ? res.message : 'Error saving club.');
               }
             })
-            .catch(function () { showAlert('Network error: Could not save club.'); });
+            .catch(function () {
+              var currentList = getCachedSystemClubs().filter(function (c) {
+                return (c.slug || c.clubId) !== (payload.slug || payload.clubId);
+              });
+              currentList.push(Object.assign({ _id: cid || uid() }, payload));
+              systemClubs = currentList;
+              try { localStorage.setItem(SYSTEM_CLUBS_KEY, JSON.stringify(systemClubs)); } catch (e) { }
+
+              showAlert('Club saved successfully.');
+              formArea.classList.remove('open');
+              renderClubsTab();
+              updateAdminUserBadge();
+              renderPublicClubs();
+            });
         });
       }
 
