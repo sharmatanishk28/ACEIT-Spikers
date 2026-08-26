@@ -10444,8 +10444,12 @@
         var formArea = document.getElementById('clubFormArea');
         if (!formArea) return;
 
-        var html = '<div class="admin-form-box" style="margin-top:20px;padding:24px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg-card);box-shadow:0 4px 20px rgba(0,0,0,0.06);">' +
-          '<h4 style="font-size:18px;font-weight:800;color:var(--charcoal);margin-bottom:16px;">' + (club ? 'Edit Club: ' + esc(club.name) : 'Add New Sports Club') + '</h4>' +
+        var existingLogo = (club && club.logo) ? club.logo : '';
+        var existingCover = (club && club.coverImage) ? club.coverImage : '';
+        var sportIcon = getSportIcon(club ? club.sport : '');
+
+        var html = '<div class="admin-form-box" style="margin-top:20px;padding:26px;border:1.5px solid var(--border);border-radius:14px;background:var(--bg-card);box-shadow:0 6px 24px rgba(0,0,0,0.06);">' +
+          '<h4 style="font-size:19px;font-weight:800;color:var(--charcoal);margin-bottom:18px;">' + (club ? 'Edit Club: ' + esc(club.name) : 'Add New Sports Club') + '</h4>' +
           '<div class="admin-form-grid">' +
           '<div class="admin-field"><label>Club Name *</label><input type="text" id="cModalName" value="' + esc(club ? club.name : '') + '" placeholder="e.g. ACEIT Kabaddi, ACEIT Strikers"></div>' +
           '<div class="admin-field">' +
@@ -10461,8 +10465,41 @@
           '</div>' +
           '</div>' +
           '<div class="admin-field"><label>Slug (URL path key)</label><input type="text" id="cModalSlug" value="' + esc(club ? club.slug : '') + '" placeholder="e.g. kabaddi (URL: /club/kabaddi)"></div>' +
-          '<div class="admin-field"><label>Logo URL / Image Data</label><input type="text" id="cModalLogo" value="' + esc(club ? club.logo || '' : '') + '" placeholder="https://... (or leave blank for dynamic sport crest)"></div>' +
-          '<div class="admin-field"><label>Cover Banner Image URL</label><input type="text" id="cModalCover" value="' + esc(club ? club.coverImage || '' : '') + '" placeholder="https://... cover image for club banner"></div>' +
+          
+          '<!-- CLUB LOGO UPLOADER -->' +
+          '<div class="admin-field">' +
+          '<label>Club Logo (Upload Device Image or URL)</label>' +
+          '<div class="admin-photo-upload" id="cModalLogoWrap" style="display:flex;align-items:center;gap:14px;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg-card);">' +
+          '<div id="cModalLogoPreviewBox" style="width:64px;height:64px;border-radius:10px;border:1.5px solid var(--border);background:var(--cream-2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">' +
+          (existingLogo ? '<img src="' + esc(existingLogo) + '" style="width:100%;height:100%;object-fit:cover;">' : '<span style="font-size:26px;">' + sportIcon + '</span>') +
+          '</div>' +
+          '<div style="flex:1;min-width:0;">' +
+          '<input type="file" id="cModalLogoFile" accept="image/*" class="admin-photo-file" style="font-size:12px;margin-bottom:6px;width:100%;">' +
+          '<input type="text" id="cModalLogoUrlInput" value="' + esc(existingLogo) + '" placeholder="Or paste Logo Image URL (https://...)" style="font-size:11px;padding:5px 8px;width:100%;border-radius:6px;border:1px solid var(--border);">' +
+          '<input type="hidden" id="cModalLogo" value="' + esc(existingLogo) + '">' +
+          '</div>' +
+          '<button type="button" class="admin-btn admin-photo-remove" id="cModalLogoRemove" style="' + (existingLogo ? '' : 'display:none;') + '">Remove</button>' +
+          '</div>' +
+          '</div>' +
+
+          '<!-- CLUB COVER BANNER UPLOADER -->' +
+          '<div class="admin-field full">' +
+          '<label>Cover Banner Image (Upload Wide Hero Banner or URL)</label>' +
+          '<div class="admin-photo-upload" id="cModalCoverWrap" style="padding:14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg-card);">' +
+          '<div id="cModalCoverPreviewBox" style="width:100%;height:130px;border-radius:8px;border:1.5px solid var(--border);background:var(--cream-2);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:12px;background-size:cover;background-position:center;' + (existingCover ? ('background-image:url(\'' + esc(existingCover) + '\');') : '') + '">' +
+          (existingCover ? '' : '<span style="font-size:13px;color:var(--charcoal-soft);font-weight:600;">🖼️ No banner image uploaded (Choose file or paste URL below)</span>') +
+          '</div>' +
+          '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
+          '<div style="flex:1;min-width:200px;">' +
+          '<input type="file" id="cModalCoverFile" accept="image/*" class="admin-photo-file" style="font-size:12px;margin-bottom:6px;width:100%;">' +
+          '<input type="text" id="cModalCoverUrlInput" value="' + esc(existingCover) + '" placeholder="Or paste Banner Image URL (https://...)" style="font-size:11px;padding:6px 10px;width:100%;border-radius:6px;border:1px solid var(--border);">' +
+          '<input type="hidden" id="cModalCover" value="' + esc(existingCover) + '">' +
+          '</div>' +
+          '<button type="button" class="admin-btn admin-photo-remove" id="cModalCoverRemove" style="' + (existingCover ? '' : 'display:none;') + '">Remove Banner</button>' +
+          '</div>' +
+          '</div>' +
+          '</div>' +
+
           '<div class="admin-field full"><label>Club Description</label><textarea id="cModalDesc" rows="3" placeholder="Brief description of the club, its mission, achievements, and training ethos...">' + esc(club ? club.description || '' : '') + '</textarea></div>' +
           '<div class="admin-field" style="display:flex;align-items:center;gap:8px;padding-top:12px;">' +
           '<input type="checkbox" id="cModalActive"' + (club && club.active === false ? '' : ' checked') + '>' +
@@ -10483,12 +10520,89 @@
         var sportInput = document.getElementById('cModalSport');
         var slugInput = document.getElementById('cModalSlug');
 
+        var logoHidden = document.getElementById('cModalLogo');
+        var logoUrlInput = document.getElementById('cModalLogoUrlInput');
+        var logoFileInput = document.getElementById('cModalLogoFile');
+        var logoPreviewBox = document.getElementById('cModalLogoPreviewBox');
+        var logoRemoveBtn = document.getElementById('cModalLogoRemove');
+
+        var coverHidden = document.getElementById('cModalCover');
+        var coverUrlInput = document.getElementById('cModalCoverUrlInput');
+        var coverFileInput = document.getElementById('cModalCoverFile');
+        var coverPreviewBox = document.getElementById('cModalCoverPreviewBox');
+        var coverRemoveBtn = document.getElementById('cModalCoverRemove');
+
+        function updateLogoPreview(src) {
+          logoHidden.value = src || '';
+          logoUrlInput.value = (src && !src.startsWith('data:')) ? src : '';
+          if (src) {
+            logoPreviewBox.innerHTML = '<img src="' + esc(src) + '" style="width:100%;height:100%;object-fit:cover;">';
+            logoRemoveBtn.style.display = 'inline-block';
+          } else {
+            var icon = getSportIcon(sportInput.value);
+            logoPreviewBox.innerHTML = '<span style="font-size:26px;">' + icon + '</span>';
+            logoRemoveBtn.style.display = 'none';
+          }
+        }
+
+        function updateCoverPreview(src) {
+          coverHidden.value = src || '';
+          coverUrlInput.value = (src && !src.startsWith('data:')) ? src : '';
+          if (src) {
+            coverPreviewBox.style.backgroundImage = 'url(\'' + esc(src) + '\')';
+            coverPreviewBox.innerHTML = '';
+            coverRemoveBtn.style.display = 'inline-block';
+          } else {
+            coverPreviewBox.style.backgroundImage = 'none';
+            coverPreviewBox.innerHTML = '<span style="font-size:13px;color:var(--charcoal-soft);font-weight:600;">🖼️ No banner image uploaded (Choose file or paste URL below)</span>';
+            coverRemoveBtn.style.display = 'none';
+          }
+        }
+
+        // Logo upload handlers
+        logoFileInput.addEventListener('change', function (e) {
+          var file = e.target.files[0];
+          if (!file) return;
+          compressImage(file, 800, 0.85, function (dataUrl) {
+            updateLogoPreview(dataUrl);
+          });
+        });
+        logoUrlInput.addEventListener('input', function () {
+          var url = logoUrlInput.value.trim();
+          updateLogoPreview(url);
+        });
+        logoRemoveBtn.addEventListener('click', function () {
+          logoFileInput.value = '';
+          updateLogoPreview('');
+        });
+
+        // Cover banner upload handlers
+        coverFileInput.addEventListener('change', function (e) {
+          var file = e.target.files[0];
+          if (!file) return;
+          compressImage(file, 1600, 0.85, function (dataUrl) {
+            updateCoverPreview(dataUrl);
+          });
+        });
+        coverUrlInput.addEventListener('input', function () {
+          var url = coverUrlInput.value.trim();
+          updateCoverPreview(url);
+        });
+        coverRemoveBtn.addEventListener('click', function () {
+          coverFileInput.value = '';
+          updateCoverPreview('');
+        });
+
+        // Sport presets
         formArea.querySelectorAll('.sport-preset-btn').forEach(function (pBtn) {
           pBtn.addEventListener('click', function () {
             sportInput.value = pBtn.getAttribute('data-s');
             if (!club && !nameInput.value.trim()) {
               nameInput.value = 'ACEIT ' + sportInput.value;
               slugInput.value = sportInput.value.toLowerCase();
+            }
+            if (!logoHidden.value) {
+              updateLogoPreview('');
             }
           });
         });
