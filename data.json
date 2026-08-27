@@ -1369,6 +1369,46 @@
   ],
   "users": [
     {
+      "_id": "u_1787826150708",
+      "name": "Cricket Club Admin",
+      "username": "cricket_admin",
+      "rtuRollNo": "22EATCR001",
+      "email": "cricket.admin@aceit.edu.in",
+      "mobile": "",
+      "photo": "",
+      "passwordHash": "$2b$10$0b9BhZd.An8Ntq9eH8mgUulO41DwyrYRAKkVUZ24INVs0Cpv10T16",
+      "role": "ADMIN",
+      "clubId": "cricket",
+      "clubs": [
+        "cricket"
+      ],
+      "bio": "",
+      "sport": "Volleyball",
+      "branch": "Computer Science & Engineering",
+      "year": "3rd Year",
+      "position": "Outside Hitter",
+      "jerseyNo": "",
+      "height": "",
+      "achievements": [],
+      "permissions": [
+        "players.*",
+        "matches.*",
+        "news.*",
+        "gallery.*",
+        "events.*",
+        "training.*",
+        "testimonials.*",
+        "sponsors.*",
+        "stats.*",
+        "about.*",
+        "contact.*",
+        "applications.*"
+      ],
+      "active": true,
+      "createdAt": "2026-08-27T10:22:30.709Z",
+      "lastLoginAt": null
+    },
+    {
       "name": "Founder / Super Owner",
       "username": "founder",
       "email": "founder@aceit.edu.in",
@@ -1408,7 +1448,7 @@
       "accentColor": "#D97706",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:03:04.298Z"
+      "createdAt": "2026-08-27T10:06:12.356Z"
     },
     {
       "_id": "c_kabaddi",
@@ -1423,7 +1463,7 @@
       "accentColor": "#E74C3C",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:03:04.298Z"
+      "createdAt": "2026-08-27T10:06:12.356Z"
     },
     {
       "_id": "c_dunkers",
@@ -1438,7 +1478,7 @@
       "accentColor": "#D35400",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:03:04.298Z"
+      "createdAt": "2026-08-27T10:06:12.356Z"
     },
     {
       "_id": "c_strikers",
@@ -1453,7 +1493,7 @@
       "accentColor": "#2ECC71",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:03:04.298Z"
+      "createdAt": "2026-08-27T10:06:12.356Z"
     },
     {
       "_id": "c_shuttlers",
@@ -1468,7 +1508,7 @@
       "accentColor": "#1ABC9C",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:03:04.298Z"
+      "createdAt": "2026-08-27T10:06:12.356Z"
     },
     {
       "_id": "c_cricket",
@@ -1483,7 +1523,7 @@
       "accentColor": "#3498DB",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:03:04.298Z"
+      "createdAt": "2026-08-27T10:06:12.356Z"
     }
   ]
 }

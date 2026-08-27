@@ -889,12 +889,15 @@ function generateId() {
 
 // Health Check
 app.get('/api/health', (req, res) => {
-  const isMongo = isMongoConnected();
+  const readyState = mongoose.connection.readyState;
+  const isMongo = readyState === 1;
   const mongoError = isMongo ? null : lastMongoError;
   res.json({
     status: 'ok',
     database: isMongo ? 'MongoDB Atlas' : 'Local File (data.json fallback)',
     connected: isMongo,
+    mongoState: ['disconnected', 'connected', 'connecting', 'disconnecting'][readyState] || 'unknown',
+    hasUri: !!process.env.MONGODB_URI,
     lastError: mongoError
   });
 });
