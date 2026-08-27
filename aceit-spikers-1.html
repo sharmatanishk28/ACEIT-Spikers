@@ -594,6 +594,33 @@
         display: block !important;
         margin-top: 8px;
       }
+
+      /* Mobile Clubs Submenu */
+      .nav-clubs-sub {
+        display: none;
+        flex-direction: column;
+        gap: 2px;
+        padding: 4px 0 4px 10px;
+        border-left: 2px solid var(--amber);
+        margin: 2px 0 4px 14px;
+      }
+      .nav-clubs-sub.open {
+        display: flex;
+      }
+      .nav-clubs-sub a {
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        padding: 7px 12px !important;
+        color: var(--charcoal) !important;
+        border-bottom: none !important;
+        border-radius: 8px !important;
+        gap: 8px;
+      }
+      .nav-clubs-sub a:hover {
+        background: var(--cream-2);
+        color: var(--amber) !important;
+        padding-left: 16px !important;
+      }
     }
 
     /* Small Tablets & Mobile Phones (< 600px) */
@@ -4865,7 +4892,16 @@
         <li><a href="#training">Training</a></li>
         <li><a href="#news">News</a></li>
         <li><a href="#events">Events</a></li>
-        <li><a href="#clubs">Clubs</a></li>
+        <li id="navClubsMenuItem">
+          <!-- Desktop: plain scroll link; Mobile: toggle + sub-list -->
+          <a href="#clubs" id="navClubsToggle" aria-expanded="false" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>Clubs</span>
+            <span id="navClubsArrow" style="font-size:10px;transition:transform .25s;display:none;">▼</span>
+          </a>
+          <div class="nav-clubs-sub" id="navClubsSub">
+            <a href="#clubs" style="font-style:italic;opacity:.7;">↳ All Clubs (explore)</a>
+          </div>
+        </li>
         <li><a href="#contact">Contact</a></li>
         <li class="mobile-only-nav-cta" style="display:none;"><a href="#join" class="btn btn-primary" style="margin-top:6px;display:flex;align-items:center;justify-content:center;color:#1a0f00;font-weight:800;width:100%;">🏐 Join Club</a></li>
       </ul>
@@ -5957,25 +5993,86 @@
       /* ---------- Mobile menu ---------- */
       var burger = document.getElementById('burger');
       var navLinks = document.getElementById('navLinks');
+      var isMobileNav = function() { return window.innerWidth < 1220; };
+
+      // Render nav clubs sub-list dynamically from systemClubs
+      function renderNavClubsMenu() {
+        var sub = document.getElementById('navClubsSub');
+        var arrow = document.getElementById('navClubsArrow');
+        var toggle = document.getElementById('navClubsToggle');
+        if (!sub) return;
+        var clubs = (typeof systemClubs !== 'undefined' && Array.isArray(systemClubs) && systemClubs.length)
+          ? systemClubs
+          : (typeof getCachedSystemClubs === 'function' ? getCachedSystemClubs() : []);
+        // Build items
+        var items = '<a href="#clubs" data-close-nav="1" style="font-style:italic;opacity:.7;font-size:11px;">↳ View All Clubs</a>';
+        clubs.forEach(function(c) {
+          var slug = c.slug || c.clubId || '';
+          var name = c.name || slug;
+          var sport = c.sport || '';
+          var icon = (typeof getSportIcon === 'function') ? getSportIcon(sport) : '🏆';
+          var url = '/?club=' + encodeURIComponent(slug);
+          items += '<a href="' + url + '" data-close-nav="1" style="gap:8px;">' + icon + ' <span>' + name + '</span><span style="font-size:10px;opacity:.55;font-weight:500;">' + sport + '</span></a>';
+        });
+        sub.innerHTML = items;
+        // Wire close on click for dynamically added items
+        sub.querySelectorAll('[data-close-nav]').forEach(function(a) {
+          a.addEventListener('click', function() {
+            if (navLinks) navLinks.classList.remove('open');
+            if (burger) burger.classList.remove('active');
+            sub.classList.remove('open');
+            if (arrow) { arrow.style.transform = ''; toggle && toggle.setAttribute('aria-expanded','false'); }
+          });
+        });
+        // Show arrow only on mobile
+        if (arrow) arrow.style.display = isMobileNav() ? 'inline' : 'none';
+      }
+
       if (burger && navLinks) {
         burger.addEventListener('click', function (e) {
           e.stopPropagation();
           navLinks.classList.toggle('open');
           burger.classList.toggle('active');
+          renderNavClubsMenu();
         });
-        navLinks.querySelectorAll('a').forEach(function (a) {
+
+        // Clubs toggle on mobile
+        var navClubsToggle = document.getElementById('navClubsToggle');
+        var navClubsSub = document.getElementById('navClubsSub');
+        var navClubsArrow = document.getElementById('navClubsArrow');
+        if (navClubsToggle && navClubsSub) {
+          navClubsToggle.addEventListener('click', function(e) {
+            if (!isMobileNav()) return; // desktop: let href go to #clubs
+            e.preventDefault();
+            var isOpen = navClubsSub.classList.toggle('open');
+            if (navClubsArrow) navClubsArrow.style.transform = isOpen ? 'rotate(180deg)' : '';
+            navClubsToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          });
+        }
+
+        navLinks.querySelectorAll('a:not(#navClubsToggle):not([data-close-nav])').forEach(function (a) {
           a.addEventListener('click', function () {
             navLinks.classList.remove('open');
             burger.classList.remove('active');
+            if (navClubsSub) navClubsSub.classList.remove('open');
+            if (navClubsArrow) navClubsArrow.style.transform = '';
           });
         });
         document.addEventListener('click', function (e) {
           if (!e.target.closest('#nav')) {
             navLinks.classList.remove('open');
             burger.classList.remove('active');
+            if (navClubsSub) navClubsSub.classList.remove('open');
+            if (navClubsArrow) navClubsArrow.style.transform = '';
           }
         });
       }
+
+      // Re-render nav clubs whenever systemClubs updates
+      window.addEventListener('resize', function() {
+        var arrow = document.getElementById('navClubsArrow');
+        if (arrow) arrow.style.display = isMobileNav() ? 'inline' : 'none';
+      });
 
       /* ---------- Mouse glow ---------- */
       var glow = document.getElementById('mouseGlow');
@@ -7279,6 +7376,7 @@
 
         // Draw cached clubs immediately
         drawClubs(getCachedSystemClubs());
+        if (typeof renderNavClubsMenu === 'function') renderNavClubsMenu();
 
         authFetch(API_BASE + '/clubs')
           .then(function (r) { return r.json(); })
@@ -7287,6 +7385,7 @@
               systemClubs = res.clubs;
               try { localStorage.setItem(SYSTEM_CLUBS_KEY, JSON.stringify(systemClubs)); } catch (e) { }
               drawClubs(res.clubs);
+              if (typeof renderNavClubsMenu === 'function') renderNavClubsMenu();
             }
           })
           .catch(function (err) {
