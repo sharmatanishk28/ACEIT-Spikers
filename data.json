@@ -376,6 +376,25 @@
       "insta": "manuel_gk",
       "photo": "",
       "clubId": "strikers-fc"
+    },
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mtbi3bv8bmrbx"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mtbi3cufmda7z"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mtbi3d0vtj6mo"
     }
   ],
   "matches": [
@@ -547,6 +566,17 @@
       "status": "upcoming",
       "winner": "none",
       "clubId": "strikers-fc"
+    },
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mtbi3c1jsrk34",
+      "team2": "City FC",
+      "winner": "none"
     }
   ],
   "news": [
@@ -1369,51 +1399,12 @@
   ],
   "users": [
     {
-      "_id": "u_1787826150708",
-      "name": "Cricket Club Admin",
-      "username": "cricket_admin",
-      "rtuRollNo": "22EATCR001",
-      "email": "cricket.admin@aceit.edu.in",
-      "mobile": "",
-      "photo": "",
-      "passwordHash": "$2b$10$0b9BhZd.An8Ntq9eH8mgUulO41DwyrYRAKkVUZ24INVs0Cpv10T16",
-      "role": "ADMIN",
-      "clubId": "cricket",
-      "clubs": [
-        "cricket"
-      ],
-      "bio": "",
-      "sport": "Volleyball",
-      "branch": "Computer Science & Engineering",
-      "year": "3rd Year",
-      "position": "Outside Hitter",
-      "jerseyNo": "",
-      "height": "",
-      "achievements": [],
-      "permissions": [
-        "players.*",
-        "matches.*",
-        "news.*",
-        "gallery.*",
-        "events.*",
-        "training.*",
-        "testimonials.*",
-        "sponsors.*",
-        "stats.*",
-        "about.*",
-        "contact.*",
-        "applications.*"
-      ],
-      "active": true,
-      "createdAt": "2026-08-27T10:22:30.709Z",
-      "lastLoginAt": null
-    },
-    {
+      "_id": "u_founder_real",
       "name": "Founder / Super Owner",
       "username": "founder",
       "email": "founder@aceit.edu.in",
       "rtuRollNo": "00EATFND001",
-      "passwordHash": "$2b$10$hoGWUHrmsEgTJo3BezI/h.btrV9oV0yeSxzEGdbA/.eFSSNjl6wXS",
+      "passwordHash": "$2b$10$1VNexqXl9zrE.nhoBGyWhOImFOnJHvbuuThWMlxPy7hlnWWriSj42",
       "role": "OWNER",
       "clubId": "ALL",
       "clubs": [
@@ -1430,7 +1421,8 @@
       "active": true,
       "sport": "All Sports",
       "branch": "Administration",
-      "year": "Faculty / Management"
+      "year": "Faculty / Management",
+      "createdAt": "2026-08-27T12:23:21.043Z"
     }
   ],
   "clubs": [
@@ -1448,7 +1440,7 @@
       "accentColor": "#D97706",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:06:12.356Z"
+      "createdAt": "2026-08-27T12:23:20.981Z"
     },
     {
       "_id": "c_kabaddi",
@@ -1463,7 +1455,7 @@
       "accentColor": "#E74C3C",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:06:12.356Z"
+      "createdAt": "2026-08-27T12:23:20.981Z"
     },
     {
       "_id": "c_dunkers",
@@ -1478,7 +1470,7 @@
       "accentColor": "#D35400",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:06:12.356Z"
+      "createdAt": "2026-08-27T12:23:20.981Z"
     },
     {
       "_id": "c_strikers",
@@ -1493,7 +1485,7 @@
       "accentColor": "#2ECC71",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:06:12.356Z"
+      "createdAt": "2026-08-27T12:23:20.981Z"
     },
     {
       "_id": "c_shuttlers",
@@ -1508,7 +1500,7 @@
       "accentColor": "#1ABC9C",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:06:12.356Z"
+      "createdAt": "2026-08-27T12:23:20.981Z"
     },
     {
       "_id": "c_cricket",
@@ -1523,7 +1515,13 @@
       "accentColor": "#3498DB",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-27T10:06:12.356Z"
+      "createdAt": "2026-08-27T12:23:20.981Z"
     }
-  ]
+  ],
+  "_id": "6a7a204cb56cfd67cb14f07d",
+  "key": "main",
+  "pin": "2027",
+  "createdAt": "2026-08-10T19:02:36.651Z",
+  "updatedAt": "2026-08-27T12:30:15.498Z",
+  "__v": 0
 }

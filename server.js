@@ -7,12 +7,14 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'spikers_jwt_secret_key_2026_super_secure';
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? null : 'spikers_jwt_secret_key_2026_dev_only');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data.json');
+const hasMongoUri = () => Boolean(process.env.MONGODB_URI);
 
 // In-memory fallback stores for standalone/offline dev mode without MONGODB_URI
 let localClubs = [
@@ -137,7 +139,11 @@ let localUsers = [
   }
 ];
 
-app.use(cors());
+const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').map(origin => origin.trim()).filter(Boolean);
+app.use(cors({
+  origin: allowedOrigins.length ? allowedOrigins : true,
+  credentials: true
+}));
 app.use(cookieParser());
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -258,6 +264,32 @@ async function connectToDatabase() {
   return cached.conn;
 }
 
+function databaseUnavailable(res) {
+  return res.status(503).json({
+    success: false,
+    message: 'Authentication database is unavailable. Please try again shortly.',
+    error: lastMongoError || 'MongoDB connection is not available'
+  });
+}
+
+function authConfigurationUnavailable(res) {
+  return res.status(503).json({
+    success: false,
+    message: 'Authentication is not configured on this server.'
+  });
+}
+
+function setAuthCookies(res, token) {
+  const secure = process.env.NODE_ENV === 'production';
+  const options = { httpOnly: true, secure, sameSite: secure ? 'none' : 'lax', maxAge: 7 * 86400000, path: '/' };
+  res.cookie('token', token, options);
+  res.cookie('auth_token', token, options);
+}
+
+function tokenHash(token) {
+  return crypto.createHash('sha256').update(String(token)).digest('hex');
+}
+
 // Club Schema for MongoDB Atlas
 const clubSchema = new mongoose.Schema({
   key: { type: String, default: 'main', unique: true },
@@ -347,6 +379,12 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
+
+const revokedTokenSchema = new mongoose.Schema({
+  tokenHash: { type: String, required: true, unique: true },
+  expiresAt: { type: Date, required: true, expires: 0 }
+}, { timestamps: true });
+const RevokedToken = mongoose.models.RevokedToken || mongoose.model('RevokedToken', revokedTokenSchema);
 
 // Join Club Application Model for Tally Webhook & Student Dashboard
 const applicationSchema = new mongoose.Schema({
@@ -599,6 +637,7 @@ async function authenticateUser(req, res, next) {
 
     const dbConn = await connectToDatabase();
     if (dbConn) {
+      if (await RevokedToken.exists({ tokenHash: tokenHash(token) })) return next();
       let user = null;
       if (mongoose.Types.ObjectId.isValid(decoded.id)) {
         user = await User.findById(decoded.id).select('-passwordHash');
@@ -1926,6 +1965,7 @@ app.post('/api/pin', authenticateUser, requireAuth, async (req, res) => {
 // 1. Auth: Student Signup
 const handleSignup = async (req, res) => {
   try {
+    if (!JWT_SECRET) return authConfigurationUnavailable(res);
     const { name, username, rtuRollNo, email, mobile, password, photo, branch, year, position, jerseyNo, height, sport, clubs } = req.body;
     if (!name || !username || !rtuRollNo || !email || !password) {
       return res.status(400).json({ success: false, message: 'Full Name, Username, RTU Roll No., Email, and Password are required.' });
@@ -1962,6 +2002,7 @@ const handleSignup = async (req, res) => {
     }
 
     const dbConn = await connectToDatabase();
+    if (hasMongoUri() && !dbConn) return databaseUnavailable(res);
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(String(password), salt);
 
@@ -2006,8 +2047,7 @@ const handleSignup = async (req, res) => {
         JWT_SECRET,
         { expiresIn: '7d' }
       );
-      res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
-      res.cookie('auth_token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
+      setAuthCookies(res, token);
 
       const safeUser = Object.assign({}, newUser);
       delete safeUser.passwordHash;
@@ -2053,8 +2093,7 @@ const handleSignup = async (req, res) => {
       JWT_SECRET,
       { expiresIn: '7d' }
     );
-    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
-    res.cookie('auth_token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
+    setAuthCookies(res, token);
 
     const safeUser = newUser.toObject();
     delete safeUser.passwordHash;
@@ -2071,6 +2110,7 @@ app.post('/api/signup', handleSignup);
 // 2. Auth: Login (Universal Single-ID Login across ALL Clubs)
 const handleLogin = async (req, res) => {
   try {
+    if (!JWT_SECRET) return authConfigurationUnavailable(res);
     const inputVal = (req.body.username || req.body.login || req.body.email || '').trim();
     const password = req.body.password;
     if (!inputVal || !password) {
@@ -2079,6 +2119,7 @@ const handleLogin = async (req, res) => {
 
     const cleanInput = String(inputVal).toLowerCase().trim();
     const dbConn = await connectToDatabase();
+    if (hasMongoUri() && !dbConn) return databaseUnavailable(res);
 
     let user = null;
     if (dbConn) {
@@ -2137,8 +2178,7 @@ const handleLogin = async (req, res) => {
       JWT_SECRET,
       { expiresIn: '7d' }
     );
-    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
-    res.cookie('auth_token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
+    setAuthCookies(res, token);
 
     const safeUser = user.toObject ? user.toObject() : Object.assign({}, user);
     delete safeUser.passwordHash;
@@ -2157,9 +2197,29 @@ app.post('/api/auth/login', handleLogin);
 app.post('/api/login', handleLogin);
 
 // 3. Auth: Logout
-const handleLogout = (req, res) => {
-  res.clearCookie('token');
-  res.clearCookie('auth_token');
+const handleLogout = async (req, res) => {
+  const token = (req.headers.authorization && req.headers.authorization.startsWith('Bearer '))
+    ? req.headers.authorization.slice(7)
+    : (req.cookies && (req.cookies.token || req.cookies.auth_token));
+  if (token && JWT_SECRET) {
+    try {
+      const decoded = jwt.decode(token);
+      const dbConn = await connectToDatabase();
+      if (dbConn && decoded && decoded.exp) {
+        await RevokedToken.updateOne(
+          { tokenHash: tokenHash(token) },
+          { tokenHash: tokenHash(token), expiresAt: new Date(decoded.exp * 1000) },
+          { upsert: true }
+        );
+      }
+    } catch (err) {
+      console.error('[Auth Logout Error]', err.message);
+    }
+  }
+  const secure = process.env.NODE_ENV === 'production';
+  const cookieOptions = { httpOnly: true, secure, sameSite: secure ? 'none' : 'lax', path: '/' };
+  res.clearCookie('token', cookieOptions);
+  res.clearCookie('auth_token', cookieOptions);
   res.json({ success: true, message: 'Logged out' });
 };
 
@@ -2836,6 +2896,7 @@ app.delete('/api/clubs/:id', authenticateUser, requireAuth, requirePermission('c
 app.get('/api/users', authenticateUser, requireAuth, requirePermission('users.view'), async (req, res) => {
   try {
     const dbConn = await connectToDatabase();
+    if (hasMongoUri() && !dbConn) return databaseUnavailable(res);
     if (!dbConn) {
       readLocalFileDB();
       let safeUsers = localUsers.map(u => {
@@ -2882,6 +2943,7 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
     const cleanHeight = height ? String(height).trim() : '';
 
     const dbConn = await connectToDatabase();
+    if (hasMongoUri() && !dbConn) return databaseUnavailable(res);
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(String(password), salt);
 
@@ -2957,7 +3019,9 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
       return res.status(400).json({ success: false, message: 'User already exists.' });
     }
 
-    const newUser = await User.create({
+    let newUser;
+    try {
+      newUser = await User.create({
       name,
       username: cleanUsername,
       rtuRollNo: cleanRollNo,
@@ -2978,7 +3042,13 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
       achievements: Array.isArray(achievements) ? achievements : [],
       permissions: userPerms,
       active: active !== undefined ? active : true
-    });
+      });
+    } catch (err) {
+      if (err && err.code === 11000) {
+        return res.status(409).json({ success: false, message: 'Username, Email, or Roll Number is already taken.' });
+      }
+      throw err;
+    }
 
     const userObj = newUser.toObject();
     delete userObj.passwordHash;

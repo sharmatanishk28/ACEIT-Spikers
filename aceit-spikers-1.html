@@ -6979,15 +6979,6 @@
         if (opts.body && typeof opts.body === 'string' && !opts.headers['Content-Type'] && !opts.headers['content-type']) {
           opts.headers['Content-Type'] = 'application/json';
         }
-        var token = null;
-        try { token = localStorage.getItem('authToken'); } catch (e) { }
-        if (token) {
-          if (typeof opts.headers.set === 'function') {
-            opts.headers.set('Authorization', 'Bearer ' + token);
-          } else {
-            opts.headers['Authorization'] = 'Bearer ' + token;
-          }
-        }
         return fetch(url, opts);
       }
 
@@ -8829,9 +8820,6 @@
           .then(function (res) {
             if (res && res.success && res.user) {
               currentUser = res.user;
-              if (res.token) {
-                try { localStorage.setItem('authToken', res.token); } catch (e) { }
-              }
               adminPinGate.classList.remove('open');
               renderNavUserWidget();
               showAlert('Welcome to ACEIT Sports, ' + (res.user.name || res.user.username) + '! Your student account is ready.', function () {
@@ -8882,9 +8870,6 @@
             if (submitBtn) submitBtn.disabled = false;
             if (res && res.success && res.user) {
               currentUser = res.user;
-              if (res.token) {
-                try { localStorage.setItem('authToken', res.token); } catch (e) { }
-              }
               adminPinGate.classList.remove('open');
               renderNavUserWidget();
 
