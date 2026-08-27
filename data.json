@@ -1,283 +1,386 @@
 {
   "team": [
     {
-      "n": "Alex Hunter",
-      "num": "9",
-      "pos": "Center Forward / Striker",
-      "role": "Captain",
-      "sport": "Football",
-      "clubId": "strikers",
-      "id": "id_mt8zeo2cnz1v9"
-    },
-    {
-      "n": "Lakshya Sen (Student)",
-      "num": 7,
-      "pos": "Men's Singles",
-      "cat": "Boys Team",
-      "h": "5'11\"",
-      "exp": "3 yrs",
-      "cap": true,
-      "id": "id_mt9098bz4iiul",
-      "clubId": "smashers"
-    },
-    {
-      "n": "Carlos Silva",
-      "r": "Striker",
-      "no": 10,
-      "clubId": "strikers",
-      "id": "id_mt9yxw4cf2wbs"
-    },
-    {
-      "n": "Owner Added Footballer",
-      "r": "Goalkeeper",
-      "clubId": "strikers",
-      "id": "id_mt9yxw4xdwaz8"
-    },
-    {
-      "id": "idmsozmogl1",
+      "id": "p_spk_1",
       "n": "Shubham Patidar",
       "num": 1,
       "pos": "Captain / Outside Hitter",
+      "cat": "Boys Team",
       "h": "6'1\"",
       "exp": "4 yrs",
       "cap": true,
-      "insta": "",
+      "insta": "shubham_spikers",
       "photo": "",
-      "cat": "Boys Team",
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogl2",
+      "id": "p_spk_2",
       "n": "Arjun Verma",
       "num": 5,
       "pos": "Setter",
+      "cat": "Boys Team",
       "h": "5'10\"",
       "exp": "3 yrs",
       "cap": false,
-      "insta": "",
+      "insta": "arjun_setter",
       "photo": "",
-      "cat": "Boys Team",
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogl3",
-      "n": "Rohan Mehta",
-      "num": 9,
-      "pos": "Middle Blocker",
-      "h": "6'3\"",
-      "exp": "2 yrs",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "Girls Team",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl4",
-      "n": "Karan Singh",
-      "num": 11,
-      "pos": "Libero",
-      "h": "5'8\"",
-      "exp": "3 yrs",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "Alumni",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl5",
-      "n": "Aditya Rao",
-      "num": 14,
-      "pos": "Opposite",
-      "h": "6'0\"",
-      "exp": "2 yrs",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "boys team",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl6",
-      "n": "Vikram Joshi",
-      "num": 7,
-      "pos": "Outside Hitter",
-      "h": "5'11\"",
-      "exp": "1 yr",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "Boys Team",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl7",
-      "n": "Nikhil Sharma",
-      "num": 3,
-      "pos": "Middle Blocker",
-      "h": "6'2\"",
-      "exp": "3 yrs",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "Girls Team",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl8",
-      "n": "Devansh Rathore",
-      "num": 12,
-      "pos": "Setter",
-      "h": "5'9\"",
-      "exp": "2 yrs",
-      "cap": false,
-      "insta": "",
-      "photo": "",
-      "cat": "Alumni",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl_g1",
+      "id": "p_spk_3",
       "n": "Ananya Sharma",
       "num": 8,
       "pos": "Outside Hitter",
+      "cat": "Girls Team",
       "h": "5'9\"",
       "exp": "2 yrs",
-      "cap": false,
-      "cat": "Girls Team",
-      "insta": "",
-      "photo": "",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl_a1",
-      "n": "Vikramaditya Singh",
-      "num": 10,
-      "pos": "Setter (Pass-out)",
-      "h": "6'0\"",
-      "exp": "5 yrs",
-      "cap": false,
-      "cat": "Alumni",
-      "insta": "",
-      "photo": "",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmt7aagjz45",
-      "photo": "",
-      "n": "Rishabh Sen",
-      "num": 99,
-      "pos": "Outside Hitter",
-      "cat": "pass-out 2025",
-      "h": "",
-      "exp": "",
-      "cap": false,
-      "insta": "",
-      "clubId": "spikers"
-    },
-    {
-      "n": "Owner Added Volleyballer",
-      "r": "Libero",
-      "clubId": "spikers",
-      "id": "id_mt9yxw4z52t7r"
-    },
-    {
-      "n": "Pawan Sehrawat",
-      "pos": "Lead Raider",
-      "num": 7,
-      "cat": "Boys Team",
-      "h": "5'11\"",
-      "exp": "3 yrs",
       "cap": true,
-      "clubId": "kabaddi",
-      "id": "id_mtaaloc1lbmnk"
-    }
-  ],
-  "gallery": [
-    {
-      "id": "idmsozmogl9",
-      "cat": "matches",
-      "h": 260,
-      "label": "Match Day",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl10",
-      "cat": "training",
-      "h": 180,
-      "label": "Training",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl11",
-      "cat": "team",
-      "h": 220,
-      "label": "Team",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl12",
-      "cat": "events",
-      "h": 200,
-      "label": "Event",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmsozmogl25",
-      "cat": "tournaments",
-      "h": 240,
-      "label": "Tournament Champions",
-      "clubId": "spikers"
-    },
-    {
-      "id": "idmt797zms45",
+      "insta": "ananya_vball",
       "photo": "",
-      "label": "Inter-College Final Match",
-      "cat": "inter-college cup 2026",
-      "h": 0,
       "clubId": "spikers"
+    },
+    {
+      "id": "p_spk_4",
+      "n": "Rohan Mehta",
+      "num": 9,
+      "pos": "Middle Blocker",
+      "cat": "Boys Team",
+      "h": "6'3\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "rohan_block",
+      "photo": "",
+      "clubId": "spikers"
+    },
+    {
+      "id": "p_spk_5",
+      "n": "Karan Singh",
+      "num": 11,
+      "pos": "Libero",
+      "cat": "Boys Team",
+      "h": "5'8\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "karan_libero",
+      "photo": "",
+      "clubId": "spikers"
+    },
+    {
+      "id": "p_spk_6",
+      "n": "Priya Rathore",
+      "num": 15,
+      "pos": "Setter",
+      "cat": "Girls Team",
+      "h": "5'7\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "priya_setter",
+      "photo": "",
+      "clubId": "spikers"
+    },
+    {
+      "id": "p_spk_7",
+      "n": "Aditya Rao",
+      "num": 14,
+      "pos": "Opposite",
+      "cat": "Boys Team",
+      "h": "6'0\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "aditya_spk",
+      "photo": "",
+      "clubId": "spikers"
+    },
+    {
+      "id": "p_kbd_1",
+      "n": "Pardeep Narwal ACE",
+      "num": 9,
+      "pos": "Lead Raider",
+      "cat": "Raiders",
+      "h": "5'11\"",
+      "exp": "4 yrs",
+      "cap": true,
+      "insta": "pardeep_kbd",
+      "photo": "",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "p_kbd_2",
+      "n": "Sandeep Dhull",
+      "num": 3,
+      "pos": "Left Corner Defender",
+      "cat": "Defenders",
+      "h": "5'9\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "sandeep_corner",
+      "photo": "",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "p_kbd_3",
+      "n": "Monu Goyat",
+      "num": 7,
+      "pos": "Right Raider",
+      "cat": "Raiders",
+      "h": "5'10\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "monu_raid",
+      "photo": "",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "p_kbd_4",
+      "n": "Ravinder Pahal",
+      "num": 4,
+      "pos": "Right Corner Defender",
+      "cat": "Defenders",
+      "h": "5'10\"",
+      "exp": "4 yrs",
+      "cap": false,
+      "insta": "ravinder_pahal",
+      "photo": "",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "p_kbd_5",
+      "n": "Vikas Kandola",
+      "num": 11,
+      "pos": "Running Hand Touch Specialist",
+      "cat": "Raiders",
+      "h": "5'8\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "vikas_k",
+      "photo": "",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "p_crk_1",
+      "n": "Virat Rajput",
+      "num": 18,
+      "pos": "Top-Order Batsman",
+      "cat": "Batsmen",
+      "h": "5'9\"",
+      "exp": "4 yrs",
+      "cap": true,
+      "insta": "virat_rajput",
+      "photo": "",
+      "clubId": "cricket"
+    },
+    {
+      "id": "p_crk_2",
+      "n": "Rohit Verma",
+      "num": 45,
+      "pos": "Opening Batsman",
+      "cat": "Batsmen",
+      "h": "5'10\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "rohit_bat",
+      "photo": "",
+      "clubId": "cricket"
+    },
+    {
+      "id": "p_crk_3",
+      "n": "Jasprit Choudhary",
+      "num": 93,
+      "pos": "Right-Arm Fast Bowler",
+      "cat": "Bowlers",
+      "h": "6'0\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "jasprit_pace",
+      "photo": "",
+      "clubId": "cricket"
+    },
+    {
+      "id": "p_crk_4",
+      "n": "Ravindra Meena",
+      "num": 8,
+      "pos": "Spin All-Rounder",
+      "cat": "All-Rounders",
+      "h": "5'8\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "ravi_allrounder",
+      "photo": "",
+      "clubId": "cricket"
+    },
+    {
+      "id": "p_crk_5",
+      "n": "Rishabh Sharma",
+      "num": 17,
+      "pos": "Wicketkeeper Batsman",
+      "cat": "Wicketkeepers",
+      "h": "5'7\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "rishabh_wk",
+      "photo": "",
+      "clubId": "cricket"
+    },
+    {
+      "id": "p_dnk_1",
+      "n": "Marcus Singh",
+      "num": 23,
+      "pos": "Point Guard",
+      "cat": "Guards",
+      "h": "6'2\"",
+      "exp": "4 yrs",
+      "cap": true,
+      "insta": "marcus_hoops",
+      "photo": "",
+      "clubId": "dunkers"
+    },
+    {
+      "id": "p_dnk_2",
+      "n": "Kevin Sharma",
+      "num": 35,
+      "pos": "Power Forward",
+      "cat": "Forwards",
+      "h": "6'6\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "kevin_dunks",
+      "photo": "",
+      "clubId": "dunkers"
+    },
+    {
+      "id": "p_dnk_3",
+      "n": "Stephen Rajput",
+      "num": 30,
+      "pos": "Shooting Guard (3-PT Sharpshooter)",
+      "cat": "Guards",
+      "h": "6'1\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "stephen_3pt",
+      "photo": "",
+      "clubId": "dunkers"
+    },
+    {
+      "id": "p_dnk_4",
+      "n": "Nikola Meena",
+      "num": 15,
+      "pos": "Center",
+      "cat": "Centers",
+      "h": "6'8\"",
+      "exp": "2 yrs",
+      "cap": false,
+      "insta": "nikola_center",
+      "photo": "",
+      "clubId": "dunkers"
+    },
+    {
+      "id": "p_sht_1",
+      "n": "Lakshya Sharma",
+      "num": 1,
+      "pos": "Men's Singles",
+      "cat": "Singles",
+      "h": "5'10\"",
+      "exp": "4 yrs",
+      "cap": true,
+      "insta": "lakshya_badminton",
+      "photo": "",
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "p_sht_2",
+      "n": "PV Sindhu Verma",
+      "num": 7,
+      "pos": "Women's Singles",
+      "cat": "Singles",
+      "h": "5'9\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "sindhu_shuttle",
+      "photo": "",
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "p_sht_3",
+      "n": "Chirag Rajput",
+      "num": 10,
+      "pos": "Men's Doubles Specialist",
+      "cat": "Doubles",
+      "h": "6'0\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "chirag_doubles",
+      "photo": "",
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "p_sht_4",
+      "n": "Satwik Meena",
+      "num": 12,
+      "pos": "Men's Doubles Specialist",
+      "cat": "Doubles",
+      "h": "6'1\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "satwik_smash",
+      "photo": "",
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "p_stk_1",
+      "n": "Carlos Silva",
+      "num": 10,
+      "pos": "Striker / Forward",
+      "cat": "Attackers",
+      "h": "5'11\"",
+      "exp": "4 yrs",
+      "cap": true,
+      "insta": "carlos_strikers",
+      "photo": "",
+      "clubId": "strikers-fc"
+    },
+    {
+      "id": "p_stk_2",
+      "n": "David Alaba Sharma",
+      "num": 4,
+      "pos": "Centre Back",
+      "cat": "Defenders",
+      "h": "6'1\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "david_cb",
+      "photo": "",
+      "clubId": "strikers-fc"
+    },
+    {
+      "id": "p_stk_3",
+      "n": "Luka Meena",
+      "num": 8,
+      "pos": "Central Midfielder",
+      "cat": "Midfielders",
+      "h": "5'9\"",
+      "exp": "3 yrs",
+      "cap": false,
+      "insta": "luka_playmaker",
+      "photo": "",
+      "clubId": "strikers-fc"
+    },
+    {
+      "id": "p_stk_4",
+      "n": "Manuel Verma",
+      "num": 1,
+      "pos": "Goalkeeper",
+      "cat": "Goalkeepers",
+      "h": "6'3\"",
+      "exp": "4 yrs",
+      "cap": false,
+      "insta": "manuel_gk",
+      "photo": "",
+      "clubId": "strikers-fc"
     }
   ],
   "matches": [
     {
-      "team1": "ACEIT Strikers",
-      "team2": "SKIT Football Club",
-      "opp": "SKIT Football Club",
-      "score1": "3",
-      "score2": "1",
-      "winner": "t1",
-      "date": "2026-09-15",
-      "status": "Upcoming",
-      "clubId": "strikers",
-      "id": "id_mt8zeo2fqa7z9"
-    },
-    {
-      "opp": "MNIT Shuttlers",
-      "date": "2026-09-15",
-      "time": "11:00",
-      "venue": "ACEIT Indoor Badminton Arena",
-      "cat": "Inter-College Cup",
-      "status": "UPCOMING",
-      "id": "id_mt9098c3conpp",
-      "clubId": "smashers",
-      "team1": "Home Team",
-      "team2": "MNIT Shuttlers",
-      "winner": "none"
-    },
-    {
-      "team1": "ACEIT Kabaddi",
-      "team2": "MNIT Raiders",
-      "opp": "MNIT Raiders",
-      "date": "2026-10-15",
-      "venue": "ACEIT Outdoor Kabaddi Arena",
-      "status": "upcoming",
-      "clubId": "kabaddi",
-      "id": "id_mtaaloc6fuzcc",
-      "winner": "none"
-    },
-    {
-      "id": "idmsozmogl21",
+      "id": "m_spk_1",
       "team1": "ACEIT Spikers",
       "team1Logo": "",
       "opp": "Poornima University",
@@ -288,11 +391,167 @@
       "status": "completed",
       "winner": "team1",
       "clubId": "spikers"
+    },
+    {
+      "id": "m_spk_2",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "JECRC Titans",
+      "team2": "JECRC Titans",
+      "team2Logo": "",
+      "date": "2026-09-01T04:52:00.535Z",
+      "venue": "JECRC Arena, Jaipur",
+      "status": "upcoming",
+      "winner": "none",
+      "clubId": "spikers"
+    },
+    {
+      "id": "m_spk_3",
+      "team1": "ACEIT Spikers",
+      "team1Logo": "",
+      "opp": "Manipal Smashers",
+      "team2": "Manipal Smashers",
+      "team2Logo": "",
+      "date": "2026-09-10T04:52:00.535Z",
+      "venue": "ACEIT Indoor Court",
+      "status": "upcoming",
+      "winner": "none",
+      "clubId": "spikers"
+    },
+    {
+      "id": "m_kbd_1",
+      "team1": "ACEIT Kabaddi",
+      "team1Logo": "",
+      "opp": "Rajasthan University",
+      "team2": "Rajasthan University",
+      "team2Logo": "",
+      "date": "2026-08-20T17:00:00.000Z",
+      "venue": "SMS Stadium Kabaddi Mat, Jaipur",
+      "status": "completed",
+      "winner": "team1",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "m_kbd_2",
+      "team1": "ACEIT Kabaddi",
+      "team1Logo": "",
+      "opp": "JECRC Warriors",
+      "team2": "JECRC Warriors",
+      "team2Logo": "",
+      "date": "2026-09-03T04:52:00.535Z",
+      "venue": "ACEIT Outdoor Kabaddi Mat",
+      "status": "upcoming",
+      "winner": "none",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "m_crk_1",
+      "team1": "ACEIT Cricket",
+      "team1Logo": "",
+      "opp": "MNIT Jaipur",
+      "team2": "MNIT Jaipur",
+      "team2Logo": "",
+      "date": "2026-08-18T10:00:00.000Z",
+      "venue": "MNIT Cricket Oval, Jaipur",
+      "status": "completed",
+      "winner": "team1",
+      "clubId": "cricket"
+    },
+    {
+      "id": "m_crk_2",
+      "team1": "ACEIT Cricket",
+      "team1Logo": "",
+      "opp": "Poornima Strikers",
+      "team2": "Poornima Strikers",
+      "team2Logo": "",
+      "date": "2026-09-04T04:52:00.535Z",
+      "venue": "Arya Main Cricket Ground, Kukas",
+      "status": "upcoming",
+      "winner": "none",
+      "clubId": "cricket"
+    },
+    {
+      "id": "m_dnk_1",
+      "team1": "ACEIT Dunkers",
+      "team1Logo": "",
+      "opp": "Manipal Hoopers",
+      "team2": "Manipal Hoopers",
+      "team2Logo": "",
+      "date": "2026-08-22T16:30:00.000Z",
+      "venue": "Manipal Indoor Court, Jaipur",
+      "status": "completed",
+      "winner": "team1",
+      "clubId": "dunkers"
+    },
+    {
+      "id": "m_dnk_2",
+      "team1": "ACEIT Dunkers",
+      "team1Logo": "",
+      "opp": "JECRC Dunkers",
+      "team2": "JECRC Dunkers",
+      "team2Logo": "",
+      "date": "2026-09-06T04:52:00.535Z",
+      "venue": "ACEIT Basketball Arena",
+      "status": "upcoming",
+      "winner": "none",
+      "clubId": "dunkers"
+    },
+    {
+      "id": "m_sht_1",
+      "team1": "ACEIT Shuttlers",
+      "team1Logo": "",
+      "opp": "Poornima Smashers",
+      "team2": "Poornima Smashers",
+      "team2Logo": "",
+      "date": "2026-08-21T11:00:00.000Z",
+      "venue": "ACEIT Wooden Badminton Court",
+      "status": "completed",
+      "winner": "team1",
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "m_sht_2",
+      "team1": "ACEIT Shuttlers",
+      "team1Logo": "",
+      "opp": "Rajasthan Royals Badminton Club",
+      "team2": "Rajasthan Royals Badminton Club",
+      "team2Logo": "",
+      "date": "2026-09-08T04:52:00.535Z",
+      "venue": "SMS Indoor Badminton Hall",
+      "status": "upcoming",
+      "winner": "none",
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "m_stk_1",
+      "team1": "ACEIT Strikers FC",
+      "team1Logo": "",
+      "opp": "Rajasthan FC",
+      "team2": "Rajasthan FC",
+      "team2Logo": "",
+      "date": "2026-08-19T16:00:00.000Z",
+      "venue": "Arya College Football Turf",
+      "status": "completed",
+      "winner": "team1",
+      "clubId": "strikers-fc"
+    },
+    {
+      "id": "m_stk_2",
+      "team1": "ACEIT Strikers FC",
+      "team1Logo": "",
+      "opp": "JECRC United",
+      "team2": "JECRC United",
+      "team2Logo": "",
+      "date": "2026-09-05T04:52:00.535Z",
+      "venue": "JECRC Football Stadium",
+      "status": "upcoming",
+      "winner": "none",
+      "clubId": "strikers-fc"
     }
   ],
   "news": [
     {
-      "id": "idmsozmogm25",
+      "id": "n_spk_1",
       "tag": "Featured",
       "date": "20 Jul 2026",
       "title": "Spikers clinch regional title after thrilling 5-set final",
@@ -301,7 +560,7 @@
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm26",
+      "id": "n_spk_2",
       "tag": "Announcement",
       "date": "14 Jul 2026",
       "title": "New training block begins August 1",
@@ -310,143 +569,365 @@
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm27",
-      "tag": "Tournament",
-      "date": "02 Jul 2026",
-      "title": "Spikers advance to inter-college semifinal",
-      "body": "A dominant straight-sets win books our place in the semifinal round.",
-      "featured": false,
-      "clubId": "spikers"
+      "id": "n_kbd_1",
+      "tag": "Championship",
+      "date": "22 Aug 2026",
+      "title": "ACEIT Kabaddi storm into State Semifinals after dominant 15-point raid masterclass",
+      "body": "Pardeep Narwal led the charge with a 14-point Super 10 raid performance against Rajasthan University.",
+      "featured": true,
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "n_crk_1",
+      "tag": "Trophy",
+      "date": "19 Aug 2026",
+      "title": "ACEIT Cricket lift Inter-Collegiate T20 Trophy with thrilling final over finish",
+      "body": "Virat Rajput scored 74 off 42 balls as ACEIT chased down 178 in the championship final against MNIT.",
+      "featured": true,
+      "clubId": "cricket"
+    },
+    {
+      "id": "n_dnk_1",
+      "tag": "Highlights",
+      "date": "23 Aug 2026",
+      "title": "Dunkers secure Regional Basketball Championship in overtime thriller",
+      "body": "Marcus Singh nailed a game-winning 3-pointer with 2.4 seconds remaining on the shot clock.",
+      "featured": true,
+      "clubId": "dunkers"
+    },
+    {
+      "id": "n_sht_1",
+      "tag": "Gold Medal",
+      "date": "22 Aug 2026",
+      "title": "ACEIT Shuttlers sweep Gold and Silver at State Collegiate Open",
+      "body": "Lakshya Sharma dominated men singles in straight sets 21-14, 21-17 to claim the university gold.",
+      "featured": true,
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "n_stk_1",
+      "tag": "Victory",
+      "date": "20 Aug 2026",
+      "title": "Strikers FC clinch Inter-University Football League title with undefeated run",
+      "body": "Carlos Silva scored a stunning brace as Strikers FC defeated Rajasthan FC 3-1 in the final fixture.",
+      "featured": true,
+      "clubId": "strikers-fc"
     }
   ],
   "sponsors": [
     {
-      "id": "idmsozmogm28",
+      "id": "sp_1",
       "name": "Wonder Cement",
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm29",
+      "id": "sp_2",
       "name": "FireNodeX",
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm30",
+      "id": "sp_3",
       "name": "Arya College",
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm31",
+      "id": "sp_4",
+      "name": "Sports Authority of India",
+      "clubId": "spikers"
+    },
+    {
+      "id": "sp_5",
+      "name": "Nova Sports Gear",
+      "clubId": "spikers"
+    },
+    {
+      "id": "sp_6",
+      "name": "Wonder Cement",
+      "clubId": "cricket"
+    },
+    {
+      "id": "sp_7",
+      "name": "Arya College",
+      "clubId": "cricket"
+    },
+    {
+      "id": "sp_8",
+      "name": "Arya College",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "sp_9",
       "name": "Sports Authority",
-      "clubId": "spikers"
+      "clubId": "kabaddi"
     },
     {
-      "id": "idmsozmogm32",
-      "name": "Nova Gear",
-      "clubId": "spikers"
+      "id": "sp_10",
+      "name": "Arya College",
+      "clubId": "dunkers"
     },
     {
-      "id": "idmsozmogm33",
-      "name": "FireCraft Network",
-      "clubId": "spikers"
+      "id": "sp_11",
+      "name": "Arya College",
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "sp_12",
+      "name": "Arya College",
+      "clubId": "strikers-fc"
     }
   ],
   "testimonials": [
     {
-      "id": "idmsozmogm34",
+      "id": "tm_spk_1",
       "q": "Joining Spikers made me a better player and a better teammate. The discipline here is real.",
       "n": "Arjun Verma",
       "r": "Setter",
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm35",
+      "id": "tm_spk_2",
       "q": "Our coaches push us hard, but they care harder. That balance is what wins matches.",
       "n": "Karan Singh",
       "r": "Libero",
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm36",
+      "id": "tm_spk_3",
       "q": "This club taught me more about leadership than any classroom could.",
       "n": "Shubham Patidar",
       "r": "Team Captain",
       "clubId": "spikers"
+    },
+    {
+      "id": "tm_kbd_1",
+      "q": "The mat training at ACEIT Kabaddi gave me the physical strength and tactical vision to compete at state level.",
+      "n": "Pardeep Narwal ACE",
+      "r": "Lead Raider",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "tm_crk_1",
+      "q": "Playing cricket for ACEIT is an unmatched honor. The turf facilities and coaching mentorship are championship tier.",
+      "n": "Virat Rajput",
+      "r": "Team Captain",
+      "clubId": "cricket"
     }
   ],
   "stats": [
     {
-      "id": "idmtafeg5c1",
-      "label": "Matches",
-      "target": 0,
-      "clubId": "cricket"
-    },
-    {
-      "id": "idmtafeg5c2",
-      "label": "Wins",
-      "target": 0,
-      "clubId": "cricket"
-    },
-    {
-      "id": "idmtafeg5c3",
-      "label": "Athletes",
-      "target": 0,
-      "clubId": "cricket"
-    },
-    {
-      "id": "idmtafeg5c4",
-      "label": "Coaches",
-      "target": 2,
-      "clubId": "cricket"
-    },
-    {
-      "id": "idmsozmogm37",
+      "id": "st_spk_1",
       "label": "Championships",
       "target": 7,
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm38",
+      "id": "st_spk_2",
       "label": "Tournament Wins",
       "target": 24,
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm39",
+      "id": "st_spk_3",
       "label": "Players",
       "target": 38,
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm40",
+      "id": "st_spk_4",
       "label": "Coaches",
       "target": 5,
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm41",
+      "id": "st_spk_5",
       "label": "Training Sessions",
       "target": 410,
       "clubId": "spikers"
     },
     {
-      "id": "idmsozmogm42",
+      "id": "st_spk_6",
       "label": "Years Active",
       "target": 6,
       "clubId": "spikers"
+    },
+    {
+      "id": "st_kbd_1",
+      "label": "State Trophies",
+      "target": 4,
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "st_kbd_2",
+      "label": "Super Raids",
+      "target": 142,
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "st_kbd_3",
+      "label": "All-Outs Forced",
+      "target": 88,
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "st_kbd_4",
+      "label": "Active Raiders",
+      "target": 22,
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "st_crk_1",
+      "label": "APL Titles",
+      "target": 5,
+      "clubId": "cricket"
+    },
+    {
+      "id": "st_crk_2",
+      "label": "T20 Match Wins",
+      "target": 36,
+      "clubId": "cricket"
+    },
+    {
+      "id": "st_crk_3",
+      "label": "Centuries Scored",
+      "target": 12,
+      "clubId": "cricket"
+    },
+    {
+      "id": "st_crk_4",
+      "label": "Squad Size",
+      "target": 26,
+      "clubId": "cricket"
+    },
+    {
+      "id": "st_dnk_1",
+      "label": "Regional Cups",
+      "target": 3,
+      "clubId": "dunkers"
+    },
+    {
+      "id": "st_dnk_2",
+      "label": "3-Pointers Made",
+      "target": 280,
+      "clubId": "dunkers"
+    },
+    {
+      "id": "st_dnk_3",
+      "label": "Hoopers",
+      "target": 18,
+      "clubId": "dunkers"
+    },
+    {
+      "id": "st_sht_1",
+      "label": "State Gold Medals",
+      "target": 8,
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "st_sht_2",
+      "label": "Matches Won",
+      "target": 64,
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "st_sht_3",
+      "label": "Shuttlers",
+      "target": 16,
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "st_stk_1",
+      "label": "League Titles",
+      "target": 4,
+      "clubId": "strikers-fc"
+    },
+    {
+      "id": "st_stk_2",
+      "label": "Goals Scored",
+      "target": 114,
+      "clubId": "strikers-fc"
+    },
+    {
+      "id": "st_stk_3",
+      "label": "Clean Sheets",
+      "target": 19,
+      "clubId": "strikers-fc"
+    }
+  ],
+  "gallery": [
+    {
+      "id": "g_spk_1",
+      "cat": "matches",
+      "h": 260,
+      "label": "Volleyball Match Day",
+      "clubId": "spikers"
+    },
+    {
+      "id": "g_spk_2",
+      "cat": "training",
+      "h": 180,
+      "label": "Spikers Morning Practice",
+      "clubId": "spikers"
+    },
+    {
+      "id": "g_spk_3",
+      "cat": "tournaments",
+      "h": 240,
+      "label": "Regional Trophy Presentation",
+      "clubId": "spikers"
+    },
+    {
+      "id": "g_kbd_1",
+      "cat": "matches",
+      "h": 260,
+      "label": "Super Raid Point",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "g_kbd_2",
+      "cat": "tournaments",
+      "h": 240,
+      "label": "Kabaddi Trophy Winners",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "g_crk_1",
+      "cat": "matches",
+      "h": 260,
+      "label": "Championship Winning Six",
+      "clubId": "cricket"
+    },
+    {
+      "id": "g_crk_2",
+      "cat": "training",
+      "h": 200,
+      "label": "Turf Wicket Practice",
+      "clubId": "cricket"
+    },
+    {
+      "id": "g_dnk_1",
+      "cat": "matches",
+      "h": 260,
+      "label": "Fast Break Slam Dunk",
+      "clubId": "dunkers"
+    },
+    {
+      "id": "g_sht_1",
+      "cat": "matches",
+      "h": 240,
+      "label": "Jump Smash Down the Line",
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "g_stk_1",
+      "cat": "matches",
+      "h": 260,
+      "label": "Top-Corner Goal Celebration",
+      "clubId": "strikers-fc"
     }
   ],
   "events": [
     {
-      "title": "ACEIT Inter-College Football League 2026",
-      "description": "Annual football championship hosted at ACEIT football grounds.",
-      "venue": "ACEIT Football Stadium",
-      "date": "2026-10-05",
-      "clubId": "strikers",
-      "id": "id_mt9z0jhhgr37n"
-    },
-    {
-      "id": "ev_spikers_1",
+      "id": "ev_spk_1",
       "title": "ACEIT Inter-College Volleyball Cup 2026",
       "description": "Annual inter-college championship featuring top collegiate teams across Rajasthan.",
       "date": "25 Sep 2026",
@@ -459,17 +940,258 @@
       "clubId": "spikers"
     },
     {
-      "id": "ev_spikers_2",
-      "title": "National Sports Day Volleyball Showcase",
-      "description": "Special exhibition matches, skills challenges, and freshmen recruitment trials.",
-      "date": "29 Aug 2026",
-      "time": "05:00 PM - 08:00 PM",
-      "venue": "Outdoor Volleyball Arena",
+      "id": "ev_kbd_1",
+      "title": "Rajasthan State Collegiate Kabaddi Cup 2026",
+      "description": "State-level championship mat matches featuring the fiercest collegiate raiders and defenders.",
+      "date": "15 Oct 2026",
+      "time": "08:00 AM - 07:00 PM",
+      "venue": "Arya College Kabaddi Arena, Jaipur",
       "poster": "",
-      "regBtnText": "RSVP Online",
+      "regBtnText": "Register Team",
       "regUrl": "https://tally.so/r/RGeGvd",
       "regEnabled": true,
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "ev_crk_1",
+      "title": "Arya Premier League (APL) T20 Championship 2026",
+      "description": "Annual college cricket league tournament with 8 departmental squads competing for glory.",
+      "date": "20 Oct 2026",
+      "time": "09:30 AM - 05:30 PM",
+      "venue": "Arya Main Cricket Stadium, Kukas",
+      "poster": "",
+      "regBtnText": "Join Player Auction",
+      "regUrl": "https://tally.so/r/RGeGvd",
+      "regEnabled": true,
+      "clubId": "cricket"
+    },
+    {
+      "id": "ev_dnk_1",
+      "title": "ACEIT 3x3 Inter-College Basketball Jam 2026",
+      "description": "Fast-paced streetball and collegiate 3x3 showdown with high-flying dunks and 3-point shootouts.",
+      "date": "05 Nov 2026",
+      "time": "04:00 PM - 09:00 PM",
+      "venue": "ACEIT Floodlit Basketball Court",
+      "poster": "",
+      "regBtnText": "Register Squad",
+      "regUrl": "https://tally.so/r/RGeGvd",
+      "regEnabled": true,
+      "clubId": "dunkers"
+    },
+    {
+      "id": "ev_sht_1",
+      "title": "ACEIT Open Shuttle Badminton Masters 2026",
+      "description": "Men and Women singles and doubles open badminton championship.",
+      "date": "12 Nov 2026",
+      "time": "09:00 AM - 06:00 PM",
+      "venue": "ACEIT Indoor Badminton Complex",
+      "poster": "",
+      "regBtnText": "Enter Draw",
+      "regUrl": "https://tally.so/r/RGeGvd",
+      "regEnabled": true,
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "ev_stk_1",
+      "title": "Arya Inter-Collegiate Football Cup 2026",
+      "description": "Prestigious 11v11 collegiate football championship under floodlights.",
+      "date": "18 Nov 2026",
+      "time": "03:00 PM - 08:30 PM",
+      "venue": "Arya College Main Football Arena",
+      "poster": "",
+      "regBtnText": "Register Club",
+      "regUrl": "https://tally.so/r/RGeGvd",
+      "regEnabled": true,
+      "clubId": "strikers-fc"
+    }
+  ],
+  "training": [
+    {
+      "id": "tr_spk_1",
+      "icon": "🌅",
+      "title": "Morning Session",
+      "time": "06:00 – 07:30",
+      "desc": "Mon / Wed / Fri — footwork, serving accuracy, and reception drills.",
       "clubId": "spikers"
+    },
+    {
+      "id": "tr_spk_2",
+      "icon": "🌆",
+      "title": "Evening Session",
+      "time": "17:30 – 19:30",
+      "desc": "Daily — full-court scrimmage, attack combinations, block timing.",
+      "clubId": "spikers"
+    },
+    {
+      "id": "tr_spk_3",
+      "icon": "💪",
+      "title": "Strength Training",
+      "time": "Tue / Thu 18:00",
+      "desc": "Conditioning, jump strength, and injury-prevention work in the gym.",
+      "clubId": "spikers"
+    },
+    {
+      "id": "tr_kbd_1",
+      "icon": "🤼",
+      "title": "Morning Mat Drills",
+      "time": "06:00 – 08:00",
+      "desc": "Mon / Wed / Fri — explosive raid footwork, ankle catch, thigh hold drills.",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "tr_kbd_2",
+      "icon": "⚡",
+      "title": "Evening Defense Tactics",
+      "time": "17:00 – 19:00",
+      "desc": "Chain defense, corner positioning, and full mat match simulations.",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "tr_crk_1",
+      "icon": "🏏",
+      "title": "Morning Bowling Nets",
+      "time": "06:30 – 08:30",
+      "desc": "Tue / Thu / Sat — pace bowling line & length, spin variations on turf nets.",
+      "clubId": "cricket"
+    },
+    {
+      "id": "tr_crk_2",
+      "icon": "🎯",
+      "title": "Evening Batting Practice",
+      "time": "16:30 – 18:30",
+      "desc": "Throwdowns, power hitting against spin, and death overs execution.",
+      "clubId": "cricket"
+    },
+    {
+      "id": "tr_dnk_1",
+      "icon": "🏀",
+      "title": "Morning Shooting Drills",
+      "time": "06:00 – 07:30",
+      "desc": "3-point spot shooting, mid-range pullups, free throw discipline.",
+      "clubId": "dunkers"
+    },
+    {
+      "id": "tr_dnk_2",
+      "icon": "🔥",
+      "title": "Evening Fast-Break Practice",
+      "time": "17:30 – 19:30",
+      "desc": "Defensive transition, pick-and-roll execution, 5v5 full court.",
+      "clubId": "dunkers"
+    },
+    {
+      "id": "tr_sht_1",
+      "icon": "🏸",
+      "title": "Court Agility & Footwork",
+      "time": "06:00 – 07:30",
+      "desc": "Multi-shuttle shadow drills, reflex smashes, net-kill accuracy.",
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "tr_sht_2",
+      "icon": "🏆",
+      "title": "Match Play & Strategy",
+      "time": "17:00 – 19:00",
+      "desc": "Singles and doubles match tactical rehearsal ahead of state cup.",
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "tr_stk_1",
+      "icon": "⚽",
+      "title": "Morning Fitness & Rondos",
+      "time": "06:00 – 07:30",
+      "desc": "Passing accuracy, high-press positioning, cardiovascular sprints.",
+      "clubId": "strikers-fc"
+    },
+    {
+      "id": "tr_stk_2",
+      "icon": "🥅",
+      "title": "Evening Tactical 11v11",
+      "time": "17:00 – 19:00",
+      "desc": "Set-piece mastery, defensive shape, attacking transitions.",
+      "clubId": "strikers-fc"
+    }
+  ],
+  "slideshow": [
+    {
+      "id": "slide_spk_1",
+      "title": "WINNER TEAM SPIKERS 2.0",
+      "date": "AI&DS 3RD YEAR TEAM · Champions",
+      "image": "banner1.jpg",
+      "link": "#matches",
+      "btnText": "View Highlights",
+      "clubId": "spikers"
+    },
+    {
+      "id": "slide_spk_2",
+      "title": "Championship Season 2026",
+      "date": "Upcoming Tournament · 15 Sept 2026",
+      "image": "banner2.jpg",
+      "link": "#matches",
+      "btnText": "View Match Schedule",
+      "clubId": "spikers"
+    },
+    {
+      "id": "slide_spk_3",
+      "title": "Intense Team Training & Practice",
+      "date": "Daily Practice · Arya Campus Grounds",
+      "image": "banner1.jpg",
+      "link": "#training",
+      "btnText": "View Timetable",
+      "clubId": "spikers"
+    },
+    {
+      "id": "slide_spk_4",
+      "title": "ACEIT Inter-College Volleyball Cup",
+      "date": "Main Indoor Court · 25 Sep 2026",
+      "image": "banner2.jpg",
+      "link": "#events",
+      "btnText": "Explore Event",
+      "clubId": "spikers"
+    },
+    {
+      "id": "slide_kbd_1",
+      "title": "ACEIT KABADDI CHAMPIONSHIP RUN",
+      "date": "SMS Stadium Jaipur · State Champions",
+      "image": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=1200&q=80",
+      "link": "#matches",
+      "btnText": "View Match Highlights",
+      "clubId": "kabaddi"
+    },
+    {
+      "id": "slide_crk_1",
+      "title": "ARYA PREMIER LEAGUE T20 CRICKET",
+      "date": "Arya Main Cricket Stadium · Champions",
+      "image": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80",
+      "link": "#matches",
+      "btnText": "View Scorecard",
+      "clubId": "cricket"
+    },
+    {
+      "id": "slide_dnk_1",
+      "title": "ACEIT DUNKERS COURT DOMINANCE",
+      "date": "Regional Basketball Cup · Overtime Thriller",
+      "image": "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80",
+      "link": "#matches",
+      "btnText": "View Highlights",
+      "clubId": "dunkers"
+    },
+    {
+      "id": "slide_sht_1",
+      "title": "ACEIT SHUTTLERS STATE GOLD",
+      "date": "Inter-University Badminton Open · Champions",
+      "image": "https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=80",
+      "link": "#matches",
+      "btnText": "View Highlights",
+      "clubId": "shuttlers"
+    },
+    {
+      "id": "slide_stk_1",
+      "title": "STRIKERS FC UNDEFEATED LEAGUE CHAMPIONS",
+      "date": "Arya College Football Turf · Title Winners",
+      "image": "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80",
+      "link": "#matches",
+      "btnText": "View Highlights",
+      "clubId": "strikers-fc"
     }
   ],
   "about": {
@@ -489,197 +1211,7 @@
     "yt": "https://youtube.com/@aceitspikers",
     "wa": "https://wa.me/919999988888"
   },
-  "applications": [
-    {
-      "_id": "app_17876767280533kcp",
-      "name": "Rahul Sharma",
-      "email": "spikertest_7930@aceit.ac.in",
-      "phone": "9876543210",
-      "position": "Player",
-      "experience": "2 years district level",
-      "message": "Excited to represent ACEIT Spikers in upcoming inter-college tourney!",
-      "status": "Accepted",
-      "source": "Student Portal",
-      "tallyEventId": null,
-      "tallyResponseId": null,
-      "createdAt": "2026-08-25T16:52:08.053Z",
-      "date": "2026-08-25T16:52:08.053Z",
-      "adminFeedback": "Welcome to the team! Training starts 6:00 AM on Monday."
-    },
-    {
-      "_id": "app_1787665375154h14l",
-      "name": "Rahul Sharma",
-      "email": "spikertest_5096@aceit.ac.in",
-      "phone": "9876543210",
-      "position": "Player",
-      "experience": "2 years district level",
-      "message": "Excited to represent ACEIT Spikers in upcoming inter-college tourney!",
-      "status": "Accepted",
-      "source": "Student Portal",
-      "tallyEventId": null,
-      "tallyResponseId": null,
-      "createdAt": "2026-08-25T13:42:55.154Z",
-      "date": "2026-08-25T13:42:55.154Z",
-      "adminFeedback": "Welcome to the team! Training starts 6:00 AM on Monday."
-    },
-    {
-      "_id": "app_1787664151209lfkr",
-      "name": "Rahul Sharma",
-      "email": "spikertest_1145@aceit.ac.in",
-      "phone": "9876543210",
-      "position": "Player",
-      "experience": "2 years district level",
-      "message": "Excited to represent ACEIT Spikers in upcoming inter-college tourney!",
-      "status": "Rejected",
-      "source": "Student Portal",
-      "tallyEventId": null,
-      "tallyResponseId": null,
-      "createdAt": "2026-08-25T13:22:31.209Z",
-      "date": "2026-08-25T13:22:31.209Z",
-      "adminFeedback": "Welcome to the team! Training starts 6:00 AM on Monday."
-    },
-    {
-      "id": "app_1787766480219",
-      "name": "test 0001",
-      "email": "test@gmail.com",
-      "phone": "+910000000000",
-      "position": "Goalkeeper",
-      "experience": "Advanced / Competitive",
-      "message": "nothing",
-      "date": "2026-08-26T17:48:00.219Z",
-      "status": "Accepted"
-    }
-  ],
-  "deletedCategories": {
-    "team": [
-      "2nd year"
-    ],
-    "gallery": []
-  },
-  "categories": {
-    "team": [
-      "boys team",
-      "girls team",
-      "alumni"
-    ],
-    "gallery": [
-      "matches",
-      "training",
-      "team",
-      "events",
-      "tournaments"
-    ]
-  },
-  "training": [
-    {
-      "id": "tr_m1",
-      "icon": "🌅",
-      "title": "Morning Session",
-      "time": "06:00 – 07:30",
-      "desc": "Mon / Wed / Fri — footwork, serving accuracy, and reception drills.",
-      "clubId": "spikers"
-    },
-    {
-      "id": "tr_e1",
-      "icon": "🌆",
-      "title": "Evening Session",
-      "time": "17:30 – 19:30",
-      "desc": "Daily — full-court scrimmage, attack combinations, block timing.",
-      "clubId": "spikers"
-    },
-    {
-      "id": "tr_w1",
-      "icon": "🏆",
-      "title": "Weekend Practice",
-      "time": "Sat 09:00 – 12:00",
-      "desc": "Match simulation and set-play rehearsal ahead of fixtures.",
-      "clubId": "spikers"
-    },
-    {
-      "id": "tr_s1",
-      "icon": "💪",
-      "title": "Strength Training",
-      "time": "Tue / Thu 18:00",
-      "desc": "Conditioning, jump strength, and injury-prevention work in the gym.",
-      "clubId": "spikers"
-    }
-  ],
-  "slideshow": [
-    {
-      "title": "ACEIT Dunkers Championship Final 2026",
-      "date": "Hardcourt Arena · 15 Oct 2026",
-      "image": "https://images.unsplash.com/photo-1546519638-68e109498ffc?w=1200",
-      "link": "#events",
-      "btnText": "View Match Replay",
-      "clubId": "dunkers",
-      "id": "id_mtag29juw1nfq"
-    },
-    {
-      "title": "Maha-Raid Super Tackle Finals",
-      "date": "Main Outdoor Arena · 20 Oct 2026",
-      "image": "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=1200",
-      "link": "#matches",
-      "btnText": "View Fixtures",
-      "clubId": "kabaddi",
-      "id": "id_mtag29jzdwjpk"
-    },
-    {
-      "id": "slide_1",
-      "title": "WINNER TEAM SPIKERS 2.0",
-      "date": "AI&DS 3RD YEAR TEAM · Champions",
-      "image": "banner1.jpg",
-      "link": "#matches",
-      "btnText": "View Highlights",
-      "clubId": "spikers"
-    },
-    {
-      "id": "slide_2",
-      "title": "Championship Season 2026",
-      "date": "Upcoming Tournament · 15 Sept 2026",
-      "image": "banner2.jpg",
-      "link": "#matches",
-      "btnText": "View Match Schedule",
-      "clubId": "spikers"
-    },
-    {
-      "id": "slide_3",
-      "title": "Intense Team Training & Practice",
-      "date": "Daily Practice · Arya Campus Grounds",
-      "image": "banner1.jpg",
-      "link": "#training",
-      "btnText": "View Timetable",
-      "clubId": "spikers"
-    },
-    {
-      "id": "slide_4",
-      "title": "ACEIT Inter-College Volleyball Cup",
-      "date": "Main Indoor Court · 25 Sep 2026",
-      "image": "banner2.jpg",
-      "link": "#events",
-      "btnText": "Explore Event",
-      "clubId": "spikers"
-    }
-  ],
-  "customCategories": {
-    "team": [],
-    "gallery": []
-  },
-  "clubId": "strikers-fc",
   "abouts": {
-    "dunkers": {
-      "eyebrow": "Court Dominance",
-      "title": "Every possession counts,\nevery basket earned.",
-      "sub": "ACEIT Dunkers squad trains with relentless pace, sharpshooting accuracy, and lockdown team defense.",
-      "mission": "To develop high-IQ, fast-paced basketball players who execute under pressure with unity, grit, and passion.",
-      "vision": "To build an elite championship-winning basketball legacy representing Arya College across national tourneys."
-    },
-    "kabaddi": {
-      "eyebrow": "Pride of ACEIT",
-      "title": "Strength on the mat,\nunstoppable in raid.",
-      "sub": "ACEIT Kabaddi brings together fierce raiders and ironclad defenders trained for collegiate championships.",
-      "mission": "To cultivate mental grit, explosive raid power, and tactical defense in traditional and modern collegiate Kabaddi.",
-      "vision": "To be the premier collegiate Kabaddi powerhouse in Rajasthan, producing champion athletes who play with honor."
-    },
     "spikers": {
       "eyebrow": "Who we are",
       "title": "Built on the court,\ndefined by character.",
@@ -687,12 +1219,40 @@
       "mission": "To build a competitive volleyball program that develops skilled, disciplined athletes while creating a home for anyone who wants to play, grow, and belong.",
       "vision": "To be recognised as the standard-bearer for collegiate volleyball at ACEIT — a club that wins with class and trains the next generation of captains."
     },
+    "kabaddi": {
+      "eyebrow": "Pride of ACEIT",
+      "title": "Strength on the mat,\nunstoppable in raid.",
+      "sub": "ACEIT Kabaddi brings together fierce raiders and ironclad defenders trained for collegiate championships and state tournaments.",
+      "mission": "To cultivate mental grit, explosive raid power, and tactical defense in traditional and modern collegiate Kabaddi.",
+      "vision": "To be the premier collegiate Kabaddi powerhouse in Rajasthan, producing champion athletes who play with honor."
+    },
     "cricket": {
       "eyebrow": "Gentleman's Game",
       "title": "Discipline at the crease,\npower on the field.",
       "sub": "ACEIT Cricket combines technical batting, hostile fast & spin bowling, and sharp fielding for every match fixture.",
       "mission": "To build a formidable collegiate cricket squad grounded in match temperament, relentless fitness, and teamwork.",
       "vision": "To be celebrated as the top university cricket team in the region with an undefeated championship spirit."
+    },
+    "dunkers": {
+      "eyebrow": "Court Dominance",
+      "title": "Every possession counts,\nevery basket earned.",
+      "sub": "ACEIT Dunkers squad trains with relentless pace, sharpshooting accuracy, and lockdown team defense.",
+      "mission": "To develop high-IQ, fast-paced basketball players who execute under pressure with unity, grit, and passion.",
+      "vision": "To build an elite championship-winning basketball legacy representing Arya College across national tourneys."
+    },
+    "shuttlers": {
+      "eyebrow": "Speed & Precision",
+      "title": "Master every rally,\nsmash every limit.",
+      "sub": "ACEIT Shuttlers brings together dedicated singles and doubles shuttlers competing for collegiate and university glory.",
+      "mission": "To refine reflex speed, court agility, and mental composure in high-stakes collegiate badminton tournaments.",
+      "vision": "To nurture collegiate badminton champions who dominate inter-university championships with skill and grace."
+    },
+    "strikers-fc": {
+      "eyebrow": "The Beautiful Game",
+      "title": "Passion on the pitch,\nunited for 90 minutes.",
+      "sub": "ACEIT Strikers FC is built on swift passing, clinical finishing, tactical discipline, and unwavering brotherhood.",
+      "mission": "To foster tactical intelligence, cardiovascular stamina, and sportsmanship through modern football training.",
+      "vision": "To set the collegiate benchmark for competitive football at ACEIT with discipline, flair, and championships."
     }
   },
   "contacts": {
@@ -706,10 +1266,50 @@
       "yt": "https://youtube.com/@aceitspikers",
       "wa": "https://wa.me/919999988888"
     },
-    "cricket": {
+    "kabaddi": {
       "address": "Arya College of Engineering & IT, Jaipur, Rajasthan",
-      "email": "sports@aceit.edu.in",
-      "phone": "+91 7067787571",
+      "email": "kabaddi@aceit.edu.in",
+      "phone": "+91 98765 43210",
+      "hours": "Mon–Sat, 6:00 AM – 8:00 PM",
+      "insta": "#",
+      "fb": "#",
+      "yt": "#",
+      "wa": "#"
+    },
+    "cricket": {
+      "address": "Arya Main Cricket Grounds, Kukas, Jaipur",
+      "email": "cricket@aceit.edu.in",
+      "phone": "+91 98765 43211",
+      "hours": "Mon–Sat, 6:00 AM – 7:30 PM",
+      "insta": "#",
+      "fb": "#",
+      "yt": "#",
+      "wa": "#"
+    },
+    "dunkers": {
+      "address": "ACEIT Indoor Basketball Arena, Jaipur",
+      "email": "basketball@aceit.edu.in",
+      "phone": "+91 98765 43212",
+      "hours": "Mon–Sat, 6:00 AM – 8:00 PM",
+      "insta": "#",
+      "fb": "#",
+      "yt": "#",
+      "wa": "#"
+    },
+    "shuttlers": {
+      "address": "ACEIT Indoor Badminton Hall, Jaipur",
+      "email": "badminton@aceit.edu.in",
+      "phone": "+91 98765 43213",
+      "hours": "Mon–Sat, 6:00 AM – 8:00 PM",
+      "insta": "#",
+      "fb": "#",
+      "yt": "#",
+      "wa": "#"
+    },
+    "strikers-fc": {
+      "address": "Arya Football Turf Stadium, Kukas, Jaipur",
+      "email": "football@aceit.edu.in",
+      "phone": "+91 98765 43214",
       "hours": "Mon–Sat, 6:00 AM – 8:00 PM",
       "insta": "#",
       "fb": "#",
@@ -717,115 +1317,369 @@
       "wa": "#"
     }
   },
+  "categories": {
+    "team": [
+      "boys team",
+      "girls team",
+      "alumni",
+      "raiders",
+      "defenders",
+      "batsmen",
+      "bowlers",
+      "all-rounders",
+      "guards",
+      "forwards",
+      "singles",
+      "doubles",
+      "attackers",
+      "midfielders"
+    ],
+    "gallery": [
+      "matches",
+      "training",
+      "team",
+      "events",
+      "tournaments"
+    ]
+  },
+  "deletedCategories": {
+    "team": [],
+    "gallery": []
+  },
+  "customCategories": {
+    "team": [],
+    "gallery": []
+  },
+  "applications": [
+    {
+      "_id": "app_sample_1",
+      "name": "Rahul Sharma",
+      "email": "rahul.sharma@aceit.edu.in",
+      "phone": "+91 98765 43210",
+      "position": "Outside Hitter",
+      "experience": "2 years district level volleyball",
+      "message": "Excited to represent ACEIT Spikers in upcoming collegiate tournaments!",
+      "status": "Accepted",
+      "source": "Join Club Form",
+      "clubId": "spikers",
+      "createdAt": "2026-08-27T04:52:00.536Z"
+    },
+    {
+      "_id": "app_sample_2",
+      "name": "Amitabh Verma",
+      "email": "amitabh.v@aceit.edu.in",
+      "phone": "+91 98765 43211",
+      "position": "Raider",
+      "experience": "State championship finalist",
+      "message": "Interested in joining ACEIT Kabaddi squad for the inter-collegiate season.",
+      "status": "Pending",
+      "source": "Website Tryouts",
+      "clubId": "kabaddi",
+      "createdAt": "2026-08-27T04:52:00.536Z"
+    }
+  ],
   "users": [
     {
-      "_id": "owner_local",
-      "name": "Founder / Owner",
-      "username": "founder",
-      "passwordHash": "$2b$10$vWX5EpSW3sXchTkATuTesekfj4cmgfz6ZlxlbiHRotVPtkQ919L52",
+      "_id": "u_owner_1",
+      "name": "Founder / Super Owner",
+      "username": "owner",
+      "email": "owner@aceit.edu.in",
+      "rtuRollNo": "00EATOWN001",
+      "passwordHash": "$2b$10$8XRkwB4mLqKIlTz277M3j.xrRfL3ROQx3I2KwAQ1xZT7viJHxScee",
       "role": "OWNER",
       "clubId": "ALL",
       "clubs": [
-        "aceit-spikers"
+        "spikers",
+        "kabaddi",
+        "cricket",
+        "dunkers",
+        "shuttlers",
+        "strikers-fc"
       ],
       "permissions": [
         "*"
       ],
       "active": true,
-      "createdAt": "2026-08-26T21:33:15.490Z"
+      "sport": "All Sports",
+      "branch": "Administration",
+      "year": "Faculty / Management",
+      "createdAt": "2026-08-27T04:52:10.625Z"
     },
     {
-      "_id": "u_1787781387869",
-      "name": "Universal Student 1787781387797",
-      "username": "student_1787781387797",
-      "rtuRollNo": "23EARYA7797",
-      "email": "student_1787781387797@aceit.edu.in",
-      "mobile": "9876543210",
-      "photo": "",
-      "passwordHash": "$2b$10$KstCzPhIyHyGbf/IgfDmNuChrSBKuaBeC4t1C8ZpeMEagi1PDscLG",
+      "_id": "u_owner_2",
+      "name": "Founder Account",
+      "username": "founder",
+      "email": "founder@aceit.edu.in",
+      "rtuRollNo": "00EATFND001",
+      "passwordHash": "$2b$10$THOnVK7APeDDfykrM/nm5e1SBlL/xoeYBTRr0MlR0KN.1HQPYOh.2",
+      "role": "OWNER",
+      "clubId": "ALL",
+      "clubs": [
+        "spikers",
+        "kabaddi",
+        "cricket",
+        "dunkers",
+        "shuttlers",
+        "strikers-fc"
+      ],
+      "permissions": [
+        "*"
+      ],
+      "active": true,
+      "sport": "All Sports",
+      "branch": "Administration",
+      "year": "Faculty / Management",
+      "createdAt": "2026-08-27T04:52:10.680Z"
+    },
+    {
+      "_id": "u_admin_crk",
+      "name": "Cricket Club Admin",
+      "username": "cricket_admin",
+      "email": "cricket.admin@aceit.edu.in",
+      "rtuRollNo": "22EATCR001",
+      "passwordHash": "$2b$10$wuqSP8qoQnqdfASDuLteGuQ4r8Y8jsyWlT/GI5VX2EY/peRMh5.mG",
+      "role": "ADMIN",
+      "clubId": "cricket",
+      "clubs": [
+        "cricket"
+      ],
+      "permissions": [
+        "players.*",
+        "matches.*",
+        "news.*",
+        "gallery.*",
+        "events.*",
+        "training.*",
+        "testimonials.*",
+        "sponsors.*",
+        "stats.*",
+        "about.*",
+        "contact.*",
+        "applications.*"
+      ],
+      "active": true,
+      "sport": "Cricket",
+      "branch": "Mechanical Engineering",
+      "year": "4th Year",
+      "createdAt": "2026-08-27T04:52:10.735Z"
+    },
+    {
+      "_id": "u_admin_kbd",
+      "name": "Kabaddi Club Admin",
+      "username": "kabaddi_admin",
+      "email": "kabaddi.admin@aceit.edu.in",
+      "rtuRollNo": "22EATKB001",
+      "passwordHash": "$2b$10$QE3hTBbJUe8QJ4n6c14yEeLj9fr8W0nuuh6O6X8fewsAnqty/rf5e",
+      "role": "ADMIN",
+      "clubId": "kabaddi",
+      "clubs": [
+        "kabaddi"
+      ],
+      "permissions": [
+        "players.*",
+        "matches.*",
+        "news.*",
+        "gallery.*",
+        "events.*",
+        "training.*",
+        "testimonials.*",
+        "sponsors.*",
+        "stats.*",
+        "about.*",
+        "contact.*",
+        "applications.*"
+      ],
+      "active": true,
+      "sport": "Kabaddi",
+      "branch": "Civil Engineering",
+      "year": "4th Year",
+      "createdAt": "2026-08-27T04:52:10.791Z"
+    },
+    {
+      "_id": "u_admin_stk",
+      "name": "Football Club Admin",
+      "username": "football_admin",
+      "email": "football.admin@aceit.edu.in",
+      "rtuRollNo": "22EATFT001",
+      "passwordHash": "$2b$10$OeuEZR6Zqg9w7FpdD3KSP.iEvNQ505PUfR.PbaO0zSpJbnHC4sXky",
+      "role": "ADMIN",
+      "clubId": "strikers-fc",
+      "clubs": [
+        "strikers-fc"
+      ],
+      "permissions": [
+        "players.*",
+        "matches.*",
+        "news.*",
+        "gallery.*",
+        "events.*",
+        "training.*",
+        "testimonials.*",
+        "sponsors.*",
+        "stats.*",
+        "about.*",
+        "contact.*",
+        "applications.*"
+      ],
+      "active": true,
+      "sport": "Football",
+      "branch": "Electrical Engineering",
+      "year": "4th Year",
+      "createdAt": "2026-08-27T04:52:10.853Z"
+    },
+    {
+      "_id": "u_coord_spk",
+      "name": "Sports General Coordinator",
+      "username": "sports_coord",
+      "email": "coordinator@aceit.edu.in",
+      "rtuRollNo": "23EATSP010",
+      "passwordHash": "$2b$10$v7FtAu7XLXUDYiw8NxvgfOIldFK9K6IqXSom6wA3e3lVJd/faZm3W",
+      "role": "COORDINATOR",
+      "clubId": "spikers",
+      "clubs": [
+        "spikers",
+        "cricket",
+        "kabaddi"
+      ],
+      "permissions": [
+        "players.*",
+        "matches.*",
+        "events.*",
+        "news.*",
+        "gallery.*",
+        "training.*",
+        "testimonials.*",
+        "sponsors.*",
+        "stats.*",
+        "about.*",
+        "contact.*",
+        "applications.*"
+      ],
+      "active": true,
+      "sport": "Volleyball",
+      "branch": "Computer Science & Engineering",
+      "year": "3rd Year",
+      "createdAt": "2026-08-27T04:52:10.910Z"
+    },
+    {
+      "_id": "u_coord_dnk",
+      "name": "Basketball Coordinator",
+      "username": "dunkers_coord",
+      "email": "dunkers.coord@aceit.edu.in",
+      "rtuRollNo": "23EATBK012",
+      "passwordHash": "$2b$10$wq5VzRPrPjczkk.0C6K0qerNno2rZv7hgcXhdG2P0vms7fw5wxFPC",
+      "role": "COORDINATOR",
+      "clubId": "dunkers",
+      "clubs": [
+        "dunkers"
+      ],
+      "permissions": [
+        "players.*",
+        "matches.*",
+        "events.*",
+        "news.*",
+        "gallery.*",
+        "training.*"
+      ],
+      "active": true,
+      "sport": "Basketball",
+      "branch": "Information Technology",
+      "year": "3rd Year",
+      "createdAt": "2026-08-27T04:52:10.967Z"
+    },
+    {
+      "_id": "u_student_1",
+      "name": "Student Athlete (Multi-Sport)",
+      "username": "student_athlete",
+      "email": "student.athlete@aceit.edu.in",
+      "rtuRollNo": "22EATCS089",
+      "passwordHash": "$2b$10$VTqgewgVj4UlcJKj4.AsOO.rifIRhH/vNdj2YQUwAdOrXwXY9cvrK",
+      "role": "STUDENT",
+      "clubId": "spikers",
+      "clubs": [
+        "spikers",
+        "cricket",
+        "kabaddi"
+      ],
+      "permissions": [
+        "profile.view",
+        "profile.edit",
+        "clubs.join",
+        "applications.submit"
+      ],
+      "active": true,
+      "sport": "Volleyball",
+      "branch": "Computer Science & Engineering",
+      "year": "3rd Year (Batch 2023-27)",
+      "position": "Outside Hitter",
+      "jerseyNo": "7",
+      "height": "6'0\" (183 cm)",
+      "mobile": "+91 98765 43210",
+      "bio": "Collegiate athlete passionate about volleyball spikes, cricket, and fitness.",
+      "achievements": [
+        {
+          "title": "Inter-College Volleyball Gold Medalist",
+          "year": "2025"
+        },
+        {
+          "title": "Rajasthan State Selection Trialist",
+          "year": "2026"
+        }
+      ],
+      "stats": {
+        "matchesPlayed": 14,
+        "points": 68,
+        "spikes": 42,
+        "blocks": 18,
+        "aces": 8,
+        "mvpAwards": 2,
+        "mvpPoints": 252
+      },
+      "createdAt": "2026-08-27T04:52:11.023Z"
+    },
+    {
+      "_id": "u_student_2",
+      "name": "Rahul Sharma",
+      "username": "rahul_sharma",
+      "email": "rahul.sharma@aceit.edu.in",
+      "rtuRollNo": "23EATEC042",
+      "passwordHash": "$2b$10$IAqjcqgzb.Oyxv1.mVyE6OCvubrSgxOwArfjJjovtINtvYBDxWzYa",
       "role": "STUDENT",
       "clubId": "spikers",
       "clubs": [
         "spikers"
       ],
-      "bio": "",
-      "sport": "Volleyball",
-      "branch": "Computer Science & Engineering",
-      "year": "3rd Year",
-      "position": "Athlete",
-      "jerseyNo": "",
-      "height": "",
-      "achievements": [],
       "permissions": [
         "profile.view",
         "profile.edit",
-        "clubs.join"
+        "clubs.join",
+        "applications.submit"
       ],
       "active": true,
-      "createdAt": "2026-08-26T21:56:27.869Z",
-      "lastLoginAt": "2026-08-26T21:56:27.869Z"
-    },
-    {
-      "_id": "u_1787780182788",
-      "name": "Universal Student 1787780182707",
-      "username": "student_1787780182707",
-      "rtuRollNo": "23EARYA2707",
-      "email": "student_1787780182707@aceit.edu.in",
-      "mobile": "9876543210",
-      "photo": "",
-      "passwordHash": "$2b$10$by6rgOMK9GzvdQE6/OAUKOPYx0WjMEqITHG2zRqUpDsFuNmbfS4pm",
-      "role": "STUDENT",
-      "clubId": "spikers",
-      "clubs": [
-        "spikers"
-      ],
-      "bio": "",
       "sport": "Volleyball",
-      "branch": "Computer Science & Engineering",
-      "year": "3rd Year",
-      "position": "Athlete",
-      "jerseyNo": "",
-      "height": "",
-      "achievements": [],
-      "permissions": [
-        "profile.view",
-        "profile.edit",
-        "clubs.join"
+      "branch": "Electronics & Communication",
+      "year": "2nd Year (Batch 2024-28)",
+      "position": "Setter",
+      "jerseyNo": "12",
+      "height": "5'11\"",
+      "mobile": "+91 98765 43219",
+      "bio": "Aspiring collegiate volleyball setter.",
+      "achievements": [
+        {
+          "title": "Freshers Volleyball Tournament MVP",
+          "year": "2024"
+        }
       ],
-      "active": true,
-      "createdAt": "2026-08-26T21:36:22.788Z",
-      "lastLoginAt": "2026-08-26T21:36:22.788Z"
-    },
-    {
-      "_id": "u_1787780079874",
-      "name": "Universal Student 1787780079787",
-      "username": "student_1787780079787",
-      "rtuRollNo": "23EARYA9787",
-      "email": "student_1787780079787@aceit.edu.in",
-      "mobile": "9876543210",
-      "photo": "",
-      "passwordHash": "$2b$10$1HzfmejSr2xYojtFkNvWMuChHxrvRTxXB43se.9WyyvJHf5jY6/PK",
-      "role": "STUDENT",
-      "clubId": "spikers",
-      "clubs": [
-        "spikers"
-      ],
-      "bio": "",
-      "sport": "Volleyball",
-      "branch": "Computer Science & Engineering",
-      "year": "3rd Year",
-      "position": "Athlete",
-      "jerseyNo": "",
-      "height": "",
-      "achievements": [],
-      "permissions": [
-        "profile.view",
-        "profile.edit",
-        "clubs.join"
-      ],
-      "active": true,
-      "createdAt": "2026-08-26T21:34:39.874Z",
-      "lastLoginAt": "2026-08-26T21:34:39.874Z"
+      "stats": {
+        "matchesPlayed": 8,
+        "points": 28,
+        "spikes": 10,
+        "blocks": 6,
+        "aces": 12,
+        "mvpAwards": 1,
+        "mvpPoints": 105
+      },
+      "createdAt": "2026-08-27T04:52:11.079Z"
     }
   ],
   "clubs": [
@@ -843,7 +1697,7 @@
       "accentColor": "#D97706",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-26T21:33:15.432Z"
+      "createdAt": "2026-08-27T04:52:10.561Z"
     },
     {
       "_id": "c_kabaddi",
@@ -858,7 +1712,7 @@
       "accentColor": "#E74C3C",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-26T21:33:15.432Z"
+      "createdAt": "2026-08-27T04:52:10.561Z"
     },
     {
       "_id": "c_dunkers",
@@ -873,7 +1727,7 @@
       "accentColor": "#D35400",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-26T21:33:15.432Z"
+      "createdAt": "2026-08-27T04:52:10.561Z"
     },
     {
       "_id": "c_strikers",
@@ -888,7 +1742,7 @@
       "accentColor": "#2ECC71",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-26T21:33:15.432Z"
+      "createdAt": "2026-08-27T04:52:10.561Z"
     },
     {
       "_id": "c_shuttlers",
@@ -903,7 +1757,7 @@
       "accentColor": "#1ABC9C",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-26T21:33:15.432Z"
+      "createdAt": "2026-08-27T04:52:10.561Z"
     },
     {
       "_id": "c_cricket",
@@ -918,7 +1772,7 @@
       "accentColor": "#3498DB",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-26T21:33:15.432Z"
+      "createdAt": "2026-08-27T04:52:10.561Z"
     }
   ]
 }
