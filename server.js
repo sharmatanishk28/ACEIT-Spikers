@@ -394,6 +394,45 @@ async function connectToDatabase() {
       serverSelectionTimeoutMS: 8000,
       dbName: 'spikers'
     };
+
+    // Seed all fallback data into MongoDB if collections are empty
+    async function seedAllData() {
+      const dbConn = await connectToDatabase();
+      if (!dbConn) return;
+
+      // Backup data.json before any modifications
+      try {
+        const backupPath = path.join(__dirname, `data_backup_${Date.now()}.json`);
+        fs.copyFileSync(DATA_FILE, backupPath);
+        console.log('[MongoDB Atlas] Data backup created at', backupPath);
+      } catch (e) {
+        console.error('Backup failed:', e.message);
+      }
+
+      // Helper to insert if collection empty
+      const insertIfEmpty = async (Model, dataArray, name) => {
+        const count = await Model.countDocuments();
+        if (count === 0 && Array.isArray(dataArray) && dataArray.length) {
+          await Model.insertMany(dataArray);
+          console.log(`[MongoDB Atlas] Seeded ${name} (${dataArray.length} records)`);
+        }
+      };
+
+      await insertIfEmpty(Club, localClubs, 'clubs');
+      await insertIfEmpty(Role, localRoles, 'roles');
+      await insertIfEmpty(User, localUsers, 'users');
+      await insertIfEmpty(EventRsvp, localEventRsvps, 'event RSVPs');
+      await insertIfEmpty(MatchAvailability, localMatchAvailability, 'match availability');
+      await insertIfEmpty(Notification, localNotifications, 'notifications');
+      await insertIfEmpty(Announcement, localAnnouncements, 'announcements');
+    }
+
+    // Initialize DB and seed data
+    (async () => {
+      await connectToDatabase();
+      await seedInitialAuthAndClubs();
+      await seedAllData();
+    })();
     console.log('[MongoDB Atlas] Connecting to database cluster...');
     cached.promise = mongoose.connect(uri, opts).then((m) => {
       console.log('[MongoDB Atlas] Connected successfully to spikers database!');
@@ -2147,65 +2186,18 @@ const handleSignup = async (req, res) => {
     const hash = bcrypt.hashSync(String(password), salt);
 
     if (!dbConn) {
-      const existingUser = localUsers.find(u => u.username === cleanUsername || (u.email && u.email.toLowerCase() === cleanEmail));
-      if (existingUser) {
-        if (existingUser.username === cleanUsername) {
-          return res.status(400).json({ success: false, message: `Username '${cleanUsername}' is already taken. Please pick another.` });
-        }
-        return res.status(400).json({ success: false, message: `Email '${cleanEmail}' is already registered. Please sign in.` });
-      }
-      const newUser = {
-        _id: 'u_' + Date.now(),
-        name: cleanName,
-        username: cleanUsername,
-        rtuRollNo: cleanRollNo,
-        email: cleanEmail,
-        mobile: cleanMobile,
-        photo: photo || '',
-        passwordHash: hash,
-        role: 'STUDENT',
-        clubId: userClubs[0] || 'spikers',
-        clubs: userClubs,
-        bio: '',
-        sport: cleanSport,
-        branch: cleanBranch,
-        year: cleanYear,
-        position: cleanPosition,
-        jerseyNo: cleanJersey,
-        height: cleanHeight,
-        achievements: [],
-        permissions: ['profile.view', 'profile.edit', 'clubs.join'],
-        active: true,
-        createdAt: new Date(),
-        lastLoginAt: new Date()
-      };
-      localUsers.unshift(newUser);
-      writeLocalFileDB(readLocalFileDB());
-
-      const token = jwt.sign(
-        { id: String(newUser._id), username: newUser.username, role: newUser.role, clubId: newUser.clubId, permissions: newUser.permissions },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-      );
-      res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
-      res.cookie('auth_token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
-
-      const safeUser = Object.assign({}, newUser);
-      delete safeUser.passwordHash;
-      return res.json({ success: true, token, user: safeUser, message: 'Student account registered successfully!' });
+      return res.status(500).json({ success: false, message: 'Database connection failed' });
     }
 
-    const existing = await User.findOne({
-      $or: [{ username: cleanUsername }, { email: cleanEmail }]
-    });
-    if (existing) {
-      if (existing.username === cleanUsername) {
+    const existingUser = await User.findOne({ $or: [{ username: cleanUsername }, { email: cleanEmail }] });
+    if (existingUser) {
+      if (existingUser.username === cleanUsername) {
         return res.status(400).json({ success: false, message: `Username '${cleanUsername}' is already taken. Please pick another.` });
       }
       return res.status(400).json({ success: false, message: `Email '${cleanEmail}' is already registered. Please sign in.` });
     }
 
-    const newUser = await User.create({
+    const newUser = new User({
       name: cleanName,
       username: cleanUsername,
       rtuRollNo: cleanRollNo,
@@ -2226,8 +2218,10 @@ const handleSignup = async (req, res) => {
       achievements: [],
       permissions: ['profile.view', 'profile.edit', 'clubs.join'],
       active: true,
+      createdAt: new Date(),
       lastLoginAt: new Date()
     });
+    await newUser.save();
 
     const token = jwt.sign(
       { id: String(newUser._id), username: newUser.username, role: newUser.role, clubId: newUser.clubId, permissions: newUser.permissions },
@@ -2237,10 +2231,8 @@ const handleSignup = async (req, res) => {
     res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
     res.cookie('auth_token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 86400000 });
 
-    const safeUser = newUser.toObject();
-    delete safeUser.passwordHash;
-
-    res.json({ success: true, token, user: safeUser, message: 'Student account registered successfully!' });
+    const { passwordHash, ...safeUser } = newUser.toObject();
+    return res.json({ success: true, token, user: safeUser, message: 'Student account registered successfully!' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -2261,33 +2253,25 @@ const handleLogin = async (req, res) => {
     const cleanInput = String(inputVal).toLowerCase().trim();
     const dbConn = await connectToDatabase();
 
-    let user = null;
-    if (dbConn) {
-      const escapeRegex = (text) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-      const inputRegex = new RegExp('^' + escapeRegex(cleanInput) + '$', 'i');
+    if (!dbConn) {
+      return res.status(500).json({ success: false, message: 'Database connection failed' });
+    }
+
+    const escapeRegex = (text) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    const inputRegex = new RegExp('^' + escapeRegex(cleanInput) + '$', 'i');
+    let user = await User.findOne({
+      $or: [{ username: inputRegex }, { email: inputRegex }, { rtuRollNo: inputRegex }]
+    });
+    if (!user && (cleanInput === 'owner' || cleanInput === 'admin')) {
+      user = await User.findOne({ role: 'OWNER' });
+    }
+    if (!user) {
+      await seedInitialAuthAndClubs();
       user = await User.findOne({
         $or: [{ username: inputRegex }, { email: inputRegex }, { rtuRollNo: inputRegex }]
       });
       if (!user && (cleanInput === 'owner' || cleanInput === 'admin')) {
         user = await User.findOne({ role: 'OWNER' });
-      }
-      if (!user) {
-        await seedInitialAuthAndClubs();
-        user = await User.findOne({
-          $or: [{ username: inputRegex }, { email: inputRegex }, { rtuRollNo: inputRegex }]
-        });
-        if (!user && (cleanInput === 'owner' || cleanInput === 'admin')) {
-          user = await User.findOne({ role: 'OWNER' });
-        }
-      }
-    } else {
-      user = localUsers.find(u => 
-        (u.username && u.username.toLowerCase().trim() === cleanInput) || 
-        (u.email && u.email.toLowerCase().trim() === cleanInput) ||
-        (u.rtuRollNo && u.rtuRollNo.toLowerCase().trim() === cleanInput)
-      );
-      if (!user && (cleanInput === 'owner' || cleanInput === 'admin')) {
-        user = localUsers.find(u => u.role === 'OWNER');
       }
     }
 
@@ -2308,10 +2292,8 @@ const handleLogin = async (req, res) => {
     }
 
     const userId = user._id || user.id || 'owner_local';
-    if (user.save) {
-      user.lastLoginAt = new Date();
-      await user.save();
-    }
+    user.lastLoginAt = new Date();
+    await user.save();
 
     const token = jwt.sign(
       { id: String(userId), username: user.username, role: user.role, clubId: user.clubId, permissions: user.permissions },
@@ -3018,17 +3000,6 @@ app.get('/api/users', authenticateUser, requireAuth, requirePermission('users.vi
   try {
     const dbConn = await connectToDatabase();
     if (!dbConn) {
-      let safeUsers = localUsers.map(u => {
-        const copy = Object.assign({}, u);
-        delete copy.passwordHash;
-        return copy;
-      });
-      if (req.user && req.user.role !== 'OWNER' && req.user.clubId !== 'ALL') {
-        safeUsers = safeUsers.filter(function (u) {
-          return String(u.clubId) === String(req.user.clubId);
-        });
-      }
-      return res.json({ success: true, users: safeUsers });
     }
     await seedInitialAuthAndClubs();
     let users = await User.find({}).select('-passwordHash').sort({ createdAt: -1 });
