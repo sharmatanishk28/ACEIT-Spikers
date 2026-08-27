@@ -1045,23 +1045,25 @@
       border-radius: 50%;
     }
 
-    /* ---------- Team ---------- */
+    /* ---------- Team Grid ---------- */
     .team-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: var(--space-3);
-      margin-top: var(--space-5);
+      gap: 12px;
+      margin-top: var(--space-4);
     }
 
-    @media(min-width:700px) {
+    @media(min-width:650px) {
       .team-grid {
         grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
       }
     }
 
     @media(min-width:1000px) {
       .team-grid {
         grid-template-columns: repeat(4, 1fr);
+        gap: 22px;
       }
     }
 
@@ -3631,50 +3633,88 @@
         padding: 24px 18px;
       }
 
-      /* Team Cards — Single Column on Mobile */
+      /* Team Cards — Strict 2 Columns on Mobile */
       .team-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-        max-width: 380px;
-        margin-left: auto;
-        margin-right: auto;
-        margin-top: 24px;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-top: 16px !important;
       }
 
       .player-card {
         max-width: 100%;
+        border-radius: 12px;
         box-sizing: border-box;
       }
 
+      .player-photo {
+        aspect-ratio: 1 / 1.15;
+      }
+
+      .player-photo .jersey-num {
+        font-size: 36px;
+      }
+
+      .player-photo.has-photo .jersey-num {
+        font-size: 11px;
+        padding: 2px 6px;
+        top: 6px;
+        left: 6px;
+        border-radius: 6px;
+      }
+
+      .captain-badge {
+        font-size: 8px;
+        padding: 2.5px 7px;
+        top: 6px;
+        right: 6px;
+      }
+
       .player-info {
-        padding: 14px 16px 16px;
+        padding: 8px 8px 10px;
       }
 
       .player-info h3 {
-        font-size: 16px;
-        margin-bottom: 3px;
+        font-size: 13px;
+        font-weight: 800;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .player-pos {
-        font-size: 12px;
-        margin-bottom: 8px;
+        font-size: 10px;
+        margin-bottom: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .player-stats {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 6px 10px;
-        font-size: 12px;
+        gap: 4px 6px;
+        font-size: 9px;
+      }
+
+      .player-stats span {
+        font-size: 8.5px;
       }
 
       .player-stats span b {
-        font-size: 13px;
+        font-size: 10.5px;
       }
 
       .player-insta {
-        padding: 8px 12px;
-        font-size: 11px;
-        margin-top: 10px;
+        padding: 4px 8px;
+        font-size: 9.5px;
+        margin-top: 6px;
+        border-radius: 6px;
+        gap: 4px;
+        justify-content: center;
       }
 
       /* Achievements */
@@ -3705,9 +3745,15 @@
         flex-wrap: nowrap;
         padding-bottom: 8px;
         -webkit-overflow-scrolling: touch;
-        margin: 16px 0 20px;
+        margin: 14px 0 18px;
         max-width: 100%;
-        scrollbar-width: thin;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .team-filters::-webkit-scrollbar,
+      .gallery-filters::-webkit-scrollbar {
+        display: none;
       }
 
       .filter-btn {
@@ -7293,7 +7339,6 @@
       function getAllCategories(tab) {
         tab = tab || 'team';
         var deleted = ((DB && DB.deletedCategories && DB.deletedCategories[tab]) || []).map(function (c) { return String(c).trim().toLowerCase(); });
-        var configured = ((DB && DB.categories && DB.categories[tab]) || []).map(function (c) { return String(c).trim().toLowerCase(); });
         var custom = ((DB && DB.customCategories && DB.customCategories[tab]) || []).map(function (c) { return String(c).trim().toLowerCase(); });
 
         var activeList = [];
@@ -7305,14 +7350,31 @@
           }
         }
 
-        configured.forEach(add);
-        custom.forEach(add);
-
-        // Also scan items in DB[tab] (ignoring any deleted category)
+        // 1. Scan actual items in current club DB[tab] (ignoring deleted)
         (DB && DB[tab] || []).forEach(function (it) {
           var itCats = getCategories(it);
           itCats.forEach(add);
         });
+
+        // 2. Add sport-relevant base categories for current club
+        if (tab === 'team') {
+          var currentSport = (currentActiveClub && currentActiveClub.sport ? currentActiveClub.sport : 'Volleyball').toLowerCase();
+          var sportDefaults = {
+            'volleyball': ['boys team', 'girls team', 'alumni'],
+            'cricket': ['boys team', 'girls team', 'alumni', 'batsmen', 'bowlers', 'all-rounders'],
+            'kabaddi': ['boys team', 'girls team', 'alumni', 'raiders', 'defenders'],
+            'football': ['boys team', 'girls team', 'alumni', 'forwards', 'midfielders', 'defenders'],
+            'basketball': ['boys team', 'girls team', 'alumni', 'guards', 'forwards'],
+            'badminton': ['boys team', 'girls team', 'alumni', 'singles', 'doubles']
+          };
+          var defForSport = sportDefaults[currentSport] || ['boys team', 'girls team', 'alumni'];
+          defForSport.forEach(add);
+        } else if (tab === 'gallery') {
+          ['matches', 'training', 'team', 'events', 'tournaments'].forEach(add);
+        }
+
+        // 3. Add any club-specific custom categories
+        custom.forEach(add);
 
         return sortCategories(activeList);
       }

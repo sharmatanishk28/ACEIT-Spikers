@@ -393,6 +393,16 @@ async function runComprehensiveSuite() {
     assert(typeof res.body === 'string' && res.body.includes('<!DOCTYPE html>'), `Route '${r}' delivered valid HTML shell`);
   }
 
+  // Cleanup temporary test accounts created in Section 3
+  const finalUsersList = await request('GET', '/api/users', null, { 'Authorization': `Bearer ${ownerToken}` });
+  if (finalUsersList.body && Array.isArray(finalUsersList.body.users)) {
+    for (const u of finalUsersList.body.users) {
+      if (u.username !== 'founder' && u.role !== 'OWNER') {
+        await request('DELETE', `/api/users/${u._id || u.id}`, null, { 'Authorization': `Bearer ${ownerToken}` });
+      }
+    }
+  }
+
   // ====================================================
   // 8. FINAL SUMMARY
   // ====================================================

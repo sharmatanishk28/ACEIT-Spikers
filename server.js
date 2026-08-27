@@ -731,35 +731,12 @@ function readLocalFileDB() {
   try {
     if (fs.existsSync(DATA_FILE)) {
       const raw = fs.readFileSync(DATA_FILE, 'utf-8');
-      if (Array.isArray(parsed.users) && parsed.users.length) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.users) && parsed.users.length && (!localUsers || localUsers.length <= 1)) {
         localUsers = parsed.users.slice();
-      } else if (!localUsers || localUsers.length === 0) {
-        localUsers = [
-          {
-            _id: 'u_founder_real',
-            id: 'u_founder_real',
-            name: 'Founder / Super Owner',
-            username: (process.env.OWNER_USERNAME || 'founder').toLowerCase().trim(),
-            email: 'founder@aceit.edu.in',
-            rtuRollNo: '00EATFND001',
-            passwordHash: bcrypt.hashSync(process.env.OWNER_PASSWORD || 'OwnerSecret123!', 10),
-            role: 'OWNER',
-            clubId: 'ALL',
-            clubs: ['spikers', 'kabaddi', 'cricket', 'dunkers', 'shuttlers', 'strikers-fc'],
-            permissions: ['*'],
-            active: true
-          }
-        ];
       }
-      if (Array.isArray(parsed.clubs) && parsed.clubs.length) {
-        parsed.clubs.forEach(pc => {
-          const idx = localClubs.findIndex(lc => (lc.slug && pc.slug && lc.slug.toLowerCase() === pc.slug.toLowerCase()) || (lc.clubId && pc.clubId && lc.clubId.toLowerCase() === pc.clubId.toLowerCase()));
-          if (idx !== -1) {
-            localClubs[idx] = Object.assign({}, localClubs[idx], pc);
-          } else {
-            localClubs.push(pc);
-          }
-        });
+      if (Array.isArray(parsed.clubs) && parsed.clubs.length && (!localClubs || localClubs.length === 0)) {
+        localClubs = parsed.clubs.slice();
       }
       if (Array.isArray(parsed.team)) parsed.team.forEach(i => normalizeItemClubId(i, 'spikers'));
       if (Array.isArray(parsed.matches)) parsed.matches.forEach(i => normalizeItemClubId(i, 'spikers'));
@@ -798,7 +775,8 @@ function readLocalFileDB() {
 
 function writeLocalFileDB(data) {
   try {
-    const fullData = Object.assign({}, data, {
+    const fileData = fs.existsSync(DATA_FILE) ? JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8')) : {};
+    const fullData = Object.assign({}, fileData, data, {
       users: localUsers,
       clubs: localClubs
     });
@@ -949,7 +927,7 @@ app.get('/api/db', async (req, res) => {
       slideshow: filterByClub(data.slideshow, reqClubId)
     };
   }
-  res.json({ success: true, data });
+  res.json({ success: true, ...data, data });
 });
 
 // 2. Save full database (scoped per club and permissions)
@@ -1119,7 +1097,7 @@ app.put('/api/team/:id', authenticateUser, requireAuth, requirePermission('playe
     const { id } = req.params;
     const updatedPlayer = req.body;
     db.team = db.team || [];
-    const idx = db.team.findIndex(p => String(p.id) === String(id));
+    const idx = db.team.findIndex(p => String(p.id) === String(id) || String(p._id) === String(id));
     if (idx === -1) {
       console.error(`[API Player Update Failed] Player ID not found: ${id}`);
       return res.status(404).json({ success: false, message: 'Player not found' });
@@ -1163,7 +1141,7 @@ app.delete('/api/team/:id', authenticateUser, requireAuth, requirePermission('pl
     const db = dbRes.data;
     const { id } = req.params;
     db.team = db.team || [];
-    const playerToDelete = db.team.find(p => String(p.id) === String(id));
+    const playerToDelete = db.team.find(p => String(p.id) === String(id) || String(p._id) === String(id));
     if (!playerToDelete) {
       return res.status(404).json({ success: false, message: 'Player not found' });
     }
@@ -1173,7 +1151,7 @@ app.delete('/api/team/:id', authenticateUser, requireAuth, requirePermission('pl
       return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to delete players from club '${existingClub}'` });
     }
 
-    db.team = db.team.filter(p => String(p.id) !== String(id));
+    db.team = db.team.filter(p => String(p.id) !== String(id) && String(p._id) !== String(id));
 
     const result = await saveDB(db);
     if (!result.success) {
@@ -3179,7 +3157,7 @@ app.delete('/api/users/:id', authenticateUser, requireAuth, requirePermission('u
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
-      const targetUser = localUsers.find(u => String(u._id) === String(id));
+      const targetUser = localUsers.find(u => String(u._id) === String(id) || String(u.id) === String(id) || String(u.username).toLowerCase() === String(id).toLowerCase());
       if (!targetUser) return res.status(404).json({ success: false, message: 'User not found' });
       if (targetUser.role === 'OWNER') {
         return res.status(403).json({ success: false, message: 'The OWNER account cannot be deleted.' });
@@ -3187,7 +3165,8 @@ app.delete('/api/users/:id', authenticateUser, requireAuth, requirePermission('u
       if (req.user.role !== 'OWNER' && req.user.clubId !== 'ALL' && !hasClubAccess(req.user, targetUser.clubId)) {
         return res.status(403).json({ success: false, message: 'Cannot delete a user outside your assigned club.' });
       }
-      localUsers = localUsers.filter(u => String(u._id) !== String(id));
+      localUsers = localUsers.filter(u => String(u._id) !== String(targetUser._id) && String(u.id) !== String(targetUser._id) && String(u.username).toLowerCase() !== String(targetUser.username).toLowerCase());
+      writeLocalFileDB(readLocalFileDB());
       return res.json({ success: true, message: 'User deleted successfully' });
     }
 

@@ -517,7 +517,7 @@ async function generateCleanDatabase() {
     abouts,
     contacts,
     categories: {
-      team: ['boys team', 'girls team', 'alumni', 'raiders', 'defenders', 'batsmen', 'bowlers', 'all-rounders', 'guards', 'forwards', 'singles', 'doubles', 'attackers', 'midfielders'],
+      team: ['boys team', 'girls team', 'alumni'],
       gallery: ['matches', 'training', 'team', 'events', 'tournaments']
     },
     deletedCategories: { team: [], gallery: [] },
@@ -552,11 +552,9 @@ async function generateCleanDatabase() {
     ]
   };
 
-  // 12. Standard Demo Accounts for Testing & Development
+  // 12. Authoritative Single OWNER Account
   const salt = bcrypt.genSaltSync(10);
   const ownerHash = bcrypt.hashSync('OwnerSecret123!', salt);
-  const adminHash = bcrypt.hashSync('AdminSecret123!', salt);
-  const studentHash = bcrypt.hashSync('StudentSecret123!', salt);
 
   const cleanUsers = [
     // Authoritative OWNER Account
@@ -574,140 +572,12 @@ async function generateCleanDatabase() {
       sport: 'All Sports',
       branch: 'Administration',
       year: 'Faculty / Management'
-    },
-
-    // CLUB ADMIN Accounts (Scoped)
-    {
-      name: 'Cricket Club Admin',
-      username: 'cricket_admin',
-      email: 'cricket.admin@aceit.edu.in',
-      rtuRollNo: '22EATCR001',
-      passwordHash: adminHash,
-      role: 'ADMIN',
-      clubId: 'cricket',
-      clubs: ['cricket'],
-      permissions: ['players.*', 'matches.*', 'news.*', 'gallery.*', 'events.*', 'training.*', 'testimonials.*', 'sponsors.*', 'stats.*', 'about.*', 'contact.*', 'applications.*'],
-      active: true,
-      sport: 'Cricket',
-      branch: 'Mechanical Engineering',
-      year: '4th Year'
-    },
-    {
-      name: 'Kabaddi Club Admin',
-      username: 'kabaddi_admin',
-      email: 'kabaddi.admin@aceit.edu.in',
-      rtuRollNo: '22EATKB001',
-      passwordHash: adminHash,
-      role: 'ADMIN',
-      clubId: 'kabaddi',
-      clubs: ['kabaddi'],
-      permissions: ['players.*', 'matches.*', 'news.*', 'gallery.*', 'events.*', 'training.*', 'testimonials.*', 'sponsors.*', 'stats.*', 'about.*', 'contact.*', 'applications.*'],
-      active: true,
-      sport: 'Kabaddi',
-      branch: 'Civil Engineering',
-      year: '4th Year'
-    },
-    {
-      name: 'Football Club Admin',
-      username: 'football_admin',
-      email: 'football.admin@aceit.edu.in',
-      rtuRollNo: '22EATFT001',
-      passwordHash: adminHash,
-      role: 'ADMIN',
-      clubId: 'strikers-fc',
-      clubs: ['strikers-fc'],
-      permissions: ['players.*', 'matches.*', 'news.*', 'gallery.*', 'events.*', 'training.*', 'testimonials.*', 'sponsors.*', 'stats.*', 'about.*', 'contact.*', 'applications.*'],
-      active: true,
-      sport: 'Football',
-      branch: 'Electrical Engineering',
-      year: '4th Year'
-    },
-
-    // COORDINATOR Accounts
-    {
-      name: 'Sports General Coordinator',
-      username: 'sports_coord',
-      email: 'coordinator@aceit.edu.in',
-      rtuRollNo: '23EATSP010',
-      passwordHash: adminHash,
-      role: 'COORDINATOR',
-      clubId: 'spikers',
-      clubs: ['spikers', 'cricket', 'kabaddi'],
-      permissions: ['players.*', 'matches.*', 'events.*', 'news.*', 'gallery.*', 'training.*', 'testimonials.*', 'sponsors.*', 'stats.*', 'about.*', 'contact.*', 'applications.*'],
-      active: true,
-      sport: 'Volleyball',
-      branch: 'Computer Science & Engineering',
-      year: '3rd Year'
-    },
-    {
-      name: 'Basketball Coordinator',
-      username: 'dunkers_coord',
-      email: 'dunkers.coord@aceit.edu.in',
-      rtuRollNo: '23EATBK012',
-      passwordHash: adminHash,
-      role: 'COORDINATOR',
-      clubId: 'dunkers',
-      clubs: ['dunkers'],
-      permissions: ['players.*', 'matches.*', 'events.*', 'news.*', 'gallery.*', 'training.*'],
-      active: true,
-      sport: 'Basketball',
-      branch: 'Information Technology',
-      year: '3rd Year'
-    },
-
-    // STUDENT / USER Accounts
-    {
-      name: 'Student Athlete (Multi-Sport)',
-      username: 'student_athlete',
-      email: 'student.athlete@aceit.edu.in',
-      rtuRollNo: '22EATCS089',
-      passwordHash: studentHash,
-      role: 'STUDENT',
-      clubId: 'spikers',
-      clubs: ['spikers', 'cricket', 'kabaddi'],
-      permissions: ['profile.view', 'profile.edit', 'clubs.join', 'applications.submit'],
-      active: true,
-      sport: 'Volleyball',
-      branch: 'Computer Science & Engineering',
-      year: '3rd Year (Batch 2023-27)',
-      position: 'Outside Hitter',
-      jerseyNo: '7',
-      height: "6'0\" (183 cm)",
-      mobile: '+91 98765 43210',
-      bio: 'Collegiate athlete passionate about volleyball spikes, cricket, and fitness.',
-      achievements: [
-        { title: 'Inter-College Volleyball Gold Medalist', year: '2025' },
-        { title: 'Rajasthan State Selection Trialist', year: '2026' }
-      ],
-      stats: { matchesPlayed: 14, points: 68, spikes: 42, blocks: 18, aces: 8, mvpAwards: 2, mvpPoints: 110 }
-    },
-    {
-      name: 'Rahul Sharma',
-      username: 'rahul_sharma',
-      email: 'rahul.sharma@aceit.edu.in',
-      rtuRollNo: '23EATEC042',
-      passwordHash: studentHash,
-      role: 'STUDENT',
-      clubId: 'spikers',
-      clubs: ['spikers'],
-      permissions: ['profile.view', 'profile.edit', 'clubs.join', 'applications.submit'],
-      active: true,
-      sport: 'Volleyball',
-      branch: 'Electronics & Communication',
-      year: '2nd Year (Batch 2024-28)',
-      position: 'Setter',
-      jerseyNo: '12',
-      height: "5'11\"",
-      mobile: '+91 98765 43219',
-      bio: 'Aspiring collegiate volleyball setter.',
-      achievements: [
-        { title: 'Freshers Volleyball Tournament MVP', year: '2024' }
-      ],
-      stats: { matchesPlayed: 8, points: 28, spikes: 10, blocks: 6, aces: 12, mvpAwards: 1, mvpPoints: 50 }
     }
   ];
 
   // Save clean data to local file fallback
+  cleanDB.users = cleanUsers;
+  cleanDB.clubs = defaultClubsList;
   fs.writeFileSync(DATA_FILE, JSON.stringify(cleanDB, null, 2), 'utf8');
   console.log('✓ Successfully wrote clean multi-club dataset to local data.json');
 
