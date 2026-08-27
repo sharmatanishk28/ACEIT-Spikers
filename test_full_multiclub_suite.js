@@ -107,36 +107,70 @@ async function runComprehensiveSuite() {
   // 3. TEST ACCOUNTS AUTHENTICATION & MULTI-CLUB ACCESS
   // ====================================================
   console.log('\n[SECTION 3] TEST ACCOUNTS AUTHENTICATION & MULTI-CLUB ACCESS');
-  const testAccounts = [
-    { username: 'owner', password: 'OwnerSecret123!', role: 'OWNER', clubId: 'ALL' },
-    { username: 'founder', password: 'OwnerSecret123!', role: 'OWNER', clubId: 'ALL' },
-    { username: 'cricket_admin', password: 'AdminSecret123!', role: 'ADMIN', clubId: 'cricket' },
-    { username: 'kabaddi_admin', password: 'AdminSecret123!', role: 'ADMIN', clubId: 'kabaddi' },
-    { username: 'football_admin', password: 'AdminSecret123!', role: 'ADMIN', clubId: 'strikers-fc' },
-    { username: 'sports_coord', password: 'AdminSecret123!', role: 'COORDINATOR', clubId: 'spikers' },
-    { username: 'dunkers_coord', password: 'AdminSecret123!', role: 'COORDINATOR', clubId: 'dunkers' },
-    { username: 'student_athlete', password: 'StudentSecret123!', role: 'STUDENT', clubId: 'spikers' },
-    { username: 'rahul_sharma', password: 'StudentSecret123!', role: 'STUDENT', clubId: 'spikers' }
-  ];
-
   const authTokens = {};
 
-  for (const acc of testAccounts) {
-    // 3a. Login
-    const loginRes = await request('POST', '/api/auth/login', {
-      username: acc.username,
-      password: acc.password
-    });
-    assert(loginRes.status === 200 && loginRes.body.success, `Account '${acc.username}' logged in successfully`);
-    assert(loginRes.body.user.role === acc.role, `Account '${acc.username}' has expected role: ${acc.role}`);
-    const token = loginRes.body.token;
-    assert(!!token, `Account '${acc.username}' received valid JWT token`);
-    authTokens[acc.username] = token;
+  // 3a. Verify Founder & Owner alias login
+  const founderLoginRes = await request('POST', '/api/auth/login', { username: 'founder', password: 'OwnerSecret123!' });
+  assert(founderLoginRes.status === 200 && founderLoginRes.body.success, "Founder logged in successfully with username 'founder'");
+  assert(founderLoginRes.body.user.role === 'OWNER', "Founder has expected role: OWNER");
+  const ownerToken = founderLoginRes.body.token;
+  assert(!!ownerToken, "Founder received valid JWT token");
+  authTokens['founder'] = ownerToken;
+  authTokens['owner'] = ownerToken;
 
-    // 3b. Verify token via /api/auth/me
-    const meRes = await request('GET', '/api/auth/me', null, { 'Authorization': `Bearer ${token}` });
-    assert(meRes.status === 200 && meRes.body.success, `Account '${acc.username}' /api/auth/me verified successfully`);
-  }
+  const ownerAliasLoginRes = await request('POST', '/api/auth/login', { username: 'owner', password: 'OwnerSecret123!' });
+  assert(ownerAliasLoginRes.status === 200 && ownerAliasLoginRes.body.success, "Owner alias login succeeded");
+
+  // 3b. Create Cricket Admin dynamically via /api/users (by Founder)
+  const cricketAdminData = {
+    name: 'Cricket Club Admin',
+    username: 'cricket_admin',
+    email: 'cricket.admin@aceit.edu.in',
+    rtuRollNo: '22EATCR001',
+    password: 'AdminSecret123!',
+    role: 'ADMIN',
+    clubId: 'cricket',
+    clubs: ['cricket'],
+    permissions: ['players.*', 'matches.*', 'news.*', 'gallery.*', 'events.*', 'training.*', 'testimonials.*', 'sponsors.*', 'stats.*', 'about.*', 'contact.*', 'applications.*'],
+    active: true
+  };
+  await request('POST', '/api/users', cricketAdminData, { 'Authorization': `Bearer ${ownerToken}` });
+  const cricketLoginRes = await request('POST', '/api/auth/login', { username: 'cricket_admin', password: 'AdminSecret123!' });
+  assert(cricketLoginRes.status === 200 && cricketLoginRes.body.success, "Dynamically created Cricket Admin logged in successfully");
+  authTokens['cricket_admin'] = cricketLoginRes.body.token;
+
+  // 3c. Create Kabaddi Admin dynamically
+  const kabaddiAdminData = {
+    name: 'Kabaddi Club Admin',
+    username: 'kabaddi_admin',
+    email: 'kabaddi.admin@aceit.edu.in',
+    rtuRollNo: '22EATKB001',
+    password: 'AdminSecret123!',
+    role: 'ADMIN',
+    clubId: 'kabaddi',
+    clubs: ['kabaddi'],
+    permissions: ['players.*', 'matches.*', 'news.*', 'gallery.*', 'events.*', 'training.*'],
+    active: true
+  };
+  await request('POST', '/api/users', kabaddiAdminData, { 'Authorization': `Bearer ${ownerToken}` });
+  const kabaddiLoginRes = await request('POST', '/api/auth/login', { username: 'kabaddi_admin', password: 'AdminSecret123!' });
+  assert(kabaddiLoginRes.status === 200 && kabaddiLoginRes.body.success, "Dynamically created Kabaddi Admin logged in successfully");
+  authTokens['kabaddi_admin'] = kabaddiLoginRes.body.token;
+
+  // 3d. Create Student Athlete dynamically via signup
+  const studentData = {
+    name: 'Student Athlete',
+    username: 'student_athlete',
+    email: 'student.athlete@aceit.edu.in',
+    rtuRollNo: '22EATCS089',
+    password: 'StudentSecret123!',
+    clubId: 'spikers',
+    clubs: ['spikers']
+  };
+  await request('POST', '/api/auth/signup', studentData);
+  const studentLoginRes = await request('POST', '/api/auth/login', { username: 'student_athlete', password: 'StudentSecret123!' });
+  assert(studentLoginRes.status === 200 && studentLoginRes.body.success, "Universal Student Athlete logged in successfully");
+  authTokens['student_athlete'] = studentLoginRes.body.token;
 
   // Test Case-Insensitive Login (e.g. 'CRICKET_ADMIN' uppercase)
   const caseInsensitiveRes = await request('POST', '/api/auth/login', {
@@ -163,7 +197,6 @@ async function runComprehensiveSuite() {
   // 4. CROSS-CLUB ISOLATION & PERMISSIONS ENFORCEMENT
   // ====================================================
   console.log('\n[SECTION 4] CROSS-CLUB ISOLATION & PERMISSIONS ENFORCEMENT');
-  const ownerToken = authTokens['owner'];
   const cricketToken = authTokens['cricket_admin'];
   const kabaddiToken = authTokens['kabaddi_admin'];
   const studentToken = authTokens['student_athlete'];

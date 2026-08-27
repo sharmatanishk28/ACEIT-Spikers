@@ -3642,19 +3642,23 @@
         font-size: 10px;
       }
 
-      /* Gallery */
+      /* Team & Gallery Category Filters on Mobile */
+      .team-filters,
       .gallery-filters {
         display: flex;
         gap: 8px;
         overflow-x: auto;
         flex-wrap: nowrap;
-        padding-bottom: 6px;
+        padding-bottom: 8px;
         -webkit-overflow-scrolling: touch;
         margin: 16px 0 20px;
+        max-width: 100%;
+        scrollbar-width: thin;
       }
 
       .filter-btn {
         flex-shrink: 0;
+        white-space: nowrap;
         padding: 6px 14px;
         font-size: 12px;
       }
@@ -6617,34 +6621,23 @@
       }
 
       function loadDB() {
-        var currentClub = getActiveClubId();
-        var fresh = defaultDB(currentClub);
-        try {
-          var raw = window.localStorage.getItem('aceitSpikersDB_master') || 
-                    window.localStorage.getItem('aceitSpikersDB_' + currentClub) || 
-                    window.localStorage.getItem(DB_KEY);
-          if (raw) {
-            var parsed = JSON.parse(raw);
-            if (parsed && typeof parsed === 'object') {
-              var keys = ['training', 'team', 'gallery', 'matches', 'news', 'sponsors', 'testimonials', 'stats', 'events', 'slideshow'];
-              keys.forEach(function (k) {
-                if (!Array.isArray(parsed[k])) { parsed[k] = Array.isArray(fresh[k]) ? fresh[k] : []; }
-              });
-              if (!parsed.about || typeof parsed.about !== 'object') { parsed.about = fresh.about; }
-              if (!parsed.contact || typeof parsed.contact !== 'object') { parsed.contact = fresh.contact; }
-              if (!parsed.categories || typeof parsed.categories !== 'object') { parsed.categories = fresh.categories || {}; }
-              if (!parsed.deletedCategories || typeof parsed.deletedCategories !== 'object') { parsed.deletedCategories = fresh.deletedCategories || {}; }
-              if (!parsed.customCategories || typeof parsed.customCategories !== 'object') { parsed.customCategories = fresh.customCategories || {}; }
-              
-              if (!parsed.deletedCategories.team) parsed.deletedCategories.team = [];
-              if (!parsed.deletedCategories.gallery) parsed.deletedCategories.gallery = [];
-
-              return parsed;
-            }
-          }
-        } catch (e) { }
-        saveDB(fresh);
-        return fresh;
+        return {
+          training: [],
+          team: [],
+          gallery: [],
+          categories: { team: [], gallery: [] },
+          deletedCategories: { team: [], gallery: [] },
+          customCategories: { team: [], gallery: [] },
+          matches: [],
+          news: [],
+          sponsors: [],
+          testimonials: [],
+          events: [],
+          stats: [],
+          about: {},
+          contact: {},
+          slideshow: []
+        };
       }
       var API_BASE = window.location.origin.indexOf('http') === 0 ? '/api' : 'http://localhost:3000/api';
 
@@ -6674,12 +6667,6 @@
         
         var scope = targetClubId || activeClubScope || getActiveClubId() || 'ALL';
         var activeClub = String(scope).toLowerCase();
-        
-        try {
-          window.localStorage.setItem('aceitSpikersDB_master', JSON.stringify(db));
-          window.localStorage.setItem('aceitSpikersDB_' + activeClub, JSON.stringify(db));
-          window.localStorage.setItem(DB_KEY, JSON.stringify(db));
-        } catch (e) { }
 
         try {
           authFetch(API_BASE + '/save-all?clubId=' + encodeURIComponent(activeClub), {
@@ -6691,20 +6678,15 @@
             .then(function (res) {
               if (res && res.success && res.data) {
                 DB = res.data;
-                try {
-                  window.localStorage.setItem('aceitSpikersDB_master', JSON.stringify(DB));
-                  window.localStorage.setItem('aceitSpikersDB_' + activeClub, JSON.stringify(DB));
-                  window.localStorage.setItem(DB_KEY, JSON.stringify(DB));
-                } catch (e) { }
               }
               if (cb) cb(true);
             })
             .catch(function (err) {
-              console.log('[API Save Error] Using local save as fallback.', err);
-              if (cb) cb(true);
+              console.warn('[API Save Error]', err);
+              if (cb) cb(false);
             });
         } catch (e) {
-          if (cb) cb(true);
+          if (cb) cb(false);
         }
       }
 
@@ -7147,32 +7129,26 @@
           .then(function (res) { return res.json(); })
           .then(function (res) {
             if (res && res.success && res.data) {
-              var fresh = defaultDB(activeClub);
               DB = res.data;
-              if (!Array.isArray(DB.training)) { DB.training = Array.isArray(fresh.training) ? fresh.training : []; }
-              if (!Array.isArray(DB.slideshow)) { DB.slideshow = Array.isArray(fresh.slideshow) ? fresh.slideshow : []; }
-              if (!Array.isArray(DB.team)) { DB.team = Array.isArray(fresh.team) ? fresh.team : []; }
-              if (!Array.isArray(DB.matches)) { DB.matches = Array.isArray(fresh.matches) ? fresh.matches : []; }
-              if (!Array.isArray(DB.news)) { DB.news = Array.isArray(fresh.news) ? fresh.news : []; }
-              if (!Array.isArray(DB.sponsors)) { DB.sponsors = Array.isArray(fresh.sponsors) ? fresh.sponsors : []; }
-              if (!Array.isArray(DB.stats)) { DB.stats = Array.isArray(fresh.stats) ? fresh.stats : []; }
-              if (!Array.isArray(DB.events)) { DB.events = Array.isArray(fresh.events) ? fresh.events : []; }
-              if (!DB.about || typeof DB.about !== 'object') { DB.about = fresh.about; }
-              if (!DB.contact || typeof DB.contact !== 'object') { DB.contact = fresh.contact; }
-              if (!DB.categories || typeof DB.categories !== 'object') { DB.categories = fresh.categories || {}; }
-              if (!DB.deletedCategories || typeof DB.deletedCategories !== 'object') { DB.deletedCategories = fresh.deletedCategories || {}; }
-              if (!DB.customCategories || typeof DB.customCategories !== 'object') { DB.customCategories = fresh.customCategories || {}; }
-              try { 
-                window.localStorage.setItem('aceitSpikersDB_master', JSON.stringify(DB)); 
-                window.localStorage.setItem('aceitSpikersDB_' + activeClub, JSON.stringify(DB));
-                window.localStorage.setItem(DB_KEY, JSON.stringify(DB)); 
-              } catch (e) { }
+              if (!Array.isArray(DB.training)) { DB.training = []; }
+              if (!Array.isArray(DB.slideshow)) { DB.slideshow = []; }
+              if (!Array.isArray(DB.team)) { DB.team = []; }
+              if (!Array.isArray(DB.matches)) { DB.matches = []; }
+              if (!Array.isArray(DB.news)) { DB.news = []; }
+              if (!Array.isArray(DB.sponsors)) { DB.sponsors = []; }
+              if (!Array.isArray(DB.stats)) { DB.stats = []; }
+              if (!Array.isArray(DB.events)) { DB.events = []; }
+              if (!DB.about || typeof DB.about !== 'object') { DB.about = {}; }
+              if (!DB.contact || typeof DB.contact !== 'object') { DB.contact = {}; }
+              if (!DB.categories || typeof DB.categories !== 'object') { DB.categories = {}; }
+              if (!DB.deletedCategories || typeof DB.deletedCategories !== 'object') { DB.deletedCategories = {}; }
+              if (!DB.customCategories || typeof DB.customCategories !== 'object') { DB.customCategories = {}; }
               if (onComplete) onComplete();
               renderAllPublic();
             }
           })
           .catch(function (err) {
-            console.log('[API Sync] Backend offline or using standalone HTML mode.', err);
+            console.warn('[API Sync Error]', err);
           });
       }
 
@@ -7259,13 +7235,8 @@
 
       function getAllCategories(tab) {
         tab = tab || 'team';
-        var fresh = defaultDB();
-        var baseDefaults = (fresh.categories && fresh.categories[tab])
-          ? fresh.categories[tab]
-          : (tab === 'team' ? ['boys team', 'girls team', 'alumni'] : ['matches', 'training', 'team', 'events', 'tournaments']);
-
         var deleted = ((DB && DB.deletedCategories && DB.deletedCategories[tab]) || []).map(function (c) { return String(c).trim().toLowerCase(); });
-        var configured = ((DB && DB.categories && DB.categories[tab]) || baseDefaults).map(function (c) { return String(c).trim().toLowerCase(); });
+        var configured = ((DB && DB.categories && DB.categories[tab]) || []).map(function (c) { return String(c).trim().toLowerCase(); });
         var custom = ((DB && DB.customCategories && DB.customCategories[tab]) || []).map(function (c) { return String(c).trim().toLowerCase(); });
 
         var activeList = [];
@@ -8446,12 +8417,14 @@
         var username = (document.getElementById('adminUsernameInput').value || '').trim();
         var password = (document.getElementById('adminPasswordInput').value || '').trim();
         var msgEl = document.getElementById('adminPinMsg');
+        var submitBtn = document.getElementById('adminPinSubmit');
 
         if (!username || !password) {
           msgEl.innerHTML = '<span style="color:#C0392B;">Please enter both username/email and password.</span>';
           return;
         }
 
+        if (submitBtn) submitBtn.disabled = true;
         msgEl.innerHTML = '<span style="color:var(--amber);">Signing in...</span>';
 
         authFetch(API_BASE + '/auth/login', {
@@ -8461,6 +8434,7 @@
         })
           .then(function (r) { return r.json(); })
           .then(function (res) {
+            if (submitBtn) submitBtn.disabled = false;
             if (res && res.success && res.user) {
               currentUser = res.user;
               if (res.token) {
@@ -8477,10 +8451,11 @@
                 renderAdminTab(currentAdminTab);
               }
             } else {
-              msgEl.innerHTML = '<span style="color:#C0392B;">' + (res.message || 'Login failed. Incorrect credentials.') + '</span>';
+              msgEl.innerHTML = '<span style="color:#C0392B;">' + (res && res.message ? res.message : 'Login failed. Incorrect credentials.') + '</span>';
             }
           })
           .catch(function () {
+            if (submitBtn) submitBtn.disabled = false;
             msgEl.innerHTML = '<span style="color:#C0392B;">Network error during login. Please try again.</span>';
           });
       }
@@ -10306,10 +10281,23 @@
           } else {
             DB[tab].push(newItem);
           }
-          saveDB(DB, activeClubScope, function () {
-            formEl.classList.remove('open');
-            renderAdminTab(tab);
-            refreshPublicFor(tab);
+          var saveBtn = document.getElementById('adminSaveBtn');
+          if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Saving...';
+          }
+          saveDB(DB, activeClubScope, function (success) {
+            if (saveBtn) {
+              saveBtn.disabled = false;
+              saveBtn.textContent = 'Save';
+            }
+            if (success) {
+              formEl.classList.remove('open');
+              renderAdminTab(tab);
+              refreshPublicFor(tab);
+            } else {
+              showAlert('Failed to save changes to database. Please check your connection.');
+            }
           });
         });
       }
@@ -11086,6 +11074,12 @@
           var url = user ? (API_BASE + '/users/' + targetId) : (API_BASE + '/users');
           var method = user ? 'PUT' : 'POST';
 
+          var saveUserBtnEl = document.getElementById('saveUserBtn');
+          if (saveUserBtnEl) {
+            saveUserBtnEl.disabled = true;
+            saveUserBtnEl.textContent = 'Saving...';
+          }
+
           authFetch(url, {
             method: method,
             headers: { 'Content-Type': 'application/json' },
@@ -11093,6 +11087,10 @@
           })
             .then(function (r) { return r.json(); })
             .then(function (res) {
+              if (saveUserBtnEl) {
+                saveUserBtnEl.disabled = false;
+                saveUserBtnEl.textContent = 'Save User';
+              }
               if (res && res.success) {
                 showAlert(user ? 'User updated successfully.' : 'User created successfully.');
                 formArea.classList.remove('open');
@@ -11101,7 +11099,13 @@
                 showAlert(res && res.message ? res.message : 'Error saving user.');
               }
             })
-            .catch(function () { showAlert('Network error: Could not save user.'); });
+            .catch(function () {
+              if (saveUserBtnEl) {
+                saveUserBtnEl.disabled = false;
+                saveUserBtnEl.textContent = 'Save User';
+              }
+              showAlert('Network error: Could not save user.');
+            });
         });
       }
 

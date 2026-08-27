@@ -119,26 +119,9 @@ let localRoles = [
 
 let localUsers = [
   {
-    _id: 'u_owner_1',
+    _id: 'u_founder_real',
     name: 'Founder / Super Owner',
-    username: 'owner',
-    email: 'owner@aceit.edu.in',
-    rtuRollNo: '00EATOWN001',
-    passwordHash: bcrypt.hashSync(process.env.OWNER_PASSWORD || 'OwnerSecret123!', 10),
-    role: 'OWNER',
-    clubId: 'ALL',
-    clubs: ['spikers', 'kabaddi', 'cricket', 'dunkers', 'shuttlers', 'strikers-fc'],
-    permissions: ['*'],
-    active: true,
-    sport: 'All Sports',
-    branch: 'Administration',
-    year: 'Faculty / Management',
-    createdAt: new Date()
-  },
-  {
-    _id: 'u_owner_2',
-    name: 'Founder Account',
-    username: 'founder',
+    username: (process.env.OWNER_USERNAME || 'founder').toLowerCase().trim(),
     email: 'founder@aceit.edu.in',
     rtuRollNo: '00EATFND001',
     passwordHash: bcrypt.hashSync(process.env.OWNER_PASSWORD || 'OwnerSecret123!', 10),
@@ -150,144 +133,6 @@ let localUsers = [
     sport: 'All Sports',
     branch: 'Administration',
     year: 'Faculty / Management',
-    createdAt: new Date()
-  },
-  {
-    _id: 'u_admin_crk',
-    name: 'Cricket Club Admin',
-    username: 'cricket_admin',
-    email: 'cricket.admin@aceit.edu.in',
-    rtuRollNo: '22EATCR001',
-    passwordHash: bcrypt.hashSync('AdminSecret123!', 10),
-    role: 'ADMIN',
-    clubId: 'cricket',
-    clubs: ['cricket'],
-    permissions: ['players.*', 'matches.*', 'news.*', 'gallery.*', 'events.*', 'training.*', 'testimonials.*', 'sponsors.*', 'stats.*', 'about.*', 'contact.*', 'applications.*'],
-    active: true,
-    sport: 'Cricket',
-    branch: 'Mechanical Engineering',
-    year: '4th Year',
-    createdAt: new Date()
-  },
-  {
-    _id: 'u_admin_kbd',
-    name: 'Kabaddi Club Admin',
-    username: 'kabaddi_admin',
-    email: 'kabaddi.admin@aceit.edu.in',
-    rtuRollNo: '22EATKB001',
-    passwordHash: bcrypt.hashSync('AdminSecret123!', 10),
-    role: 'ADMIN',
-    clubId: 'kabaddi',
-    clubs: ['kabaddi'],
-    permissions: ['players.*', 'matches.*', 'news.*', 'gallery.*', 'events.*', 'training.*', 'testimonials.*', 'sponsors.*', 'stats.*', 'about.*', 'contact.*', 'applications.*'],
-    active: true,
-    sport: 'Kabaddi',
-    branch: 'Civil Engineering',
-    year: '4th Year',
-    createdAt: new Date()
-  },
-  {
-    _id: 'u_admin_stk',
-    name: 'Football Club Admin',
-    username: 'football_admin',
-    email: 'football.admin@aceit.edu.in',
-    rtuRollNo: '22EATFT001',
-    passwordHash: bcrypt.hashSync('AdminSecret123!', 10),
-    role: 'ADMIN',
-    clubId: 'strikers-fc',
-    clubs: ['strikers-fc'],
-    permissions: ['players.*', 'matches.*', 'news.*', 'gallery.*', 'events.*', 'training.*', 'testimonials.*', 'sponsors.*', 'stats.*', 'about.*', 'contact.*', 'applications.*'],
-    active: true,
-    sport: 'Football',
-    branch: 'Electrical Engineering',
-    year: '4th Year',
-    createdAt: new Date()
-  },
-  {
-    _id: 'u_coord_spk',
-    name: 'Sports General Coordinator',
-    username: 'sports_coord',
-    email: 'coordinator@aceit.edu.in',
-    rtuRollNo: '23EATSP010',
-    passwordHash: bcrypt.hashSync('AdminSecret123!', 10),
-    role: 'COORDINATOR',
-    clubId: 'spikers',
-    clubs: ['spikers', 'cricket', 'kabaddi'],
-    permissions: ['players.*', 'matches.*', 'events.*', 'news.*', 'gallery.*', 'training.*', 'testimonials.*', 'sponsors.*', 'stats.*', 'about.*', 'contact.*', 'applications.*'],
-    active: true,
-    sport: 'Volleyball',
-    branch: 'Computer Science & Engineering',
-    year: '3rd Year',
-    createdAt: new Date()
-  },
-  {
-    _id: 'u_coord_dnk',
-    name: 'Basketball Coordinator',
-    username: 'dunkers_coord',
-    email: 'dunkers.coord@aceit.edu.in',
-    rtuRollNo: '23EATBK012',
-    passwordHash: bcrypt.hashSync('AdminSecret123!', 10),
-    role: 'COORDINATOR',
-    clubId: 'dunkers',
-    clubs: ['dunkers'],
-    permissions: ['players.*', 'matches.*', 'events.*', 'news.*', 'gallery.*', 'training.*'],
-    active: true,
-    sport: 'Basketball',
-    branch: 'Information Technology',
-    year: '3rd Year',
-    createdAt: new Date()
-  },
-  {
-    _id: 'u_student_1',
-    name: 'Student Athlete (Multi-Sport)',
-    username: 'student_athlete',
-    email: 'student.athlete@aceit.edu.in',
-    rtuRollNo: '22EATCS089',
-    passwordHash: bcrypt.hashSync('StudentSecret123!', 10),
-    role: 'STUDENT',
-    clubId: 'spikers',
-    clubs: ['spikers', 'cricket', 'kabaddi'],
-    permissions: ['profile.view', 'profile.edit', 'clubs.join', 'applications.submit'],
-    active: true,
-    sport: 'Volleyball',
-    branch: 'Computer Science & Engineering',
-    year: '3rd Year (Batch 2023-27)',
-    position: 'Outside Hitter',
-    jerseyNo: '7',
-    height: "6'0\" (183 cm)",
-    mobile: '+91 98765 43210',
-    bio: 'Collegiate athlete passionate about volleyball spikes, cricket, and fitness.',
-    achievements: [
-      { title: 'Inter-College Volleyball Gold Medalist', year: '2025' },
-      { title: 'Rajasthan State Selection Trialist', year: '2026' }
-    ],
-    stats: { matchesPlayed: 14, points: 68, spikes: 42, blocks: 18, aces: 8, mvpAwards: 2, mvpPoints: 110 },
-    createdAt: new Date()
-  },
-  {
-    _id: 'u_student_2',
-    name: 'Rahul Sharma',
-    username: 'rahul_sharma',
-    email: 'rahul.sharma@aceit.edu.in',
-    rtuRollNo: '23EATEC042',
-    passwordHash: bcrypt.hashSync('StudentSecret123!', 10),
-    role: 'STUDENT',
-    clubId: 'spikers',
-    clubs: ['spikers'],
-    permissions: ['profile.view', 'profile.edit', 'clubs.join', 'applications.submit'],
-    active: true,
-    sport: 'Volleyball',
-    branch: 'Electronics & Communication',
-    year: '2nd Year (Batch 2024-28)',
-    position: 'Setter',
-    jerseyNo: '12',
-    height: "5'11\"",
-    mobile: '+91 98765 43219',
-    bio: 'Aspiring collegiate volleyball setter.',
-    achievements: [
-      { title: 'Freshers Volleyball Tournament MVP', year: '2024' }
-    ],
-    stats: { matchesPlayed: 8, points: 28, spikes: 10, blocks: 6, aces: 12, mvpAwards: 1, mvpPoints: 50 },
     createdAt: new Date()
   }
 ];
@@ -582,32 +427,7 @@ const Announcement = mongoose.models.Announcement || mongoose.model('Announcemen
 let localEventRsvps = [];
 let localMatchAvailability = [];
 let localNotifications = [];
-let localAnnouncements = [
-  {
-    _id: 'ann_1',
-    title: 'Inter-College State Championship Trials Announced',
-    content: 'Selection trials for the Men\'s & Women\'s volleyball first-team roster will take place this Saturday at the ACEIT Indoor Sports Complex. All registered students are welcome to attend with valid college ID.',
-    clubId: 'all',
-    category: 'Selection',
-    isPinned: true,
-    authorName: 'Shubham Patidar',
-    authorRole: 'CAPTAIN',
-    authorUsername: 'shubham_cap',
-    createdAt: new Date(Date.now() - 3600000 * 24)
-  },
-  {
-    _id: 'ann_2',
-    title: 'Evening Strength & Conditioning Schedule Update',
-    content: 'Starting next Monday, tactical practice and jump training will run from 5:30 PM to 7:30 PM under head coach supervision. Check the training tab for detailed drill breakdowns.',
-    clubId: 'aceit-spikers',
-    category: 'Practice',
-    isPinned: false,
-    authorName: 'Sports Coordinator',
-    authorRole: 'COORDINATOR',
-    authorUsername: 'coordinator',
-    createdAt: new Date(Date.now() - 3600000 * 48)
-  }
-];
+let localAnnouncements = [];
 let localLiveMatches = {}; // matchId -> { isLive, currentSet, team1SetsWon, team2SetsWon, liveScore: { team1, team2 }, setScores: [], liveServingTeam, playByPlay: [] }
 
 // Phase 4 Notification Helper
@@ -717,33 +537,42 @@ async function seedInitialAuthAndClubs() {
       console.log('[MongoDB Atlas] Auto-seeded default system and custom roles');
     }
 
-    const ownerCount = await User.countDocuments({ role: 'OWNER' });
-    if (ownerCount === 0) {
-      const ownerUsername = (process.env.OWNER_USERNAME || 'founder').toLowerCase().trim();
+    const owners = await User.find({ role: 'OWNER' });
+    const ownerUsername = (process.env.OWNER_USERNAME || 'founder').toLowerCase().trim();
+    if (owners.length === 0) {
       const ownerPass = process.env.OWNER_PASSWORD || 'OwnerSecret123!';
       const salt = bcrypt.genSaltSync(10);
       const hash = bcrypt.hashSync(ownerPass, salt);
 
       await User.create({
-        name: 'Founder / Owner',
+        name: 'Founder / Super Owner',
         username: ownerUsername,
+        email: 'founder@aceit.edu.in',
+        rtuRollNo: '00EATFND001',
         passwordHash: hash,
         role: 'OWNER',
         clubId: 'ALL',
+        clubs: ['spikers', 'kabaddi', 'cricket', 'dunkers', 'shuttlers', 'strikers-fc'],
         permissions: ['*'],
         active: true
       });
-      console.log(`[MongoDB Atlas] Auto-seeded initial OWNER account: "${ownerUsername}"`);
+      console.log(`[MongoDB Atlas] Initialized single OWNER account: "${ownerUsername}"`);
     } else {
-      const ownerUsername = (process.env.OWNER_USERNAME || 'founder').toLowerCase().trim();
-      let ownerUser = await User.findOne({ username: ownerUsername }) || await User.findOne({ role: 'OWNER' });
-      if (ownerUser) {
-        let changed = false;
-        if (ownerUser.clubId !== 'ALL') { ownerUser.clubId = 'ALL'; changed = true; }
-        if (!ownerUser.permissions || !ownerUser.permissions.includes('*')) { ownerUser.permissions = ['*']; changed = true; }
-        if (!ownerUser.active) { ownerUser.active = true; changed = true; }
-        if (changed) await ownerUser.save();
+      const primaryOwner = owners.find(o => o.username === ownerUsername || o.username === 'founder') || owners[0];
+      if (owners.length > 1) {
+        for (const o of owners) {
+          if (String(o._id) !== String(primaryOwner._id)) {
+            await User.deleteOne({ _id: o._id });
+            console.log(`[MongoDB Atlas] Removed duplicate OWNER record: "${o.username}"`);
+          }
+        }
       }
+      let changed = false;
+      if (primaryOwner.name !== 'Founder / Super Owner') { primaryOwner.name = 'Founder / Super Owner'; changed = true; }
+      if (primaryOwner.clubId !== 'ALL') { primaryOwner.clubId = 'ALL'; changed = true; }
+      if (!primaryOwner.permissions || !primaryOwner.permissions.includes('*')) { primaryOwner.permissions = ['*']; changed = true; }
+      if (!primaryOwner.active) { primaryOwner.active = true; changed = true; }
+      if (changed) await primaryOwner.save();
     }
   } catch (err) {
     console.error('[MongoDB Atlas Seeding Error]', err.message);
@@ -3079,9 +2908,13 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
     }
 
     if (!dbConn) {
-      const existingLocal = localUsers.find(u => u.username === cleanUsername || (cleanEmail && u.email && u.email.toLowerCase() === cleanEmail));
+      const existingLocal = localUsers.find(u => 
+        (u.username && u.username.toLowerCase() === cleanUsername) || 
+        (cleanEmail && u.email && u.email.toLowerCase() === cleanEmail) ||
+        (cleanRollNo && u.rtuRollNo && u.rtuRollNo.toLowerCase() === cleanRollNo.toLowerCase())
+      );
       if (existingLocal) {
-        return res.status(400).json({ success: false, message: `Username or Email is already taken.` });
+        return res.status(400).json({ success: false, message: 'Username, Email, or Roll Number is already taken.' });
       }
       const newUser = {
         _id: 'u_' + Date.now(),
@@ -3109,19 +2942,28 @@ app.post('/api/users', authenticateUser, requireAuth, requirePermission('users.c
         lastLoginAt: null
       };
       localUsers.unshift(newUser);
+      writeLocalFileDB(readLocalFileDB());
       const userObj = Object.assign({}, newUser);
       delete userObj.passwordHash;
       return res.json({ success: true, user: userObj, message: 'User created successfully' });
     }
 
-    const existing = await User.findOne({
-      $or: [
-        { username: cleanUsername },
-        ...(cleanEmail ? [{ email: cleanEmail }] : [])
-      ]
-    });
+    const orConditions = [{ username: cleanUsername }];
+    if (cleanEmail) orConditions.push({ email: cleanEmail });
+    if (cleanRollNo) orConditions.push({ rtuRollNo: cleanRollNo });
+
+    const existing = await User.findOne({ $or: orConditions });
     if (existing) {
-      return res.status(400).json({ success: false, message: `Username or Email is already taken.` });
+      if (existing.username === cleanUsername) {
+        return res.status(400).json({ success: false, message: `Username '${cleanUsername}' is already taken.` });
+      }
+      if (cleanEmail && existing.email === cleanEmail) {
+        return res.status(400).json({ success: false, message: `Email '${cleanEmail}' is already registered.` });
+      }
+      if (cleanRollNo && existing.rtuRollNo === cleanRollNo) {
+        return res.status(400).json({ success: false, message: `Roll Number '${cleanRollNo}' is already registered.` });
+      }
+      return res.status(400).json({ success: false, message: 'User already exists.' });
     }
 
     const newUser = await User.create({

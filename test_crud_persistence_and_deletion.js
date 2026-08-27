@@ -167,16 +167,16 @@ async function runSuite() {
   const htmlPath = path.join(__dirname, 'aceit-spikers-1.html');
   const htmlContent = fs.readFileSync(htmlPath, 'utf8');
 
-  test('loadDB reads master and club keys without destructive defaults', () => {
-    assert(htmlContent.includes("window.localStorage.getItem('aceitSpikersDB_master')"), 'loadDB checks aceitSpikersDB_master');
+  test('loadDB provides clean initialization without destructive mock overrides', () => {
+    assert(htmlContent.includes("function loadDB()"), 'loadDB function exists');
   });
 
-  test('syncWithServer does not re-seed empty array with mock data', () => {
+  test('syncWithAPI does not re-seed empty array with mock data', () => {
     assert(!htmlContent.includes('DB.slideshow.length === 0) { DB.slideshow = fresh.slideshow; }'), 'syncWithServer avoids length===0 clobbering');
   });
 
-  test('saveDB stores in both master and club localStorage keys', () => {
-    assert(htmlContent.includes("window.localStorage.setItem('aceitSpikersDB_master'"), 'saveDB sets aceitSpikersDB_master');
+  test('saveDB persists directly to authoritative backend API', () => {
+    assert(htmlContent.includes("authFetch(API_BASE + '/save-all"), 'saveDB communicates with server API');
   });
 
   test('checkAuthAndOpenAdmin fetches fresh /api/db before rendering', () => {

@@ -559,24 +559,9 @@ async function generateCleanDatabase() {
   const studentHash = bcrypt.hashSync('StudentSecret123!', salt);
 
   const cleanUsers = [
-    // OWNER Accounts
+    // Authoritative OWNER Account
     {
       name: 'Founder / Super Owner',
-      username: 'owner',
-      email: 'owner@aceit.edu.in',
-      rtuRollNo: '00EATOWN001',
-      passwordHash: ownerHash,
-      role: 'OWNER',
-      clubId: 'ALL',
-      clubs: ['spikers', 'kabaddi', 'cricket', 'dunkers', 'shuttlers', 'strikers-fc'],
-      permissions: ['*'],
-      active: true,
-      sport: 'All Sports',
-      branch: 'Administration',
-      year: 'Faculty / Management'
-    },
-    {
-      name: 'Founder Account',
       username: 'founder',
       email: 'founder@aceit.edu.in',
       rtuRollNo: '00EATFND001',
