@@ -348,7 +348,7 @@ async function runComprehensiveSuite() {
     name: 'Temporary Coordinator',
     username: dummyUser,
     email: `${dummyUser}@aceit.edu.in`,
-    rtuRollNo: '23EATTMP01',
+    rtuRollNo: '23TMP' + (Date.now() % 100000),
     password: 'Password123!',
     role: 'COORDINATOR',
     clubId: 'kabaddi',

@@ -731,16 +731,25 @@ function readLocalFileDB() {
   try {
     if (fs.existsSync(DATA_FILE)) {
       const raw = fs.readFileSync(DATA_FILE, 'utf-8');
-      const parsed = JSON.parse(raw);
       if (Array.isArray(parsed.users) && parsed.users.length) {
-        parsed.users.forEach(pu => {
-          const idx = localUsers.findIndex(lu => (lu.username && pu.username && lu.username.toLowerCase() === pu.username.toLowerCase()) || (lu._id && pu._id && String(lu._id) === String(pu._id)));
-          if (idx !== -1) {
-            localUsers[idx] = pu;
-          } else {
-            localUsers.push(pu);
+        localUsers = parsed.users.slice();
+      } else if (!localUsers || localUsers.length === 0) {
+        localUsers = [
+          {
+            _id: 'u_founder_real',
+            id: 'u_founder_real',
+            name: 'Founder / Super Owner',
+            username: (process.env.OWNER_USERNAME || 'founder').toLowerCase().trim(),
+            email: 'founder@aceit.edu.in',
+            rtuRollNo: '00EATFND001',
+            passwordHash: bcrypt.hashSync(process.env.OWNER_PASSWORD || 'OwnerSecret123!', 10),
+            role: 'OWNER',
+            clubId: 'ALL',
+            clubs: ['spikers', 'kabaddi', 'cricket', 'dunkers', 'shuttlers', 'strikers-fc'],
+            permissions: ['*'],
+            active: true
           }
-        });
+        ];
       }
       if (Array.isArray(parsed.clubs) && parsed.clubs.length) {
         parsed.clubs.forEach(pc => {
@@ -2847,6 +2856,7 @@ app.get('/api/users', authenticateUser, requireAuth, requirePermission('users.vi
   try {
     const dbConn = await connectToDatabase();
     if (!dbConn) {
+      readLocalFileDB();
       let safeUsers = localUsers.map(u => {
         const copy = Object.assign({}, u);
         delete copy.passwordHash;

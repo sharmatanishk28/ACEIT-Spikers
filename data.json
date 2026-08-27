@@ -1292,7 +1292,13 @@
     "insta": "https://instagram.com/aceit_spikers",
     "fb": "https://facebook.com/aceitspikers",
     "yt": "https://youtube.com/@aceitspikers",
-    "wa": "https://wa.me/919999988888"
+    "wa": "https://wa.me/919999988888",
+    "socialButtons": [
+      {
+        "label": "Follow on Instagram",
+        "url": "https://instagram.com/aceit_spikers"
+      }
+    ]
   },
   "abouts": {
     "spikers": {
@@ -1436,235 +1442,6 @@
   "applications": [],
   "users": [
     {
-      "_id": "u_1787821127413",
-      "name": "Strikers Coordinator",
-      "username": "strikers_admin_1787821127342",
-      "rtuRollNo": "",
-      "email": "",
-      "mobile": "",
-      "photo": "",
-      "passwordHash": "$2b$10$Moi0dcTH9U2k4vRsS4WT6uR10WSBuvFpVR0Af1PlI81Ihjmxyhnxe",
-      "role": "COORDINATOR",
-      "clubId": "strikers",
-      "clubs": [
-        "strikers"
-      ],
-      "bio": "",
-      "sport": "Volleyball",
-      "branch": "Computer Science & Engineering",
-      "year": "3rd Year",
-      "position": "Outside Hitter",
-      "jerseyNo": "",
-      "height": "",
-      "achievements": [],
-      "permissions": [
-        "players.*",
-        "matches.*",
-        "applications.*"
-      ],
-      "active": true,
-      "createdAt": "2026-08-27T08:58:47.413Z",
-      "lastLoginAt": null
-    },
-    {
-      "_id": "u_1787821117753",
-      "name": "Aryan Sports Fan",
-      "username": "student_fan_mtbaj75i",
-      "rtuRollNo": "21EARYCS555",
-      "email": "fan_mtbaj75i@arya.edu.in",
-      "mobile": "",
-      "photo": "",
-      "passwordHash": "$2b$10$k3nzH19k9jjNUP8gKq50s.nVuQlPreGuJfE5AVM9JFhVfIoa.YarW",
-      "role": "STUDENT",
-      "clubId": "spikers",
-      "clubs": [
-        "spikers"
-      ],
-      "bio": "",
-      "sport": "Volleyball",
-      "branch": "Computer Science & Engineering",
-      "year": "3rd Year",
-      "position": "Athlete",
-      "jerseyNo": "",
-      "height": "",
-      "achievements": [],
-      "permissions": [
-        "profile.view",
-        "profile.edit",
-        "clubs.join"
-      ],
-      "active": true,
-      "createdAt": "2026-08-27T08:58:37.753Z",
-      "lastLoginAt": "2026-08-27T08:58:37.753Z"
-    },
-    {
-      "_id": "u_1787821104591",
-      "name": "Rohit Sharma",
-      "username": "rohit_test_mtbaiwzc",
-      "rtuRollNo": "21EARYCS999",
-      "email": "rohit_mtbaiwzc@arya.edu.in",
-      "mobile": "+91 9876543210",
-      "photo": "https://images.unsplash.com/photo-student",
-      "passwordHash": "$2b$10$o2riyAGcYiafmg3y.bCkW.YzZhtptwYK1vYhcQ7PTXx.cvTXzgAVG",
-      "role": "STUDENT",
-      "clubId": "spikers",
-      "clubs": [
-        "spikers"
-      ],
-      "bio": "",
-      "sport": "Volleyball",
-      "branch": "Computer Science",
-      "year": "3rd Year",
-      "position": "Setter",
-      "jerseyNo": "18",
-      "height": "6ft 1in",
-      "achievements": [],
-      "permissions": [
-        "profile.view",
-        "profile.edit",
-        "clubs.join"
-      ],
-      "active": true,
-      "createdAt": "2026-08-27T08:58:24.591Z",
-      "lastLoginAt": "2026-08-27T08:58:24.591Z"
-    },
-    {
-      "_id": "u_1787821093915",
-      "name": "Student Athlete",
-      "username": "student_athlete",
-      "rtuRollNo": "22EATCS089",
-      "email": "student.athlete@aceit.edu.in",
-      "mobile": "",
-      "photo": "",
-      "passwordHash": "$2b$10$zmgTQpq6KsepLkwE7Koo/uTHtyj/wjIKehR/sjOploHsFDjTrXPSy",
-      "role": "STUDENT",
-      "clubId": "spikers",
-      "clubs": [
-        "spikers"
-      ],
-      "bio": "",
-      "sport": "Volleyball",
-      "branch": "Computer Science & Engineering",
-      "year": "3rd Year",
-      "position": "Athlete",
-      "jerseyNo": "",
-      "height": "",
-      "achievements": [],
-      "permissions": [
-        "profile.view",
-        "profile.edit",
-        "clubs.join"
-      ],
-      "active": true,
-      "createdAt": "2026-08-27T08:58:13.915Z",
-      "lastLoginAt": "2026-08-27T08:58:13.915Z"
-    },
-    {
-      "_id": "u_1787821093781",
-      "name": "Kabaddi Club Admin",
-      "username": "kabaddi_admin",
-      "rtuRollNo": "22EATKB001",
-      "email": "kabaddi.admin@aceit.edu.in",
-      "mobile": "",
-      "photo": "",
-      "passwordHash": "$2b$10$sCZHvNAV9OavfZ8uyXWA6O9urD5qUkl0DNeQiMpRKSDqEgZiavAiG",
-      "role": "ADMIN",
-      "clubId": "kabaddi",
-      "clubs": [
-        "kabaddi"
-      ],
-      "bio": "",
-      "sport": "Volleyball",
-      "branch": "Computer Science & Engineering",
-      "year": "3rd Year",
-      "position": "Outside Hitter",
-      "jerseyNo": "",
-      "height": "",
-      "achievements": [],
-      "permissions": [
-        "players.*",
-        "matches.*",
-        "news.*",
-        "gallery.*",
-        "events.*",
-        "training.*"
-      ],
-      "active": true,
-      "createdAt": "2026-08-27T08:58:13.781Z",
-      "lastLoginAt": null
-    },
-    {
-      "_id": "u_1787821093649",
-      "name": "Cricket Club Admin",
-      "username": "cricket_admin",
-      "rtuRollNo": "22EATCR001",
-      "email": "cricket.admin@aceit.edu.in",
-      "mobile": "",
-      "photo": "",
-      "passwordHash": "$2b$10$6djoBnzUY7H1BwN12Lssb.QNS4q7u4bV8QpRrCM/B3ZnmFQJJSBYm",
-      "role": "ADMIN",
-      "clubId": "cricket",
-      "clubs": [
-        "cricket"
-      ],
-      "bio": "",
-      "sport": "Volleyball",
-      "branch": "Computer Science & Engineering",
-      "year": "3rd Year",
-      "position": "Outside Hitter",
-      "jerseyNo": "",
-      "height": "",
-      "achievements": [],
-      "permissions": [
-        "players.*",
-        "matches.*",
-        "news.*",
-        "gallery.*",
-        "events.*",
-        "training.*",
-        "testimonials.*",
-        "sponsors.*",
-        "stats.*",
-        "about.*",
-        "contact.*",
-        "applications.*"
-      ],
-      "active": true,
-      "createdAt": "2026-08-27T08:58:13.649Z",
-      "lastLoginAt": null
-    },
-    {
-      "_id": "u_1787820964823",
-      "name": "Universal Student 1787820964591",
-      "username": "student_1787820964591",
-      "rtuRollNo": "23EARYA4591",
-      "email": "student_1787820964591@aceit.edu.in",
-      "mobile": "9876543210",
-      "photo": "",
-      "passwordHash": "$2b$10$.i.Hs0IhepQaw91Lrx2oU.M3Yw7K7Hn6HWeTPUMZi2o5T/ljM0Cfa",
-      "role": "STUDENT",
-      "clubId": "spikers",
-      "clubs": [
-        "spikers"
-      ],
-      "bio": "",
-      "sport": "Volleyball",
-      "branch": "Computer Science & Engineering",
-      "year": "3rd Year",
-      "position": "Athlete",
-      "jerseyNo": "",
-      "height": "",
-      "achievements": [],
-      "permissions": [
-        "profile.view",
-        "profile.edit",
-        "clubs.join"
-      ],
-      "active": true,
-      "createdAt": "2026-08-27T08:56:04.823Z",
-      "lastLoginAt": "2026-08-27T08:56:04.823Z"
-    },
-    {
       "_id": "u_founder_real",
       "name": "Founder / Super Owner",
       "username": "founder",
@@ -1689,71 +1466,9 @@
       "branch": "Administration",
       "year": "Faculty / Management",
       "createdAt": "2026-08-27T08:50:53.512Z"
-    },
-    {
-      "_id": "u_1787821094448",
-      "name": "Temporary Coordinator",
-      "username": "test_crud_1787821094387",
-      "rtuRollNo": "23EATTMP01",
-      "email": "test_crud_1787821094387@aceit.edu.in",
-      "mobile": "",
-      "photo": "",
-      "passwordHash": "$2b$10$KKI373lhj34PfFmw5kWe9./4AO9BrA8PsiFKOLiDfTNC06CYBBi/.",
-      "role": "COORDINATOR",
-      "clubId": "kabaddi",
-      "clubs": [
-        "kabaddi"
-      ],
-      "bio": "",
-      "sport": "Volleyball",
-      "branch": "Computer Science & Engineering",
-      "year": "3rd Year",
-      "position": "Outside Hitter",
-      "jerseyNo": "",
-      "height": "",
-      "achievements": [],
-      "permissions": [
-        "players.*",
-        "matches.*"
-      ],
-      "active": true,
-      "createdAt": "2026-08-27T08:58:14.448Z",
-      "lastLoginAt": null
     }
   ],
   "clubs": [
-    {
-      "_id": "c_1787821117682",
-      "clubId": "smashers",
-      "name": "ACEIT Smashers",
-      "sport": "Badminton",
-      "slug": "smashers",
-      "logo": "",
-      "loaderLogo": "",
-      "coverImage": "",
-      "description": "Official Badminton Club",
-      "themeColor": "",
-      "accentColor": "",
-      "active": true,
-      "status": "active",
-      "createdAt": "2026-08-27T08:58:37.682Z"
-    },
-    {
-      "_id": "c_1787821099953",
-      "clubId": "strikers",
-      "name": "ACEIT Strikers",
-      "sport": "Football",
-      "slug": "strikers",
-      "logo": "https://images.unsplash.com/photo-football-logo",
-      "loaderLogo": "",
-      "coverImage": "https://images.unsplash.com/photo-football-cover",
-      "description": "Official ACEIT Football Club for collegiate leagues and tournaments",
-      "themeColor": "",
-      "accentColor": "",
-      "active": true,
-      "status": "active",
-      "createdAt": "2026-08-27T08:58:19.953Z"
-    },
     {
       "_id": "c_spikers",
       "clubId": "spikers",
@@ -1801,6 +1516,37 @@
       "createdAt": "2026-08-27T04:52:10.561Z"
     },
     {
+      "_id": "c_cricket",
+      "clubId": "cricket",
+      "name": "ACEIT Cricket",
+      "sport": "Cricket",
+      "slug": "cricket",
+      "logo": "",
+      "coverImage": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80",
+      "description": "Official Cricket Club of ACEIT. Powerful strokeplay, lethal bowling spells, and collegiate derby champions.",
+      "themeColor": "#2980B9",
+      "accentColor": "#3498DB",
+      "active": true,
+      "status": "active",
+      "createdAt": "2026-08-27T04:52:10.561Z"
+    },
+    {
+      "_id": "c_1787821117682",
+      "clubId": "smashers",
+      "name": "ACEIT Smashers",
+      "sport": "Badminton",
+      "slug": "smashers",
+      "logo": "",
+      "loaderLogo": "",
+      "coverImage": "",
+      "description": "Official Badminton Club",
+      "themeColor": "",
+      "accentColor": "",
+      "active": true,
+      "status": "active",
+      "createdAt": "2026-08-27T08:58:37.682Z"
+    },
+    {
       "_id": "c_strikers",
       "clubId": "strikers-fc",
       "name": "ACEIT Strikers FC",
@@ -1816,6 +1562,22 @@
       "createdAt": "2026-08-27T04:52:10.561Z"
     },
     {
+      "_id": "c_1787821099953",
+      "clubId": "strikers",
+      "name": "ACEIT Strikers",
+      "sport": "Football",
+      "slug": "strikers",
+      "logo": "https://images.unsplash.com/photo-football-logo",
+      "loaderLogo": "",
+      "coverImage": "https://images.unsplash.com/photo-football-cover",
+      "description": "Official ACEIT Football Club for collegiate leagues and tournaments",
+      "themeColor": "",
+      "accentColor": "",
+      "active": true,
+      "status": "active",
+      "createdAt": "2026-08-27T08:58:19.953Z"
+    },
+    {
       "_id": "c_shuttlers",
       "clubId": "shuttlers",
       "name": "ACEIT Shuttlers",
@@ -1826,21 +1588,6 @@
       "description": "Official Badminton Club of ACEIT. Lightning reflexes, precision smashes, and tournament agility.",
       "themeColor": "#16A085",
       "accentColor": "#1ABC9C",
-      "active": true,
-      "status": "active",
-      "createdAt": "2026-08-27T04:52:10.561Z"
-    },
-    {
-      "_id": "c_cricket",
-      "clubId": "cricket",
-      "name": "ACEIT Cricket",
-      "sport": "Cricket",
-      "slug": "cricket",
-      "logo": "",
-      "coverImage": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80",
-      "description": "Official Cricket Club of ACEIT. Powerful strokeplay, lethal bowling spells, and collegiate derby champions.",
-      "themeColor": "#2980B9",
-      "accentColor": "#3498DB",
       "active": true,
       "status": "active",
       "createdAt": "2026-08-27T04:52:10.561Z"
