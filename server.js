@@ -154,6 +154,16 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(__dirname));
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'production' && req.path !== '/api/uploads/images' && ['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    let bodyText = '';
+    try { bodyText = JSON.stringify(req.body || {}); } catch (e) { }
+    if (/data:image\//i.test(bodyText)) {
+      return res.status(400).json({ success: false, message: 'Base64 images cannot be saved in production. Upload the image through /api/uploads/images first.' });
+    }
+  }
+  next();
+});
 
 // Dynamic Public Club Page Route Handlers
 app.get('/club/:clubId', (req, res) => {
@@ -597,14 +607,6 @@ async function seedInitialAuthAndClubs() {
       console.log(`[MongoDB Atlas] Initialized single OWNER account: "${ownerUsername}"`);
     } else {
       const primaryOwner = owners.find(o => o.username === ownerUsername || o.username === 'founder') || owners[0];
-      if (owners.length > 1) {
-        for (const o of owners) {
-          if (String(o._id) !== String(primaryOwner._id)) {
-            await User.deleteOne({ _id: o._id });
-            console.log(`[MongoDB Atlas] Removed duplicate OWNER record: "${o.username}"`);
-          }
-        }
-      }
       let changed = false;
       if (primaryOwner.name !== 'Founder / Super Owner') { primaryOwner.name = 'Founder / Super Owner'; changed = true; }
       if (primaryOwner.clubId !== 'ALL') { primaryOwner.clubId = 'ALL'; changed = true; }
@@ -834,9 +836,14 @@ async function getDB() {
       if (!doc) {
         const count = await ClubDoc.countDocuments();
         if (count === 0) {
-          const initial = readLocalFileDB();
-          doc = await ClubDoc.create({ key: 'main', ...initial, pin: process.env.ADMIN_PIN || '2026' });
-          console.log('[MongoDB Atlas] Collection empty. Auto-seeded initial data from data.json!');
+          doc = await ClubDoc.create({
+            key: 'main',
+            team: [], matches: [], news: [], sponsors: [], testimonials: [],
+            stats: [], gallery: [], events: [], training: [], slideshow: [],
+            about: {}, contact: {}, abouts: {}, contacts: {},
+            pin: process.env.ADMIN_PIN || '2026'
+          });
+          console.log('[MongoDB Atlas] Created an empty canonical content document.');
         } else {
           doc = await ClubDoc.findOne({});
         }
@@ -866,26 +873,33 @@ async function getDB() {
     return { success: false, error: lastMongoError || 'Could not connect to MongoDB Atlas cluster' };
   }
 
+  if (process.env.NODE_ENV === 'production') {
+    return { success: false, error: 'MONGODB_URI is not configured; production data access is disabled.' };
+  }
+
   // Local standalone dev mode without MONGODB_URI
   return { success: true, data: readLocalFileDB() };
 }
 
 // Helper: Save full database to MongoDB Atlas
 async function saveDB(data) {
-  writeLocalFileDB(data);
   const uri = process.env.MONGODB_URI;
   if (!uri) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('MONGODB_URI is not configured; production writes are disabled.');
+    }
+    writeLocalFileDB(data);
     console.warn('[MongoDB Atlas Warning] MONGODB_URI not set in process.env');
-    return { success: true, warning: 'Saved to local data.json fallback only' };
+    return { success: true, warning: 'Development-only local data.json fallback' };
   }
   const dbConn = await connectToDatabase();
   if (!dbConn) {
     const errReason = lastMongoError || 'Could not establish MongoDB connection';
     console.error('[MongoDB Atlas Save Failed]', errReason);
-    return { success: false, error: errReason };
+    throw new Error(errReason);
   }
   try {
-    await ClubDoc.findOneAndUpdate(
+    const saved = await ClubDoc.findOneAndUpdate(
       { key: 'main' },
       {
         team: data.team || [],
@@ -908,12 +922,15 @@ async function saveDB(data) {
       },
       { upsert: true, new: true }
     );
+    if (!saved) {
+      throw new Error('MongoDB did not return the saved content document.');
+    }
     console.log('[MongoDB Atlas Save Success] Saved document key "main" successfully!');
-    return { success: true };
+    return { success: true, data: saved.toObject() };
   } catch (err) {
     const errReason = err.message || String(err);
     console.error('[MongoDB Atlas Save Failed]:', errReason);
-    return { success: false, error: errReason };
+    throw new Error(errReason);
   }
 }
 
@@ -922,9 +939,62 @@ function generateId() {
   return 'id_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
 
+async function uploadToCloudinary(dataUrl, folder) {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  if (!cloudName || !apiKey || !apiSecret) {
+    throw new Error('Image storage is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in Vercel.');
+  }
+  if (typeof dataUrl !== 'string' || !/^data:image\/[a-z0-9.+-]+;base64,/i.test(dataUrl)) {
+    throw new Error('Upload must be a base64 encoded image data URL.');
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const uploadFolder = String(folder || 'aceit-spikers').replace(/[^a-zA-Z0-9/_-]/g, '').replace(/^\/+|\/+$/g, '') || 'aceit-spikers';
+  const signature = crypto.createHash('sha1')
+    .update(`folder=${uploadFolder}&timestamp=${timestamp}${apiSecret}`)
+    .digest('hex');
+  const form = new URLSearchParams({
+    file: dataUrl,
+    api_key: apiKey,
+    timestamp: String(timestamp),
+    folder: uploadFolder,
+    signature
+  });
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/image/upload`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: form
+  });
+  const result = await response.json();
+  if (!response.ok || !result.secure_url) {
+    throw new Error(result.error && result.error.message ? result.error.message : 'Cloudinary upload failed.');
+  }
+  return {
+    url: result.secure_url,
+    publicId: result.public_id,
+    resourceType: result.resource_type,
+    format: result.format,
+    width: result.width,
+    height: result.height,
+    bytes: result.bytes
+  };
+}
+
 // ==========================================
 // API ROUTES
 // ==========================================
+
+app.post('/api/uploads/images', authenticateUser, requireAuth, async (req, res) => {
+  try {
+    const upload = await uploadToCloudinary(req.body && req.body.dataUrl, req.body && req.body.folder);
+    res.status(201).json({ success: true, ...upload });
+  } catch (err) {
+    const status = /not configured/i.test(err.message) ? 503 : 400;
+    res.status(status).json({ success: false, message: err.message });
+  }
+});
 
 // Health Check
 app.get('/api/health', (req, res) => {
@@ -933,7 +1003,7 @@ app.get('/api/health', (req, res) => {
   const mongoError = isMongo ? null : lastMongoError;
   res.json({
     status: 'ok',
-    database: isMongo ? 'MongoDB Atlas' : 'Local File (data.json fallback)',
+    database: isMongo ? 'MongoDB Atlas' : (process.env.NODE_ENV === 'production' ? 'Unavailable' : 'Local File (development only)'),
     connected: isMongo,
     mongoState: ['disconnected', 'connected', 'connecting', 'disconnecting'][readyState] || 'unknown',
     hasUri: !!process.env.MONGODB_URI,
@@ -1795,6 +1865,50 @@ app.post('/api/stats', authenticateUser, requireAuth, requirePermission('stats.*
     res.status(500).json({ success: false, message: err.message });
   }
 });
+
+function registerArrayCrud(path, arrayKey, label, permission) {
+  app.put(path + '/:id', authenticateUser, requireAuth, requirePermission(permission), async (req, res) => {
+    try {
+      const dbRes = await getDB();
+      if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+      const db = dbRes.data;
+      const id = String(req.params.id);
+      const items = db[arrayKey] || [];
+      const index = items.findIndex(item => String(item.id || item._id) === id);
+      if (index === -1) return res.status(404).json({ success: false, message: label + ' not found' });
+      const existing = items[index];
+      if (!hasClubAccess(req.user, existing.clubId || 'spikers')) return res.status(403).json({ success: false, message: 'Access forbidden' });
+      const updated = Object.assign({}, existing, req.body || {}, { id, clubId: existing.clubId || req.body.clubId || 'spikers' });
+      db[arrayKey][index] = updated;
+      await saveDB(db);
+      res.json({ success: true, item: updated, [arrayKey]: db[arrayKey] });
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  });
+
+  app.delete(path + '/:id', authenticateUser, requireAuth, requirePermission(permission), async (req, res) => {
+    try {
+      const dbRes = await getDB();
+      if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+      const db = dbRes.data;
+      const id = String(req.params.id);
+      const items = db[arrayKey] || [];
+      const existing = items.find(item => String(item.id || item._id) === id);
+      if (!existing) return res.status(404).json({ success: false, message: label + ' not found' });
+      if (!hasClubAccess(req.user, existing.clubId || 'spikers')) return res.status(403).json({ success: false, message: 'Access forbidden' });
+      db[arrayKey] = items.filter(item => String(item.id || item._id) !== id);
+      await saveDB(db);
+      res.json({ success: true, message: label + ' deleted', [arrayKey]: db[arrayKey] });
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  });
+}
+
+registerArrayCrud('/api/sponsors', 'sponsors', 'Sponsor', 'sponsors.*');
+registerArrayCrud('/api/testimonials', 'testimonials', 'Testimonial', 'testimonials.*');
+registerArrayCrud('/api/stats', 'stats', 'Stat', 'stats.*');
 
 // GET /api/slideshow (supports ?clubId=)
 app.get('/api/slideshow', async (req, res) => {
@@ -5021,6 +5135,13 @@ app.post('/api/matches/:id/live-finish', authenticateUser, requireAuth, requireP
 });
 
 // Fallback route serving the HTML app
+app.use((err, req, res, next) => {
+  if (err && err instanceof SyntaxError && err.status === 400 && Object.prototype.hasOwnProperty.call(err, 'body')) {
+    return res.status(400).json({ success: false, message: 'Invalid JSON request body.' });
+  }
+  next(err);
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'aceit-spikers-1.html'));
 });
