@@ -146,9 +146,22 @@ app.use(cors({
 }));
 app.use(cookieParser());
 app.use((req, res, next) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  // Only force no-cache on auth/write endpoints; public GET endpoints set their own Cache-Control
+  const isWriteOrAuth = req.method !== 'GET' ||
+    req.path.startsWith('/api/auth') ||
+    req.path.startsWith('/api/login') ||
+    req.path.startsWith('/api/logout') ||
+    req.path.startsWith('/api/signup') ||
+    req.path.startsWith('/api/profile') ||
+    req.path.startsWith('/api/save') ||
+    req.path.startsWith('/api/users') ||
+    req.path.startsWith('/api/applications') ||
+    req.path.startsWith('/api/notifications');
+  if (isWriteOrAuth) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
   next();
 });
 app.use(express.json({ limit: '50mb' }));
@@ -226,6 +239,10 @@ function safeSanitizeMongoUri(rawUri) {
   return uri;
 }
 
+// Track last failed connection attempt to enforce retry cooldown
+let _lastConnFailTime = 0;
+const CONN_RETRY_COOLDOWN_MS = 3000; // don't hammer Atlas — wait 3s between retries
+
 async function connectToDatabase() {
   const rawUri = process.env.MONGODB_URI;
   if (!rawUri) {
@@ -235,20 +252,31 @@ async function connectToDatabase() {
 
   const uri = safeSanitizeMongoUri(rawUri);
 
+  // Already connected: fast path
   if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
+  }
+
+  // Cooldown: if last attempt failed recently, don't retry yet — return null immediately
+  // This prevents hammering Atlas with repeated 5s-timeout attempts (thundering herd)
+  if (!cached.promise && _lastConnFailTime > 0 && (Date.now() - _lastConnFailTime) < CONN_RETRY_COOLDOWN_MS) {
+    return null;
   }
 
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 8000,
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 8000,
+      socketTimeoutMS: 30000,
+      maxPoolSize: 5,
       dbName: 'spikers'
     };
     console.log('[MongoDB Atlas] Connecting to database cluster...');
     cached.promise = mongoose.connect(uri, opts).then((m) => {
       console.log('[MongoDB Atlas] Connected successfully to spikers database!');
       lastMongoError = null;
+      _lastConnFailTime = 0;
       return m;
     });
   }
@@ -257,6 +285,7 @@ async function connectToDatabase() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
+    _lastConnFailTime = Date.now();
     lastMongoError = e.message || String(e);
     console.error('[MongoDB Atlas Error] Connection failed:', lastMongoError);
     return null;
@@ -310,13 +339,14 @@ const clubSchema = new mongoose.Schema({
 }, { timestamps: true, strict: false });
 
 const ClubDoc = mongoose.models.ClubDoc || mongoose.model('ClubDoc', clubSchema);
+// ClubDoc.key is already unique via schema; just ensure fast lookup
 
 // Dynamic Multi-Club Model
 const clubItemSchema = new mongoose.Schema({
   clubId: { type: String, required: true, unique: true, lowercase: true, trim: true },
   name: { type: String, required: true, trim: true },
   sport: { type: String, required: true, trim: true },
-  slug: { type: String, required: true, lowercase: true, trim: true },
+  slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
   logo: { type: String, default: '' },
   loaderLogo: { type: String, default: '' },
   coverImage: { type: String, default: '' },
@@ -326,6 +356,8 @@ const clubItemSchema = new mongoose.Schema({
   active: { type: Boolean, default: true },
   status: { type: String, default: 'active' }
 }, { timestamps: true, strict: false });
+// Additional composite index for fast active-club listing
+clubItemSchema.index({ active: 1, name: 1 });
 
 const Club = mongoose.models.Club || mongoose.model('Club', clubItemSchema);
 
@@ -377,6 +409,11 @@ const userSchema = new mongoose.Schema({
   active: { type: Boolean, default: true },
   lastLoginAt: { type: Date }
 }, { timestamps: true });
+// Additional indexes (username is already indexed via unique:true on schema field)
+userSchema.index({ email: 1 });
+userSchema.index({ rtuRollNo: 1 });
+userSchema.index({ role: 1 });
+userSchema.index({ clubs: 1 });
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
@@ -384,6 +421,7 @@ const revokedTokenSchema = new mongoose.Schema({
   tokenHash: { type: String, required: true, unique: true },
   expiresAt: { type: Date, required: true, expires: 0 }
 }, { timestamps: true });
+// tokenHash already indexed via unique:true on schema field
 const RevokedToken = mongoose.models.RevokedToken || mongoose.model('RevokedToken', revokedTokenSchema);
 
 // Join Club Application Model for Tally Webhook & Student Dashboard
@@ -437,13 +475,14 @@ const MatchAvailability = mongoose.models.MatchAvailability || mongoose.model('M
 
 // Phase 4: In-App Notifications Model
 const notificationSchema = new mongoose.Schema({
-  recipientUsername: { type: String, required: true },
+  recipientUsername: { type: String, required: true, index: true },
   title: { type: String, required: true },
   message: { type: String, required: true },
   type: { type: String, default: 'broadcast' }, // 'selection', 'badge', 'application', 'match', 'broadcast'
   linkUrl: { type: String, default: '' },
   read: { type: Boolean, default: false }
 }, { timestamps: true });
+notificationSchema.index({ recipientUsername: 1, read: 1, createdAt: -1 });
 
 const Notification = mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
 
@@ -458,6 +497,7 @@ const announcementSchema = new mongoose.Schema({
   authorRole: { type: String, default: 'COORDINATOR' },
   authorUsername: { type: String, default: 'admin' }
 }, { timestamps: true });
+announcementSchema.index({ clubId: 1, isPinned: -1, createdAt: -1 });
 
 const Announcement = mongoose.models.Announcement || mongoose.model('Announcement', announcementSchema);
 
@@ -538,8 +578,14 @@ async function getRoleMetadata(roleName) {
   };
 }
 
+// ==========================================
+// ONE-TIME SEEDING FLAG — prevents redundant DB queries on every request
+// ==========================================
+let seedDone = false;
+
 // Initial Seeding Helper: Auto-seeds initial Club, Roles & OWNER account if database is fresh
 async function seedInitialAuthAndClubs() {
+  if (seedDone) return; // Already ran in this serverless invocation
   const dbConn = await connectToDatabase();
   if (!dbConn) return;
 
@@ -612,6 +658,7 @@ async function seedInitialAuthAndClubs() {
       if (!primaryOwner.active) { primaryOwner.active = true; changed = true; }
       if (changed) await primaryOwner.save();
     }
+    seedDone = true;
   } catch (err) {
     console.error('[MongoDB Atlas Seeding Error]', err.message);
   }
@@ -823,35 +870,76 @@ function writeLocalFileDB(data) {
   } catch (err) { }
 }
 
+// ==========================================
+// IN-MEMORY GETDB CACHE — 10-second TTL, invalidated on writes
+// Collapses 8-12 sequential MongoDB reads per page into 1
+// ==========================================
+let _dbCache = null;
+let _dbCacheTime = 0;
+const DB_CACHE_TTL_MS = 10000; // 10 seconds
+
+// In-flight deduplication: when multiple requests hit getDB() simultaneously on a cold cache,
+// they all share ONE pending promise instead of each firing a separate ClubDoc.findOne()
+let _dbFetchPromise = null;
+
+function invalidateDbCache() {
+  _dbCache = null;
+  _dbCacheTime = 0;
+  _dbFetchPromise = null;
+}
+
 // Helper: Fetch full database from MongoDB Atlas (Strict Production Mode)
 async function getDB() {
   const hasUri = !!process.env.MONGODB_URI;
+
+  // Serve from in-memory cache if fresh
+  const now = Date.now();
+  if (_dbCache && (now - _dbCacheTime) < DB_CACHE_TTL_MS) {
+    return { success: true, data: _dbCache };
+  }
+
+  // Deduplicate in-flight fetches: if another request is already fetching from MongoDB,
+  // wait on the same promise instead of issuing a redundant ClubDoc.findOne()
+  if (_dbFetchPromise) {
+    return _dbFetchPromise;
+  }
+
+  // Start a new fetch and store the promise for deduplication
+  _dbFetchPromise = _doGetDB(hasUri).finally(() => {
+    _dbFetchPromise = null; // Clear after done so next TTL expiry starts fresh
+  });
+  return _dbFetchPromise;
+}
+
+async function _doGetDB(hasUri) {
   const dbConn = await connectToDatabase();
 
   if (dbConn) {
     try {
-      let doc = await ClubDoc.findOne({ key: 'main' });
+      let doc = await ClubDoc.findOne({ key: 'main' }).lean();
       if (!doc) {
         const count = await ClubDoc.countDocuments();
         if (count === 0) {
           const initial = readLocalFileDB();
-          doc = await ClubDoc.create({ key: 'main', ...initial, pin: process.env.ADMIN_PIN || '2026' });
+          doc = (await ClubDoc.create({ key: 'main', ...initial, pin: process.env.ADMIN_PIN || '2026' })).toObject();
           console.log('[MongoDB Atlas] Collection empty. Auto-seeded initial data from data.json!');
         } else {
-          doc = await ClubDoc.findOne({});
+          doc = await ClubDoc.findOne({}).lean();
         }
       }
       if (doc) {
-        const docObj = doc.toObject();
-        if (Array.isArray(docObj.team)) docObj.team.forEach(i => normalizeItemClubId(i, 'spikers'));
-        if (Array.isArray(docObj.matches)) docObj.matches.forEach(i => normalizeItemClubId(i, 'spikers'));
-        if (Array.isArray(docObj.events)) docObj.events.forEach(i => normalizeItemClubId(i, 'spikers'));
-        if (Array.isArray(docObj.training)) docObj.training.forEach(i => normalizeItemClubId(i, 'spikers'));
-        if (Array.isArray(docObj.news)) docObj.news.forEach(i => normalizeItemClubId(i, 'spikers'));
-        if (Array.isArray(docObj.gallery)) docObj.gallery.forEach(i => normalizeItemClubId(i, 'spikers'));
-        if (Array.isArray(docObj.sponsors)) docObj.sponsors.forEach(i => normalizeItemClubId(i, 'spikers'));
-        if (Array.isArray(docObj.testimonials)) docObj.testimonials.forEach(i => normalizeItemClubId(i, 'spikers'));
-        return { success: true, data: docObj };
+        if (Array.isArray(doc.team)) doc.team.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(doc.matches)) doc.matches.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(doc.events)) doc.events.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(doc.training)) doc.training.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(doc.news)) doc.news.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(doc.gallery)) doc.gallery.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(doc.sponsors)) doc.sponsors.forEach(i => normalizeItemClubId(i, 'spikers'));
+        if (Array.isArray(doc.testimonials)) doc.testimonials.forEach(i => normalizeItemClubId(i, 'spikers'));
+        // Update cache
+        _dbCache = doc;
+        _dbCacheTime = Date.now();
+        return { success: true, data: doc };
       }
     } catch (err) {
       console.error('[MongoDB Atlas Error] Fetch failed:', err.message);
@@ -867,12 +955,20 @@ async function getDB() {
   }
 
   // Local standalone dev mode without MONGODB_URI
-  return { success: true, data: readLocalFileDB() };
+  const localData = readLocalFileDB();
+  _dbCache = localData;
+  _dbCacheTime = Date.now();
+  return { success: true, data: localData };
 }
 
 // Helper: Save full database to MongoDB Atlas
 async function saveDB(data) {
-  writeLocalFileDB(data);
+  // Invalidate cache on any write so next read is fresh from MongoDB
+  invalidateDbCache();
+  // Skip synchronous file writes in production (MONGODB_URI set) — useless on Vercel serverless
+  if (!process.env.MONGODB_URI) {
+    writeLocalFileDB(data);
+  }
   const uri = process.env.MONGODB_URI;
   if (!uri) {
     console.warn('[MongoDB Atlas Warning] MONGODB_URI not set in process.env');
@@ -931,17 +1027,20 @@ app.get('/api/health', (req, res) => {
   const readyState = mongoose.connection.readyState;
   const isMongo = readyState === 1;
   const mongoError = isMongo ? null : lastMongoError;
+  res.set('Cache-Control', 'no-store');
   res.json({
     status: 'ok',
     database: isMongo ? 'MongoDB Atlas' : 'Local File (data.json fallback)',
     connected: isMongo,
     mongoState: ['disconnected', 'connected', 'connecting', 'disconnecting'][readyState] || 'unknown',
     hasUri: !!process.env.MONGODB_URI,
-    lastError: mongoError
+    lastError: mongoError,
+    cacheAge: _dbCache ? Math.round((Date.now() - _dbCacheTime) / 1000) + 's' : 'empty'
   });
 });
 
 // 1. Get full database (supports ?clubId=)
+// NOTE: This is the primary data endpoint. Served from in-memory cache (10s TTL).
 app.get('/api/db', async (req, res) => {
   const result = await getDB();
   if (!result.success) {
@@ -969,6 +1068,8 @@ app.get('/api/db', async (req, res) => {
       slideshow: filterByClub(data.slideshow, reqClubId)
     };
   }
+  // Public data can be cached briefly; authenticated data must not
+  res.set('Cache-Control', 'public, max-age=10, s-maxage=15');
   res.json({ success: true, ...data, data });
 });
 
@@ -2229,14 +2330,17 @@ app.post('/api/logout', handleLogout);
 // 4. Auth: Current User Info
 app.get('/api/auth/me', authenticateUser, async (req, res) => {
   if (!req.user) {
+    // Return unauthenticated quickly — no DB calls needed
+    res.set('Cache-Control', 'no-store');
     return res.json({ success: true, authenticated: false });
   }
 
   let clubs = [];
   const dbConn = await connectToDatabase();
   if (dbConn) {
-    await seedInitialAuthAndClubs();
-    clubs = await Club.find({ active: true }).sort({ name: 1 });
+    // Fire seed in background (non-blocking) — guarded by seedDone flag, runs once
+    if (!seedDone) seedInitialAuthAndClubs().catch(() => {});
+    clubs = await Club.find({ active: true }).sort({ name: 1 }).lean();
   } else {
     clubs = localClubs.filter(c => c.active !== false);
   }
@@ -2244,6 +2348,7 @@ app.get('/api/auth/me', authenticateUser, async (req, res) => {
   const safeUser = req.user.toObject ? req.user.toObject() : Object.assign({}, req.user);
   delete safeUser.passwordHash;
 
+  res.set('Cache-Control', 'no-store');
   res.json({
     success: true,
     authenticated: true,
@@ -2522,10 +2627,13 @@ app.get('/api/roles', async (req, res) => {
   try {
     const dbConn = await connectToDatabase();
     if (dbConn) {
-      await seedInitialAuthAndClubs();
-      const roles = await Role.find({}).sort({ createdAt: 1 });
+      // Fire seed in background (non-blocking) — guarded by seedDone flag, runs once
+      if (!seedDone) seedInitialAuthAndClubs().catch(() => {});
+      const roles = await Role.find({}).sort({ createdAt: 1 }).lean();
+      res.set('Cache-Control', 'public, max-age=30, s-maxage=60');
       return res.json({ success: true, roles });
     }
+    res.set('Cache-Control', 'public, max-age=30, s-maxage=60');
     res.json({ success: true, roles: localRoles });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -2686,19 +2794,22 @@ app.get('/api/clubs', authenticateUser, async (req, res) => {
       if (req.user && req.user.role === 'ADMIN' && req.user.clubId && req.user.clubId !== 'ALL') {
         clubs = clubs.filter(c => String(c._id) === String(req.user.clubId) || c.clubId === req.user.clubId || c.slug === req.user.clubId);
       }
+      res.set('Cache-Control', req.user ? 'no-store' : 'public, max-age=30, s-maxage=60');
       return res.json({ success: true, clubs });
     }
 
-    await seedInitialAuthAndClubs();
-    let rawClubs = await Club.find({}).sort({ createdAt: -1 });
+    // Fire seed in background (non-blocking) — guarded by seedDone flag, runs once
+    if (!seedDone) seedInitialAuthAndClubs().catch(() => {});
+    let rawClubs = await Club.find({}).sort({ createdAt: -1 }).lean();
     let clubs = rawClubs.map(c => {
-      const item = c.toObject();
-      item.isFollowing = userClubs.includes(item.clubId) || userClubs.includes(item.slug);
-      return item;
+      c.isFollowing = userClubs.includes(c.clubId) || userClubs.includes(c.slug);
+      return c;
     });
     if (req.user && req.user.role === 'ADMIN' && req.user.clubId && req.user.clubId !== 'ALL') {
       clubs = clubs.filter(c => String(c._id) === String(req.user.clubId) || c.clubId === req.user.clubId || c.slug === req.user.clubId);
     }
+    // Cache public (unauthenticated) club lists briefly; authenticated responses must not be cached
+    res.set('Cache-Control', req.user ? 'no-store' : 'public, max-age=30, s-maxage=60');
     res.json({ success: true, clubs });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -2715,17 +2826,20 @@ app.get('/api/clubs/:id', async (req, res) => {
     if (!dbConn) {
       const club = localClubs.find(c => String(c._id) === id || (c.clubId && c.clubId.toLowerCase() === cleanId) || (c.slug && c.slug.toLowerCase() === cleanId));
       if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
+      res.set('Cache-Control', 'public, max-age=30, s-maxage=60');
       return res.json({ success: true, club });
     }
 
+    // Single club lookup: use indexed clubId/slug fields directly for O(log n) query
     let club = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
-      club = await Club.findById(id);
+      club = await Club.findById(id).lean();
     }
     if (!club) {
-      club = await Club.findOne({ $or: [{ clubId: cleanId }, { slug: cleanId }, { _id: id }] });
+      club = await Club.findOne({ $or: [{ clubId: cleanId }, { slug: cleanId }] }).lean();
     }
     if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
+    res.set('Cache-Control', 'public, max-age=30, s-maxage=60');
     res.json({ success: true, club });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
