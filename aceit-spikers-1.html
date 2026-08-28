@@ -3517,6 +3517,8 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
+      touch-action: manipulation;
+      will-change: opacity, transform;
     }
 
     .admin-pin-gate.open {
@@ -3530,6 +3532,8 @@
       max-width: 340px;
       width: 100%;
       text-align: center;
+      touch-action: manipulation;
+      transform: translateZ(0);
     }
 
     .admin-pin-box h3 {
@@ -8971,17 +8975,27 @@
           return;
         }
 
+        // Show login modal INSTANTLY so user sees zero delay on mobile/slow connections
+        openAuthModal('signin');
+
+        // Silently verify session in the background in case token is valid
         authFetch(API_BASE + '/auth/me')
           .then(function (r) { return r.json(); })
           .then(function (res) {
             if (res && res.success && res.user) {
               currentUser = res.user;
+              if (res.token) {
+                try {
+                  localStorage.setItem('aceit_auth_token', res.token);
+                  localStorage.setItem('authToken', res.token);
+                } catch (e) {}
+              }
               renderNavUserWidget();
               updateAdminUserBadge();
+              adminPinGate.classList.remove('open');
               if (currentUser.role === 'STUDENT') {
                 openStudentProfileModal();
               } else {
-                adminPinGate.classList.remove('open');
                 adminOverlay.classList.add('open');
                 renderAdminTab(currentAdminTab);
               }
@@ -8989,11 +9003,10 @@
               currentUser = null;
               renderNavUserWidget();
               updateAdminUserBadge();
-              openAuthModal('signin');
             }
           })
           .catch(function () {
-            openAuthModal('signin');
+            // Keep openAuthModal active if network fails
           });
       }
 
@@ -10011,6 +10024,9 @@
       document.getElementById('adminClose').addEventListener('click', function () {
         closeAdminDrawer();
         adminOverlay.classList.remove('open');
+        // Ensure nav state, gear button, and public site reflect latest edits without losing login
+        renderNavUserWidget();
+        renderPublicSite();
       });
 
       document.querySelectorAll('.admin-tab').forEach(function (btn) {
@@ -10243,12 +10259,13 @@
           var s = schema.summary(it);
           var searchText = (String(s.title) + ' ' + String(s.sub || '')).replace(/&amp;/g, '&').replace(/&middot;|&mdash;/g, '').toLowerCase();
           var moveBtns = tab === 'slideshow' ? '<button class="admin-btn" data-move-up="' + it.id + '">↑</button><button class="admin-btn" data-move-down="' + it.id + '">↓</button>' : '';
+          var rsvpBtn = tab === 'events' ? '<button class="admin-btn" data-view-rsvps="' + it.id + '" data-event-title="' + esc(it.title || 'Event') + '" style="background:var(--cream-2);color:var(--charcoal);border:1.5px solid var(--border);font-weight:700;margin-right:4px;">👥 View RSVPs</button>' : '';
           html += '<div class="admin-item" data-search="' + esc(searchText) + '">' +
             (s.photo ? '<img src="' + s.photo + '" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;margin-right:12px;flex-shrink:0;">' : '') +
-            '<div class="info"><b>' + s.title + '</b><span>' + (s.sub || '') + '</span></div>' +
-            '<div class="actions">' + moveBtns + '<button class="admin-btn" data-edit="' + it.id + '">Edit</button><button class="admin-btn" data-dup="' + it.id + '">Duplicate</button><button class="admin-btn danger" data-del="' + it.id + '">Delete</button></div></div>';
+            '<div class="info" style="cursor:' + (tab === 'events' ? 'pointer' : 'default') + ';" ' + (tab === 'events' ? 'data-view-rsvps="' + it.id + '" data-event-title="' + esc(it.title || 'Event') + '" title="Click to view RSVPs / Join Attendees list"' : '') + '><b>' + s.title + '</b><span>' + (s.sub || '') + '</span></div>' +
+            '<div class="actions">' + rsvpBtn + moveBtns + '<button class="admin-btn" data-edit="' + it.id + '">Edit</button><button class="admin-btn" data-dup="' + it.id + '">Duplicate</button><button class="admin-btn danger" data-del="' + it.id + '">Delete</button></div></div>';
         });
-        if (items.length === 0) { html += '<p style="color:var(--charcoal-soft);font-size:14px;">No custom slides yet — click "+ Add Slide" or "✨ Auto-Fill Default Slides" to populate default sport highlights.</p>'; }
+        if (items.length === 0) { html += '<p style="color:var(--charcoal-soft);font-size:14px;">No custom items yet — click "+ Add ' + schema.label + '" to get started.</p>'; }
         html += '</div><div class="admin-form" id="adminForm"></div>';
         adminContent.innerHTML = html;
         adminContent.scrollTop = 0;
@@ -10294,6 +10311,14 @@
         }
         adminContent.querySelectorAll('[data-edit]').forEach(function (b) {
           b.addEventListener('click', function () { openAdminForm(tab, b.getAttribute('data-edit')); });
+        });
+        adminContent.querySelectorAll('[data-view-rsvps]').forEach(function (b) {
+          b.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var evId = b.getAttribute('data-view-rsvps');
+            var evTitle = b.getAttribute('data-event-title');
+            openEventRsvpsModal(evId, evTitle);
+          });
         });
         adminContent.querySelectorAll('[data-move-up]').forEach(function (b) {
           b.addEventListener('click', function () {
@@ -11125,111 +11150,240 @@
       }
 
       function renderApplicationsTable(apps) {
-        var html = '<div class="admin-panel-head"><h3>Club Applications <span class="admin-count mono">' + apps.length + '</span></h3></div>' +
-          '<div class="admin-note">View, manage, and process player applications submitted via Tally or the website join form.</div>';
+        var allApps = Array.isArray(apps) ? apps : [];
+        var activeScope = (activeClubScope && activeClubScope !== 'ALL') ? activeClubScope.toLowerCase() : 'all';
 
-        if (apps.length === 0) {
-          html += '<p style="color:var(--charcoal-soft);font-size:14px;margin-top:20px;">No applications received yet. Submissions to Tally or the Join Club form will appear here in real-time.</p>';
-          adminContent.innerHTML = html;
-          return;
-        }
-
-        html += '<div style="margin-top:16px;overflow-x:auto;">' +
-          '<table class="admin-table" style="width:100%;border-collapse:collapse;font-size:13px;text-align:left;">' +
-          '<thead><tr style="border-bottom:2px solid var(--border);color:var(--charcoal);background:var(--bg-card);">' +
-          '<th style="padding:10px 12px;">Applicant Name</th>' +
-          '<th style="padding:10px 12px;">Email &amp; Phone</th>' +
-          '<th style="padding:10px 12px;">Position &amp; Exp</th>' +
-          '<th style="padding:10px 12px;">Date</th>' +
-          '<th style="padding:10px 12px;">Status</th>' +
-          '<th style="padding:10px 12px;text-align:right;">Actions</th>' +
-          '</tr></thead><tbody>';
-
-        apps.forEach(function (app) {
-          var appId = app._id || app.id;
-          var dateStr = app.createdAt || app.date || new Date().toISOString();
-          var formattedDate = '';
-          try {
-            var d = new Date(dateStr);
-            formattedDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-          } catch (e) { formattedDate = dateStr; }
-
-          var statusColors = {
-            Pending: 'background:#F39C12;color:#fff;',
-            Reviewed: 'background:#2980B9;color:#fff;',
-            Accepted: 'background:#27AE60;color:#fff;',
-            Rejected: 'background:#C0392B;color:#fff;'
-          };
-          var statusStyle = statusColors[app.status] || statusColors.Pending;
-
-          html += '<tr style="border-bottom:1px solid var(--border);">' +
-            '<td style="padding:10px 12px;"><b>' + esc(app.name) + '</b><br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.source || 'Tally Webhook') + '</span></td>' +
-            '<td style="padding:10px 12px;">' + esc(app.email) + '<br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.phone || 'N/A') + '</span></td>' +
-            '<td style="padding:10px 12px;"><b>' + esc(app.position || 'N/A') + '</b><br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.experience || 'N/A') + '</span></td>' +
-            '<td style="padding:10px 12px;font-size:12px;">' + esc(formattedDate) + '</td>' +
-            '<td style="padding:10px 12px;">' +
-            '<select data-app-status="' + esc(appId) + '" style="padding:3px 6px;border-radius:4px;font-size:11px;font-weight:700;' + statusStyle + 'border:none;cursor:pointer;">' +
-            '<option value="Pending"' + (app.status === 'Pending' ? ' selected' : '') + ' style="background:#fff;color:#000;">Pending</option>' +
-            '<option value="Reviewed"' + (app.status === 'Reviewed' ? ' selected' : '') + ' style="background:#fff;color:#000;">Reviewed</option>' +
-            '<option value="Accepted"' + (app.status === 'Accepted' ? ' selected' : '') + ' style="background:#fff;color:#000;">Accepted</option>' +
-            '<option value="Rejected"' + (app.status === 'Rejected' ? ' selected' : '') + ' style="background:#fff;color:#000;">Rejected</option>' +
-            '</select>' +
-            '</td>' +
-            '<td style="padding:10px 12px;text-align:right;">' +
-            '<button class="admin-btn" data-app-view="' + esc(appId) + '" style="margin-right:6px;">View</button>' +
-            '<button class="admin-btn danger" data-app-del="' + esc(appId) + '">Delete</button>' +
-            '</td>' +
-            '</tr>';
+        // Auto-filter by selected club scope if a specific club is active in top dropdown
+        var filteredApps = allApps.filter(function (app) {
+          if (activeScope === 'all') return true;
+          var appClub = (app.clubSlug || app.clubId || 'spikers').toLowerCase();
+          return appClub === activeScope || ((appClub === 'spikers' || appClub === 'c_spikers') && (activeScope === 'spikers' || activeScope === 'c_spikers'));
         });
 
-        html += '</tbody></table></div>';
+        var clubOptionsHtml = '<option value="all">All Clubs (' + allApps.length + ')</option>';
+        var clubCounts = {};
+        allApps.forEach(function (a) {
+          var cKey = (a.clubSlug || a.clubId || 'spikers').toLowerCase();
+          clubCounts[cKey] = (clubCounts[cKey] || 0) + 1;
+        });
+
+        var clubsList = (systemClubs && systemClubs.length) ? systemClubs : [
+          { slug: 'spikers', name: 'ACEIT Spikers', sport: 'Volleyball' },
+          { slug: 'cricket', name: 'ACEIT Cricket', sport: 'Cricket' },
+          { slug: 'kabaddi', name: 'ACEIT Kabaddi', sport: 'Kabaddi' },
+          { slug: 'dunkers', name: 'ACEIT Dunkers', sport: 'Basketball' },
+          { slug: 'shuttlers', name: 'ACEIT Shuttlers', sport: 'Badminton' },
+          { slug: 'strikers-fc', name: 'ACEIT Strikers FC', sport: 'Football' }
+        ];
+
+        clubsList.forEach(function (c) {
+          var s = (c.slug || c.clubId || c._id || '').toLowerCase();
+          var cnt = clubCounts[s] || 0;
+          clubOptionsHtml += '<option value="' + s + '">' + esc(c.name) + ' (' + cnt + ')</option>';
+        });
+
+        var html = '<div class="admin-panel-head"><h3>Club Applications <span class="admin-count mono" id="appTotalCountBadge">' + filteredApps.length + '</span></h3></div>' +
+          '<div class="admin-note">View, manage, sort, and process player applications submitted via Tally or the website join form. Filter dynamically by target sports club or application status.</div>';
+
+        // Filter and Sort Toolbar
+        html += '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--cream-2);padding:12px 14px;border-radius:10px;border:1px solid var(--border);margin-top:14px;">' +
+          '<div style="flex:1;min-width:180px;">' +
+          '<label style="font-size:11px;font-weight:700;color:var(--charcoal-soft);display:block;margin-bottom:3px;">Filter by Club</label>' +
+          '<select id="appClubFilterSelect" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--bg-card);color:var(--charcoal);font-weight:600;">' + clubOptionsHtml + '</select>' +
+          '</div>' +
+          '<div style="flex:1;min-width:150px;">' +
+          '<label style="font-size:11px;font-weight:700;color:var(--charcoal-soft);display:block;margin-bottom:3px;">Filter by Status</label>' +
+          '<select id="appStatusFilterSelect" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--bg-card);color:var(--charcoal);">' +
+          '<option value="all">All Statuses</option>' +
+          '<option value="Pending">Pending</option>' +
+          '<option value="Reviewed">Reviewed</option>' +
+          '<option value="Accepted">Accepted</option>' +
+          '<option value="Rejected">Rejected</option>' +
+          '</select>' +
+          '</div>' +
+          '<div style="flex:1;min-width:150px;">' +
+          '<label style="font-size:11px;font-weight:700;color:var(--charcoal-soft);display:block;margin-bottom:3px;">Sort By</label>' +
+          '<select id="appSortSelect" style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--bg-card);color:var(--charcoal);">' +
+          '<option value="newest">Date: Newest First</option>' +
+          '<option value="oldest">Date: Oldest First</option>' +
+          '<option value="name_asc">Name: A to Z</option>' +
+          '<option value="name_desc">Name: Z to A</option>' +
+          '<option value="club_asc">Club Name: A to Z</option>' +
+          '</select>' +
+          '</div>' +
+          '<div style="flex:1.5;min-width:200px;">' +
+          '<label style="font-size:11px;font-weight:700;color:var(--charcoal-soft);display:block;margin-bottom:3px;">Search Applicant</label>' +
+          '<input type="text" id="appSearchInput" placeholder="Search by name, email, phone..." style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border);font-size:12px;background:var(--bg-card);color:var(--charcoal);">' +
+          '</div>' +
+          '</div>';
+
+        html += '<div id="appsTableContainer" style="margin-top:16px;overflow-x:auto;"></div>';
+
         adminContent.innerHTML = html;
         adminContent.scrollTop = 0;
 
-        // Status change listeners
-        adminContent.querySelectorAll('select[data-app-status]').forEach(function (sel) {
-          sel.addEventListener('change', function () {
-            var id = sel.getAttribute('data-app-status');
-            var newStatus = sel.value;
-            // Update local DB.applications
-            if (DB.applications) {
-              var target = DB.applications.find(function (a) { return String(a.id || a._id) === String(id); });
-              if (target) target.status = newStatus;
-              saveDB(DB);
+        function getClubName(slug) {
+          var clean = String(slug || 'spikers').toLowerCase();
+          var found = clubsList.find(function (c) { return (c.slug || c.clubId || '').toLowerCase() === clean; });
+          return found ? found.name : clean.toUpperCase();
+        }
+
+        function renderRows() {
+          var selectedClub = (document.getElementById('appClubFilterSelect').value || 'all').toLowerCase();
+          var selectedStatus = document.getElementById('appStatusFilterSelect').value;
+          var sortBy = document.getElementById('appSortSelect').value;
+          var q = (document.getElementById('appSearchInput').value || '').trim().toLowerCase();
+
+          var displayList = allApps.filter(function (app) {
+            var appClub = (app.clubSlug || app.clubId || 'spikers').toLowerCase();
+            if (selectedClub !== 'all' && appClub !== selectedClub && !((appClub === 'spikers' || appClub === 'c_spikers') && (selectedClub === 'spikers' || selectedClub === 'c_spikers'))) {
+              return false;
             }
-            authFetch(API_BASE + '/applications/' + id + '/status', {
-              method: 'PUT',
-              body: JSON.stringify({ status: newStatus })
-            }).catch(function (e) { });
-            showAlert('Application status updated to ' + newStatus);
-            renderApplicationsTab();
+            if (selectedStatus !== 'all' && app.status !== selectedStatus) {
+              return false;
+            }
+            if (q) {
+              var searchCorpus = (String(app.name || '') + ' ' + String(app.email || '') + ' ' + String(app.phone || '') + ' ' + String(app.position || '') + ' ' + String(app.clubSlug || '')).toLowerCase();
+              if (searchCorpus.indexOf(q) === -1) return false;
+            }
+            return true;
           });
-        });
 
-        // View details modal listener
-        adminContent.querySelectorAll('button[data-app-view]').forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            var id = btn.getAttribute('data-app-view');
-            var targetApp = apps.find(function (a) { return String(a._id || a.id) === String(id); });
-            if (targetApp) openApplicationViewModal(targetApp);
+          // Sort display list
+          displayList.sort(function (a, b) {
+            if (sortBy === 'oldest') return new Date(a.createdAt || a.date || 0) - new Date(b.createdAt || b.date || 0);
+            if (sortBy === 'name_asc') return String(a.name || '').localeCompare(String(b.name || ''));
+            if (sortBy === 'name_desc') return String(b.name || '').localeCompare(String(a.name || ''));
+            if (sortBy === 'club_asc') return String(getClubName(a.clubSlug)).localeCompare(String(getClubName(b.clubSlug)));
+            return new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0); // newest default
           });
-        });
 
-        // Delete listener
-        adminContent.querySelectorAll('button[data-app-del]').forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            var id = btn.getAttribute('data-app-del');
-            showConfirm('Delete this application permanently?', function () {
+          var countEl = document.getElementById('appTotalCountBadge');
+          if (countEl) countEl.textContent = displayList.length;
+
+          var container = document.getElementById('appsTableContainer');
+          if (!container) return;
+
+          if (displayList.length === 0) {
+            container.innerHTML = '<div style="padding:32px;text-align:center;color:var(--charcoal-soft);background:var(--bg-card);border-radius:8px;border:1px solid var(--border);margin-top:8px;">' +
+              '<p style="margin:0;font-size:14px;font-weight:600;">No applications found matching selected filter criteria.</p>' +
+              '</div>';
+            return;
+          }
+
+          var tHtml = '<table class="admin-table" style="width:100%;border-collapse:collapse;font-size:13px;text-align:left;">' +
+            '<thead><tr style="border-bottom:2px solid var(--border);color:var(--charcoal);background:var(--bg-card);">' +
+            '<th style="padding:10px 12px;">Applicant Name</th>' +
+            '<th style="padding:10px 12px;">Target Club</th>' +
+            '<th style="padding:10px 12px;">Email &amp; Phone</th>' +
+            '<th style="padding:10px 12px;">Position &amp; Exp</th>' +
+            '<th style="padding:10px 12px;">Date</th>' +
+            '<th style="padding:10px 12px;">Status</th>' +
+            '<th style="padding:10px 12px;text-align:right;">Actions</th>' +
+            '</tr></thead><tbody>';
+
+          displayList.forEach(function (app) {
+            var appId = app._id || app.id;
+            var dateStr = app.createdAt || app.date || new Date().toISOString();
+            var formattedDate = '';
+            try {
+              var d = new Date(dateStr);
+              formattedDate = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            } catch (e) { formattedDate = dateStr; }
+
+            var statusColors = {
+              Pending: 'background:#F39C12;color:#fff;',
+              Reviewed: 'background:#2980B9;color:#fff;',
+              Accepted: 'background:#27AE60;color:#fff;',
+              Rejected: 'background:#C0392B;color:#fff;'
+            };
+            var statusStyle = statusColors[app.status] || statusColors.Pending;
+            var clubName = getClubName(app.clubSlug || app.clubId);
+
+            tHtml += '<tr style="border-bottom:1px solid var(--border);">' +
+              '<td style="padding:10px 12px;"><b>' + esc(app.name) + '</b><br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.source || 'Website Form') + '</span></td>' +
+              '<td style="padding:10px 12px;"><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;background:var(--cream-2);border:1px solid var(--border);color:var(--charcoal);white-space:nowrap;">' + esc(clubName) + '</span></td>' +
+              '<td style="padding:10px 12px;"><a href="mailto:' + esc(app.email) + '" style="color:var(--charcoal);text-decoration:underline;">' + esc(app.email) + '</a><br><span style="font-size:11px;color:var(--charcoal-soft);font-weight:600;">📞 ' + esc(app.phone || 'N/A') + '</span></td>' +
+              '<td style="padding:10px 12px;"><b>' + esc(app.position || 'N/A') + '</b><br><span style="font-size:11px;color:var(--charcoal-soft);">' + esc(app.experience || 'N/A') + '</span></td>' +
+              '<td style="padding:10px 12px;font-size:12px;">' + esc(formattedDate) + '</td>' +
+              '<td style="padding:10px 12px;">' +
+              '<select data-app-status="' + esc(appId) + '" style="padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;' + statusStyle + 'border:none;cursor:pointer;">' +
+              '<option value="Pending"' + (app.status === 'Pending' ? ' selected' : '') + ' style="background:#fff;color:#000;">Pending</option>' +
+              '<option value="Reviewed"' + (app.status === 'Reviewed' ? ' selected' : '') + ' style="background:#fff;color:#000;">Reviewed</option>' +
+              '<option value="Accepted"' + (app.status === 'Accepted' ? ' selected' : '') + ' style="background:#fff;color:#000;">Accepted</option>' +
+              '<option value="Rejected"' + (app.status === 'Rejected' ? ' selected' : '') + ' style="background:#fff;color:#000;">Rejected</option>' +
+              '</select>' +
+              '</td>' +
+              '<td style="padding:10px 12px;text-align:right;white-space:nowrap;">' +
+              '<button class="admin-btn" data-app-view="' + esc(appId) + '" style="margin-right:6px;">View</button>' +
+              '<button class="admin-btn danger" data-app-del="' + esc(appId) + '">Delete</button>' +
+              '</td>' +
+              '</tr>';
+          });
+
+          tHtml += '</tbody></table>';
+          container.innerHTML = tHtml;
+
+          // Status change listeners
+          container.querySelectorAll('select[data-app-status]').forEach(function (sel) {
+            sel.addEventListener('change', function () {
+              var id = sel.getAttribute('data-app-status');
+              var newStatus = sel.value;
+              var target = allApps.find(function (a) { return String(a.id || a._id) === String(id); });
+              if (target) target.status = newStatus;
               if (DB.applications) {
-                DB.applications = DB.applications.filter(function (a) { return String(a.id || a._id) !== String(id); });
+                var loc = DB.applications.find(function (a) { return String(a.id || a._id) === String(id); });
+                if (loc) loc.status = newStatus;
                 saveDB(DB);
               }
-              authFetch(API_BASE + '/applications/' + id, { method: 'DELETE' }).catch(function (e) { });
-              showAlert('Application deleted.');
-              renderApplicationsTab();
+              authFetch(API_BASE + '/applications/' + id + '/status', {
+                method: 'PUT',
+                body: JSON.stringify({ status: newStatus })
+              }).catch(function (e) { });
+              showAlert('Application status updated to ' + newStatus);
+              renderRows();
             });
           });
-        });
+
+          // View details modal listener
+          container.querySelectorAll('button[data-app-view]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var id = btn.getAttribute('data-app-view');
+              var targetApp = allApps.find(function (a) { return String(a._id || a.id) === String(id); });
+              if (targetApp) openApplicationViewModal(targetApp);
+            });
+          });
+
+          // Delete listener
+          container.querySelectorAll('button[data-app-del]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var id = btn.getAttribute('data-app-del');
+              showConfirm('Delete this application permanently?', function () {
+                allApps = allApps.filter(function (a) { return String(a.id || a._id) !== String(id); });
+                if (DB.applications) {
+                  DB.applications = DB.applications.filter(function (a) { return String(a.id || a._id) !== String(id); });
+                  saveDB(DB);
+                }
+                authFetch(API_BASE + '/applications/' + id, { method: 'DELETE' }).catch(function (e) { });
+                showAlert('Application deleted.');
+                renderRows();
+              });
+            });
+          });
+        }
+
+        // Set initial dropdown value if scoped
+        if (activeScope !== 'all') {
+          var clubSelectEl = document.getElementById('appClubFilterSelect');
+          if (clubSelectEl) clubSelectEl.value = activeScope;
+        }
+
+        document.getElementById('appClubFilterSelect').addEventListener('change', renderRows);
+        document.getElementById('appStatusFilterSelect').addEventListener('change', renderRows);
+        document.getElementById('appSortSelect').addEventListener('change', renderRows);
+        document.getElementById('appSearchInput').addEventListener('input', renderRows);
+
+        renderRows();
       }
 
       function openApplicationViewModal(app) {
@@ -11280,6 +11434,134 @@
             if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
           });
         });
+      }
+
+      function openEventRsvpsModal(eventId, eventTitle) {
+        var existing = document.getElementById('eventRsvpsDetailOverlay');
+        if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+        var modalHtml = '<div class="modal-overlay open" id="eventRsvpsDetailOverlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(3px);padding:16px;">' +
+          '<div class="modal-card" style="background:var(--white,#FFFFFF);border-radius:14px;padding:24px;max-width:760px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,0.35);color:var(--charcoal,#1A1A1A);border:1px solid var(--border);">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:14px;">' +
+          '<div>' +
+          '<h3 style="margin:0;font-size:18px;display:flex;align-items:center;gap:8px;">🎟️ Event Attendees &amp; RSVPs</h3>' +
+          '<div style="font-size:13px;color:var(--charcoal-soft);margin-top:3px;font-weight:600;">' + esc(eventTitle || 'Event Details') + '</div>' +
+          '</div>' +
+          '<button id="closeEventRsvpModalBtn" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--charcoal);line-height:1;">&times;</button>' +
+          '</div>' +
+          '<div id="eventRsvpsModalContent" style="flex:1;overflow-y:auto;padding-right:4px;">' +
+          '<div style="text-align:center;padding:36px;color:var(--charcoal-soft);font-size:14px;">Loading attendee list...</div>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:14px;margin-top:14px;flex-wrap:wrap;gap:10px;">' +
+          '<div id="eventRsvpSummaryStats" style="font-size:12px;font-weight:700;color:var(--charcoal);">Total RSVPs: <span class="mono">0</span></div>' +
+          '<div style="display:flex;gap:8px;">' +
+          '<button class="btn btn-outline" id="exportEventRsvpsCsvBtn" style="font-size:12px;padding:6px 12px;display:none;">📥 Export CSV</button>' +
+          '<button class="btn btn-primary" id="closeEventRsvpModalBtn2" style="font-size:12px;padding:6px 16px;">Close</button>' +
+          '</div>' +
+          '</div>' +
+          '</div>' +
+          '</div>';
+
+        var div = document.createElement('div');
+        div.innerHTML = modalHtml;
+        document.body.appendChild(div.firstElementChild);
+
+        var overlay = document.getElementById('eventRsvpsDetailOverlay');
+        var closeBtns = [document.getElementById('closeEventRsvpModalBtn'), document.getElementById('closeEventRsvpModalBtn2')];
+        closeBtns.forEach(function (b) {
+          if (b) b.addEventListener('click', function () {
+            if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+          });
+        });
+
+        // Fetch attendee list from backend
+        authFetch(API_BASE + '/events/' + encodeURIComponent(eventId) + '/rsvps')
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            var contentEl = document.getElementById('eventRsvpsModalContent');
+            var statsEl = document.getElementById('eventRsvpSummaryStats');
+            var exportBtn = document.getElementById('exportEventRsvpsCsvBtn');
+            if (!contentEl) return;
+
+            var rsvps = (res && res.success && Array.isArray(res.rsvps)) ? res.rsvps : [];
+            if (statsEl) statsEl.innerHTML = 'Total RSVPs: <span class="mono" style="color:var(--gold-dark);font-size:14px;">' + rsvps.length + '</span>';
+
+            if (rsvps.length === 0) {
+              contentEl.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--charcoal-soft);background:var(--cream-2);border-radius:10px;border:1px solid var(--border);">' +
+                '<div style="font-size:32px;margin-bottom:8px;">👥</div>' +
+                '<h4 style="margin:0 0 6px;font-size:15px;color:var(--charcoal);">No Students Have RSVPed Yet</h4>' +
+                '<p style="margin:0;font-size:13px;">When students click "RSVP / Join" on this event, their names, phone numbers, and details will instantly show up here.</p>' +
+                '</div>';
+              return;
+            }
+
+            if (exportBtn) {
+              exportBtn.style.display = 'inline-block';
+              exportBtn.addEventListener('click', function () {
+                var csv = 'Name,Phone,Email,Roll Number,Branch,Year,Team Name,Status,RSVP Date\n';
+                rsvps.forEach(function (r) {
+                  var d = r.createdAt ? new Date(r.createdAt).toLocaleString() : '';
+                  csv += '"' + (r.name || '').replace(/"/g, '""') + '",' +
+                    '"' + (r.phone || '').replace(/"/g, '""') + '",' +
+                    '"' + (r.email || '').replace(/"/g, '""') + '",' +
+                    '"' + (r.rollNo || '').replace(/"/g, '""') + '",' +
+                    '"' + (r.branch || '').replace(/"/g, '""') + '",' +
+                    '"' + (r.year || '').replace(/"/g, '""') + '",' +
+                    '"' + (r.teamName || '').replace(/"/g, '""') + '",' +
+                    '"' + (r.status || 'Registered').replace(/"/g, '""') + '",' +
+                    '"' + d.replace(/"/g, '""') + '"\n';
+                });
+                var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                var link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', (eventTitle || 'event').replace(/[^a-zA-Z0-9]/g, '_') + '_rsvps.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              });
+            }
+
+            var listHtml = '<table class="admin-table" style="width:100%;border-collapse:collapse;font-size:13px;text-align:left;">' +
+              '<thead><tr style="border-bottom:2px solid var(--border);color:var(--charcoal);background:var(--bg-card);">' +
+              '<th style="padding:10px 12px;">#</th>' +
+              '<th style="padding:10px 12px;">Student Name</th>' +
+              '<th style="padding:10px 12px;">Phone Number</th>' +
+              '<th style="padding:10px 12px;">Email Address</th>' +
+              '<th style="padding:10px 12px;">Academic Info</th>' +
+              '<th style="padding:10px 12px;">Status</th>' +
+              '<th style="padding:10px 12px;">Registered On</th>' +
+              '</tr></thead><tbody>';
+
+            rsvps.forEach(function (r, idx) {
+              var dateStr = '';
+              try {
+                var d = new Date(r.createdAt || new Date());
+                dateStr = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) + ', ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+              } catch (e) { dateStr = r.createdAt || ''; }
+
+              var phoneDisplay = r.phone ? '<a href="tel:' + esc(r.phone) + '" style="font-weight:700;color:var(--gold-dark);text-decoration:none;">📞 ' + esc(r.phone) + '</a>' : '<span style="color:var(--charcoal-soft);font-style:italic;">Not provided</span>';
+              var emailDisplay = r.email ? '<a href="mailto:' + esc(r.email) + '" style="color:var(--charcoal);">' + esc(r.email) + '</a>' : '<span style="color:var(--charcoal-soft);">N/A</span>';
+              var rollDisplay = r.rollNo ? '<span style="font-size:11px;color:var(--charcoal-soft);display:block;">RTU: ' + esc(r.rollNo) + '</span>' : '';
+              var branchYear = (r.branch || r.year) ? ('<span style="font-size:11px;color:var(--charcoal-soft);">' + esc(r.branch || '') + (r.year ? ' (' + esc(r.year) + ')' : '') + '</span>') : '';
+
+              listHtml += '<tr style="border-bottom:1px solid var(--border);">' +
+                '<td style="padding:10px 12px;color:var(--charcoal-soft);font-weight:600;">' + (idx + 1) + '</td>' +
+                '<td style="padding:10px 12px;"><b style="font-size:13px;">' + esc(r.name || r.username || 'Student') + '</b>' + rollDisplay + '</td>' +
+                '<td style="padding:10px 12px;">' + phoneDisplay + '</td>' +
+                '<td style="padding:10px 12px;">' + emailDisplay + '</td>' +
+                '<td style="padding:10px 12px;">' + (branchYear || '<span style="color:var(--charcoal-soft);">Student</span>') + (r.teamName ? '<br><span style="font-size:11px;font-weight:600;color:var(--gold-dark);">Team: ' + esc(r.teamName) + '</span>' : '') + '</td>' +
+                '<td style="padding:10px 12px;"><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:#27AE60;color:#fff;">' + esc(r.status || 'Registered') + '</span></td>' +
+                '<td style="padding:10px 12px;font-size:12px;color:var(--charcoal-soft);white-space:nowrap;">' + esc(dateStr) + '</td>' +
+                '</tr>';
+            });
+
+            listHtml += '</tbody></table>';
+            contentEl.innerHTML = listHtml;
+          })
+          .catch(function (err) {
+            var contentEl = document.getElementById('eventRsvpsModalContent');
+            if (contentEl) contentEl.innerHTML = '<div style="color:#C0392B;padding:24px;text-align:center;">Failed to load attendee records. Network or permission error.</div>';
+          });
       }
 
       /* ============ USERS TAB MANAGEMENT ============ */

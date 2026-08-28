@@ -568,6 +568,7 @@ const eventRsvpSchema = new mongoose.Schema({
   username: { type: String, default: null },
   name: { type: String, required: true },
   email: { type: String, default: '' },
+  phone: { type: String, default: '' },
   rollNo: { type: String, default: '' },
   teamName: { type: String, default: '' },
   status: { type: String, default: 'Registered' } // 'Registered', 'Attending', 'Cancelled'
@@ -4269,6 +4270,7 @@ app.post('/api/events/:eventId/rsvp', authenticateUser, requireAuth, async (req,
     const username = req.user.username;
     const name = req.user.name || username;
     const email = req.user.email || '';
+    const phone = req.user.mobile || req.user.phone || req.body.phone || '';
     const rollNo = req.user.rtuRollNo || '';
 
     const dbConn = await connectToDatabase();
@@ -4278,6 +4280,7 @@ app.post('/api/events/:eventId/rsvp', authenticateUser, requireAuth, async (req,
         rsvp.status = 'Registered';
         if (eventTitle) rsvp.eventTitle = eventTitle;
         if (teamName) rsvp.teamName = teamName;
+        if (phone && !rsvp.phone) rsvp.phone = phone;
         await rsvp.save();
       } else {
         rsvp = await EventRsvp.create({
@@ -4287,6 +4290,7 @@ app.post('/api/events/:eventId/rsvp', authenticateUser, requireAuth, async (req,
           username,
           name,
           email,
+          phone,
           rollNo,
           teamName: teamName || '',
           status: 'Registered'
@@ -4300,6 +4304,7 @@ app.post('/api/events/:eventId/rsvp', authenticateUser, requireAuth, async (req,
       rsvp.status = 'Registered';
       if (eventTitle) rsvp.eventTitle = eventTitle;
       if (teamName) rsvp.teamName = teamName;
+      if (phone && !rsvp.phone) rsvp.phone = phone;
     } else {
       rsvp = {
         _id: 'rsvp_' + Date.now(),
@@ -4309,6 +4314,7 @@ app.post('/api/events/:eventId/rsvp', authenticateUser, requireAuth, async (req,
         username,
         name,
         email,
+        phone,
         rollNo,
         teamName: teamName || '',
         status: 'Registered',
@@ -4341,6 +4347,48 @@ app.delete('/api/events/:eventId/rsvp', authenticateUser, requireAuth, async (re
     const item = localEventRsvps.find(r => r.eventId === eventId && (r.userId === userId || r.username === username));
     if (item) item.status = 'Cancelled';
     res.json({ success: true, message: 'Registration cancelled.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// GET /api/events/:eventId/rsvps: Admin/Coordinator views full attendees list (Names & Numbers) for an event
+app.get('/api/events/:eventId/rsvps', authenticateUser, requireAuth, requirePermission('events.*'), async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const dbConn = await connectToDatabase();
+    if (dbConn) {
+      const rsvps = await EventRsvp.find({ eventId, status: { $ne: 'Cancelled' } }).sort({ createdAt: -1 });
+      // Enhance with latest user mobile/email/branch/year info if available
+      const enriched = await Promise.all(rsvps.map(async (r) => {
+        const obj = r.toObject();
+        if (r.userId || r.username) {
+          const u = await User.findOne(r.userId ? { _id: r.userId } : { username: r.username }).select('name mobile email rtuRollNo branch year sport photo');
+          if (u) {
+            obj.phone = obj.phone || u.mobile || '';
+            obj.email = obj.email || u.email || '';
+            obj.branch = u.branch || '';
+            obj.year = u.year || '';
+            obj.photo = u.photo || '';
+          }
+        }
+        return obj;
+      }));
+      return res.json({ success: true, rsvps: enriched, count: enriched.length });
+    }
+
+    const rsvps = localEventRsvps.filter(r => r.eventId === eventId && r.status !== 'Cancelled');
+    const enriched = rsvps.map(r => {
+      const u = localUsers.find(u => String(u._id) === String(r.userId) || u.username === r.username);
+      return {
+        ...r,
+        phone: r.phone || (u && u.mobile) || '',
+        email: r.email || (u && u.email) || '',
+        branch: (u && u.branch) || '',
+        year: (u && u.year) || ''
+      };
+    });
+    res.json({ success: true, rsvps: enriched, count: enriched.length });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

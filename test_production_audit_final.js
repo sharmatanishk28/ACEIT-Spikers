@@ -165,7 +165,8 @@ async function runProductionAudit() {
   const playerId = newPlayerRes.body.player?.id || newPlayerRes.body.team?.find(p => p.n === 'Audit Star Player')?.id;
 
   const getTeamRes = await request('GET', '/api/db?clubId=spikers');
-  const savedPlayer = (getTeamRes.body.team || []).find(p => p.n === 'Audit Star Player');
+  const teamList = getTeamRes.body.team || (getTeamRes.body.data && getTeamRes.body.data.team) || [];
+  const savedPlayer = teamList.find(p => p.n === 'Audit Star Player');
   assert(Boolean(savedPlayer), 'Player exists in /api/db immediately');
 
   // Clean up test player
