@@ -1,6 +1,38 @@
 {
-  "team": [],
-  "matches": [],
+  "team": [
+    {
+      "n": "Carlos Silva",
+      "r": "Striker",
+      "no": 10,
+      "clubId": "strikers",
+      "id": "id_mtcwg7o037an0"
+    },
+    {
+      "n": "Owner Added Footballer",
+      "r": "Goalkeeper",
+      "clubId": "strikers",
+      "id": "id_mtcwg7p2xkfh2"
+    },
+    {
+      "n": "Owner Added Volleyballer",
+      "r": "Libero",
+      "clubId": "spikers",
+      "id": "id_mtcwg7p8qvlrn"
+    }
+  ],
+  "matches": [
+    {
+      "team1": "ACEIT Strikers",
+      "opp": "City FC",
+      "venue": "Main Ground",
+      "date": "2026-09-01",
+      "status": "upcoming",
+      "clubId": "strikers",
+      "id": "id_mtcwg7o6tduwn",
+      "team2": "City FC",
+      "winner": "none"
+    }
+  ],
   "news": [],
   "sponsors": [],
   "testimonials": [],
@@ -275,6 +307,173 @@
   ],
   "users": [
     {
+      "_id": "u_1787918508737",
+      "name": "Audit Student Athlete",
+      "username": "audit_student_mtcwimhz",
+      "rtuRollNo": "RTU570820",
+      "email": "audit_student_mtcwimhz@aceit.edu.in",
+      "mobile": "9876543210",
+      "photo": "",
+      "passwordHash": "$2b$10$Tj8GcPj1ZEHRWgjThIR/BepbClRQpH7Px7o8LHlEIPErJuZWV.Eqq",
+      "role": "STUDENT",
+      "clubId": "kabaddi",
+      "clubs": [
+        "kabaddi"
+      ],
+      "bio": "",
+      "sport": "Volleyball",
+      "branch": "Computer Science & Engineering",
+      "year": "3rd Year",
+      "position": "Athlete",
+      "jerseyNo": "",
+      "height": "",
+      "achievements": [],
+      "permissions": [
+        "profile.view",
+        "profile.edit",
+        "clubs.join"
+      ],
+      "active": true,
+      "createdAt": "2026-08-28T12:01:48.737Z",
+      "lastLoginAt": "2026-08-28T12:01:48.737Z"
+    },
+    {
+      "_id": "u_1787918396026",
+      "name": "Strikers Coordinator",
+      "username": "strikers_admin_1787918395947",
+      "rtuRollNo": "",
+      "email": "",
+      "mobile": "",
+      "photo": "",
+      "passwordHash": "$2b$10$dm1CowVF9Utf7fGTUUFBreAOn73rEwv/JkUXWVCgmpilokQ.6w.I.",
+      "role": "COORDINATOR",
+      "clubId": "strikers",
+      "clubs": [
+        "strikers"
+      ],
+      "bio": "",
+      "sport": "Volleyball",
+      "branch": "Computer Science & Engineering",
+      "year": "3rd Year",
+      "position": "Outside Hitter",
+      "jerseyNo": "",
+      "height": "",
+      "achievements": [],
+      "permissions": [
+        "players.*",
+        "matches.*",
+        "applications.*"
+      ],
+      "active": true,
+      "createdAt": "2026-08-28T11:59:56.026Z",
+      "lastLoginAt": null
+    },
+    {
+      "_id": "u_1787918321993",
+      "name": "Rohit Kumar",
+      "username": "rohit_k_1899",
+      "rtuRollNo": "23EATCS199",
+      "email": "rohit_1899@aceit.edu.in",
+      "mobile": "9876543299",
+      "photo": "",
+      "passwordHash": "$2b$10$cZac/HDHTnrJKgt3g6OWBu1yKazuY35cYeJlEXRjfs.aw9tj6U/Lu",
+      "role": "STUDENT",
+      "clubId": "kabaddi",
+      "clubs": [
+        "kabaddi",
+        "dunkers",
+        "spikers"
+      ],
+      "bio": "",
+      "sport": "Volleyball",
+      "branch": "Computer Science & Engineering",
+      "year": "2nd Year (Batch 2024-28)",
+      "position": "Athlete",
+      "jerseyNo": "",
+      "height": "",
+      "achievements": [],
+      "permissions": [
+        "profile.view",
+        "profile.edit",
+        "clubs.join"
+      ],
+      "active": true,
+      "createdAt": "2026-08-28T11:58:41.993Z",
+      "lastLoginAt": "2026-08-28T11:58:41.993Z"
+    },
+    {
+      "_id": "u_1787918275538",
+      "name": "Universal Student 1787918275435",
+      "username": "student_1787918275435",
+      "rtuRollNo": "23EARYA5435",
+      "email": "student_1787918275435@aceit.edu.in",
+      "mobile": "9876543210",
+      "photo": "",
+      "passwordHash": "$2b$10$vpdOzHDCwwjXfNIg4yG1su6VDPEHz6k4pNw8Sc2eqsvTz0oyYPXVe",
+      "role": "STUDENT",
+      "clubId": "spikers",
+      "clubs": [
+        "spikers",
+        "cricket"
+      ],
+      "bio": "",
+      "sport": "Volleyball",
+      "branch": "Computer Science & Engineering",
+      "year": "3rd Year",
+      "position": "Athlete",
+      "jerseyNo": "",
+      "height": "",
+      "achievements": [],
+      "permissions": [
+        "profile.view",
+        "profile.edit",
+        "clubs.join"
+      ],
+      "active": true,
+      "createdAt": "2026-08-28T11:57:55.538Z",
+      "lastLoginAt": "2026-08-28T11:57:55.538Z"
+    },
+    {
+      "_id": "u_1787918219336",
+      "name": "Cricket Club Admin",
+      "username": "cricket_admin",
+      "rtuRollNo": "22EATCR001",
+      "email": "cricket.admin@aceit.edu.in",
+      "mobile": "",
+      "photo": "",
+      "passwordHash": "$2b$10$kSHkJKzD7Aa0N/xdJossWuI9/khIQIs8Q0T6hTJqitu4L1Nwd1IYe",
+      "role": "ADMIN",
+      "clubId": "cricket",
+      "clubs": [
+        "cricket"
+      ],
+      "bio": "",
+      "sport": "Volleyball",
+      "branch": "Computer Science & Engineering",
+      "year": "3rd Year",
+      "position": "Outside Hitter",
+      "jerseyNo": "",
+      "height": "",
+      "achievements": [],
+      "permissions": [
+        "players.*",
+        "matches.*",
+        "news.*",
+        "gallery.*",
+        "events.*",
+        "training.*",
+        "testimonials.*",
+        "sponsors.*",
+        "stats.*",
+        "about.*",
+        "contact.*",
+        "applications.*"
+      ],
+      "active": true,
+      "createdAt": "2026-08-28T11:56:59.336Z",
+      "lastLoginAt": null
+    },
+    {
       "_id": "u_founder_real",
       "name": "Founder / Super Owner",
       "username": "founder",
@@ -303,6 +502,22 @@
   ],
   "clubs": [
     {
+      "_id": "c_1787918395943",
+      "clubId": "strikers",
+      "name": "ACEIT Strikers FC",
+      "sport": "Football",
+      "slug": "strikers",
+      "logo": "",
+      "loaderLogo": "",
+      "coverImage": "",
+      "description": "ACEIT Official Football Club",
+      "themeColor": "",
+      "accentColor": "",
+      "active": true,
+      "status": "active",
+      "createdAt": "2026-08-28T11:59:55.943Z"
+    },
+    {
       "_id": "c_spikers",
       "clubId": "spikers",
       "name": "ACEIT Spikers",
@@ -316,7 +531,7 @@
       "accentColor": "#D97706",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-28T05:21:11.102Z"
+      "createdAt": "2026-08-28T11:56:51.587Z"
     },
     {
       "_id": "c_kabaddi",
@@ -331,7 +546,7 @@
       "accentColor": "#E74C3C",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-28T05:21:11.102Z"
+      "createdAt": "2026-08-28T11:56:51.587Z"
     },
     {
       "_id": "c_dunkers",
@@ -346,7 +561,7 @@
       "accentColor": "#D35400",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-28T05:21:11.102Z"
+      "createdAt": "2026-08-28T11:56:51.587Z"
     },
     {
       "_id": "c_strikers",
@@ -361,7 +576,7 @@
       "accentColor": "#2ECC71",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-28T05:21:11.102Z"
+      "createdAt": "2026-08-28T11:56:51.587Z"
     },
     {
       "_id": "c_shuttlers",
@@ -376,7 +591,7 @@
       "accentColor": "#1ABC9C",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-28T05:21:11.102Z"
+      "createdAt": "2026-08-28T11:56:51.587Z"
     },
     {
       "_id": "c_cricket",
@@ -391,7 +606,7 @@
       "accentColor": "#3498DB",
       "active": true,
       "status": "active",
-      "createdAt": "2026-08-28T05:21:11.102Z"
+      "createdAt": "2026-08-28T11:56:51.587Z"
     }
   ],
   "_id": "6a7a204cb56cfd67cb14f07d",

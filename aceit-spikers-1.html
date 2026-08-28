@@ -6979,10 +6979,40 @@
         opts = opts || {};
         opts.credentials = opts.credentials || 'include';
         opts.headers = opts.headers || {};
+        var token = null;
+        try {
+          token = localStorage.getItem('aceit_auth_token') || localStorage.getItem('authToken');
+        } catch (e) {}
+        if (token && !opts.headers['Authorization'] && !opts.headers['authorization']) {
+          opts.headers['Authorization'] = 'Bearer ' + token;
+        }
         if (opts.body && typeof opts.body === 'string' && !opts.headers['Content-Type'] && !opts.headers['content-type']) {
           opts.headers['Content-Type'] = 'application/json';
         }
         return fetch(url, opts);
+      }
+
+      function uploadImageToBackend(dataUrlOrFile, callback) {
+        if (!dataUrlOrFile) {
+          if (callback) callback(null);
+          return;
+        }
+        authFetch(API_BASE + '/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: dataUrlOrFile, folder: 'aceit_spikers' })
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res && res.success && res.url) {
+              if (callback) callback(res.url);
+            } else {
+              if (callback) callback(dataUrlOrFile);
+            }
+          })
+          .catch(function () {
+            if (callback) callback(dataUrlOrFile);
+          });
       }
 
       function saveDB(db, targetClubId, cb) {
@@ -7137,7 +7167,7 @@
               this.style.display = 'inline-block';
               if (navBrandFallback) navBrandFallback.style.display = 'none';
             };
-            navBrandLogo.src = clubLogo;
+            navBrandLogo.src = club.logo || clubLogo;
             navBrandLogo.style.display = 'inline-block';
             if (navBrandFallback) navBrandFallback.style.display = 'none';
           } else {
@@ -7183,7 +7213,7 @@
               this.style.display = 'block';
               if (heroLogoFallback) heroLogoFallback.style.display = 'none';
             };
-            heroLogoImg.src = clubLogo;
+            heroLogoImg.src = club.logo || clubLogo;
             heroLogoImg.style.display = 'block';
             if (heroLogoFallback) heroLogoFallback.style.display = 'none';
           } else {
@@ -8400,11 +8430,14 @@
       syncDBOnline(function () {
         renderAllPublic();
       });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+          syncDBOnline();
+        }
+      });
       setInterval(function () {
-        syncDBOnline(function () {
-          renderAllPublic();
-        });
-      }, 6000);
+        syncDBOnline();
+      }, 60000);
 
       /* ============ JOIN FORM VALIDATION & TALLY BACKGROUND SUBMISSION ============ */
       var joinForm = document.getElementById('joinForm');
@@ -8611,14 +8644,24 @@
           .then(function (res) {
             if (res && res.success && res.user) {
               currentUser = res.user;
-            } else {
+              if (res.token) {
+                try {
+                  localStorage.setItem('aceit_auth_token', res.token);
+                  localStorage.setItem('authToken', res.token);
+                } catch(e) {}
+              }
+            } else if (res && res.authenticated === false) {
               currentUser = null;
+              try {
+                localStorage.removeItem('aceit_auth_token');
+                localStorage.removeItem('authToken');
+              } catch(e) {}
             }
             renderNavUserWidget();
             updateAdminUserBadge();
           })
-          .catch(function () {
-            currentUser = null;
+          .catch(function (err) {
+            console.warn('[Auth Me Error]', err);
             renderNavUserWidget();
             updateAdminUserBadge();
           });
@@ -8823,6 +8866,12 @@
           .then(function (res) {
             if (res && res.success && res.user) {
               currentUser = res.user;
+              if (res.token) {
+                try {
+                  localStorage.setItem('aceit_auth_token', res.token);
+                  localStorage.setItem('authToken', res.token);
+                } catch(e) {}
+              }
               adminPinGate.classList.remove('open');
               renderNavUserWidget();
               showAlert('Welcome to ACEIT Sports, ' + (res.user.name || res.user.username) + '! Your student account is ready.', function () {
@@ -8873,6 +8922,12 @@
             if (submitBtn) submitBtn.disabled = false;
             if (res && res.success && res.user) {
               currentUser = res.user;
+              if (res.token) {
+                try {
+                  localStorage.setItem('aceit_auth_token', res.token);
+                  localStorage.setItem('authToken', res.token);
+                } catch(e) {}
+              }
               adminPinGate.classList.remove('open');
               renderNavUserWidget();
 
@@ -8894,6 +8949,28 @@
       }
 
       function checkAuthAndOpenAdmin() {
+        if (currentUser) {
+          if (currentUser.role === 'STUDENT') {
+            openStudentProfileModal();
+            return;
+          }
+          adminPinGate.classList.remove('open');
+          adminOverlay.classList.add('open');
+          renderAdminTab(currentAdminTab);
+
+          var targetScope = (activeClubScope || (currentUser.clubId !== 'ALL' ? currentUser.clubId : 'ALL'));
+          authFetch(API_BASE + '/db?clubId=' + encodeURIComponent(targetScope))
+            .then(function (dbR) { return dbR.json(); })
+            .then(function (dbRes) {
+              if (dbRes && dbRes.success && dbRes.data) {
+                DB = dbRes.data;
+                renderAdminTab(currentAdminTab);
+              }
+            })
+            .catch(function () {});
+          return;
+        }
+
         authFetch(API_BASE + '/auth/me')
           .then(function (r) { return r.json(); })
           .then(function (res) {
@@ -8906,18 +8983,7 @@
               } else {
                 adminPinGate.classList.remove('open');
                 adminOverlay.classList.add('open');
-                var targetScope = (activeClubScope || (currentUser.clubId !== 'ALL' ? currentUser.clubId : 'ALL'));
-                authFetch(API_BASE + '/db?clubId=' + encodeURIComponent(targetScope))
-                  .then(function (dbR) { return dbR.json(); })
-                  .then(function (dbRes) {
-                    if (dbRes && dbRes.success && dbRes.data) {
-                      DB = dbRes.data;
-                    }
-                    renderAdminTab(currentAdminTab);
-                  })
-                  .catch(function () {
-                    renderAdminTab(currentAdminTab);
-                  });
+                renderAdminTab(currentAdminTab);
               }
             } else {
               currentUser = null;
@@ -8936,22 +9002,22 @@
       });
 
       function logoutUser() {
+        try {
+          localStorage.removeItem('aceit_auth_token');
+          localStorage.removeItem('authToken');
+        } catch (e) { }
+        currentUser = null;
+        adminOverlay.classList.remove('open');
+        if (studentProfileModal) studentProfileModal.style.display = 'none';
+        renderNavUserWidget();
+        updateAdminUserBadge();
+
         authFetch(API_BASE + '/auth/logout', { method: 'POST' })
           .then(function () {
-            currentUser = null;
-            try { localStorage.removeItem('authToken'); } catch (e) { }
-            adminOverlay.classList.remove('open');
-            if (studentProfileModal) studentProfileModal.style.display = 'none';
-            renderNavUserWidget();
-            updateAdminUserBadge();
             showAlert('You have been logged out.');
           })
           .catch(function () {
-            currentUser = null;
-            try { localStorage.removeItem('authToken'); } catch (e) { }
-            adminOverlay.classList.remove('open');
-            if (studentProfileModal) studentProfileModal.style.display = 'none';
-            renderNavUserWidget();
+            showAlert('You have been logged out.');
           });
       }
 
@@ -8963,6 +9029,11 @@
       function openStudentProfileModal() {
         if (!studentProfileModal) return;
 
+        if (currentUser) {
+          populateStudentProfileModal(currentUser);
+          studentProfileModal.style.display = 'flex';
+        }
+
         authFetch(API_BASE + '/profile/me')
           .then(function (r) { return r.json(); })
           .then(function (res) {
@@ -8972,12 +9043,13 @@
               renderNavUserWidget();
               populateStudentProfileModal(res.profile);
               studentProfileModal.style.display = 'flex';
-            } else {
+            } else if (res && res.authenticated === false) {
               openAuthModal('signin');
             }
           })
-          .catch(function () {
-            openAuthModal('signin');
+          .catch(function (err) {
+            console.warn('[Profile Load Warning]', err);
+            if (!currentUser) openAuthModal('signin');
           });
       }
 
@@ -10288,9 +10360,18 @@
           (file.name && /\.(png|svg|webp)$/i.test(file.name))
         );
 
+        var processDataUrl = function(dataUrl) {
+          cb(dataUrl);
+          uploadImageToBackend(dataUrl, function(cloudinaryUrl) {
+            if (cloudinaryUrl && cloudinaryUrl !== dataUrl) {
+              cb(cloudinaryUrl);
+            }
+          });
+        };
+
         if (file.type === 'image/svg+xml' || (file.name && /\.svg$/i.test(file.name))) {
           var sReader = new FileReader();
-          sReader.onload = function (e) { cb(e.target.result); };
+          sReader.onload = function (e) { processDataUrl(e.target.result); };
           sReader.readAsDataURL(file);
           return;
         }
@@ -10310,11 +10391,8 @@
             ctx.drawImage(img, 0, 0, w, h);
             
             // If PNG, SVG or WebP, preserve full alpha transparency without black box!
-            if (isPngOrSvg) {
-              cb(canvas.toDataURL('image/png'));
-            } else {
-              cb(canvas.toDataURL('image/jpeg', quality || 0.85));
-            }
+            var finalDataUrl = isPngOrSvg ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', quality || 0.85);
+            processDataUrl(finalDataUrl);
           };
           img.src = e.target.result;
         };

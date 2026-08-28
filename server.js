@@ -1,4 +1,16 @@
 require('dotenv').config();
+const dns = require('dns');
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
+} catch (e) {}
+
+process.on('uncaughtException', (err) => {
+  console.warn('[Global Uncaught Exception Handled]', err.message);
+});
+process.on('unhandledRejection', (reason) => {
+  console.warn('[Global Unhandled Rejection Handled]', reason);
+});
+
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -8,6 +20,90 @@ const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const cloudinary = require('cloudinary').v2;
+
+// Configure Cloudinary if environment variables are provided
+if (process.env.CLOUDINARY_URL) {
+  cloudinary.config({
+    cloudinary_url: process.env.CLOUDINARY_URL
+  });
+} else if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME.trim(),
+    api_key: process.env.CLOUDINARY_API_KEY.trim(),
+    api_secret: process.env.CLOUDINARY_API_SECRET.trim()
+  });
+}
+
+function hasCloudinaryConfig() {
+  return Boolean(
+    process.env.CLOUDINARY_URL ||
+    (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET)
+  );
+}
+
+async function uploadToCloudinary(dataUrlOrPath, folder = 'aceit_spikers') {
+  if (!dataUrlOrPath || typeof dataUrlOrPath !== 'string') {
+    return { success: false, url: '' };
+  }
+  const trimmed = dataUrlOrPath.trim();
+  if (/^https?:\/\//i.test(trimmed)) {
+    return { success: true, url: trimmed };
+  }
+  if (!trimmed.startsWith('data:image/')) {
+    return { success: true, url: trimmed };
+  }
+  if (!hasCloudinaryConfig()) {
+    return { success: true, url: trimmed };
+  }
+  try {
+    const res = await cloudinary.uploader.upload(trimmed, {
+      folder: folder,
+      resource_type: 'auto',
+      overwrite: true
+    });
+    return {
+      success: true,
+      url: res.secure_url || res.url,
+      public_id: res.public_id,
+      format: res.format,
+      width: res.width,
+      height: res.height
+    };
+  } catch (err) {
+    console.error('[Cloudinary Upload Error]', err.message);
+    return { success: false, url: trimmed, error: err.message };
+  }
+}
+
+async function migrateBase64ImagesInObject(data, folder = 'aceit_spikers') {
+  if (!data || typeof data !== 'object') return data;
+  if (!hasCloudinaryConfig()) return data;
+
+  if (Array.isArray(data)) {
+    for (let i = 0; i < data.length; i++) {
+      data[i] = await migrateBase64ImagesInObject(data[i], folder);
+    }
+    return data;
+  }
+
+  const imageKeys = ['photo', 'poster', 'logo', 'loaderLogo', 'coverImage', 'team1Logo', 'team2Logo', 'image', 'crest'];
+  for (const key of Object.keys(data)) {
+    const val = data[key];
+    if (typeof val === 'string' && val.startsWith('data:image/')) {
+      const upRes = await uploadToCloudinary(val, folder);
+      if (upRes && upRes.url) {
+        data[key] = upRes.url;
+        if (upRes.public_id) {
+          data[key + '_public_id'] = upRes.public_id;
+        }
+      }
+    } else if (val && typeof val === 'object') {
+      data[key] = await migrateBase64ImagesInObject(val, folder);
+    }
+  }
+  return data;
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? null : 'spikers_jwt_secret_key_2026_dev_only');
 
@@ -192,6 +288,17 @@ if (!cached) {
 
 let lastMongoError = null;
 
+mongoose.connection.on('error', (err) => {
+  console.warn('[MongoDB Atlas Connection Event Warning]', err.message);
+  lastMongoError = err.message;
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('[MongoDB Atlas Event] Disconnected from cluster');
+  cached.conn = null;
+  cached.promise = null;
+});
+
 function safeSanitizeMongoUri(rawUri) {
   if (!rawUri || typeof rawUri !== 'string') return rawUri;
   let uri = rawUri.trim();
@@ -266,10 +373,10 @@ async function connectToDatabase() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 8000,
-      socketTimeoutMS: 30000,
-      maxPoolSize: 5,
+      serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
       dbName: 'spikers'
     };
     console.log('[MongoDB Atlas] Connecting to database cluster...');
@@ -308,9 +415,18 @@ function authConfigurationUnavailable(res) {
   });
 }
 
-function setAuthCookies(res, token) {
-  const secure = process.env.NODE_ENV === 'production';
-  const options = { httpOnly: true, secure, sameSite: secure ? 'none' : 'lax', maxAge: 7 * 86400000, path: '/' };
+function setAuthCookies(res, token, req) {
+  const isHttps = Boolean(
+    (req && (req.secure || req.headers['x-forwarded-proto'] === 'https')) ||
+    (process.env.NODE_ENV === 'production' && !process.env.PORT)
+  );
+  const options = {
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: isHttps ? 'none' : 'lax',
+    maxAge: 7 * 86400000,
+    path: '/'
+  };
   res.cookie('token', token, options);
   res.cookie('auth_token', token, options);
 }
@@ -682,26 +798,43 @@ async function authenticateUser(req, res, next) {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (!decoded) return next();
 
+    // Set valid decoded payload as base authentication
+    req.user = {
+      _id: decoded.id,
+      id: decoded.id,
+      username: decoded.username,
+      role: decoded.role,
+      clubId: decoded.clubId,
+      permissions: decoded.permissions || []
+    };
+
     const dbConn = await connectToDatabase();
     if (dbConn) {
-      if (await RevokedToken.exists({ tokenHash: tokenHash(token) })) return next();
-      let user = null;
-      if (mongoose.Types.ObjectId.isValid(decoded.id)) {
-        user = await User.findById(decoded.id).select('-passwordHash');
-      }
-      if (!user && decoded.username) {
-        user = await User.findOne({ username: String(decoded.username).toLowerCase().trim() }).select('-passwordHash');
-      }
-      if (user) {
-        req.user = user.toObject ? user.toObject() : user;
-        if (user.active === false) {
-          req.userIsDisabled = true;
+      try {
+        if (await RevokedToken.exists({ tokenHash: tokenHash(token) })) {
+          req.user = null;
+          return next();
         }
+        let user = null;
+        if (mongoose.Types.ObjectId.isValid(decoded.id)) {
+          user = await User.findById(decoded.id).select('-passwordHash').lean();
+        }
+        if (!user && decoded.username) {
+          user = await User.findOne({ username: String(decoded.username).toLowerCase().trim() }).select('-passwordHash').lean();
+        }
+        if (user) {
+          req.user = Object.assign({}, req.user, user);
+          if (user.active === false) {
+            req.userIsDisabled = true;
+          }
+        }
+      } catch (dbErr) {
+        console.warn('[Auth Middleware DB Lookup Warning]', dbErr.message);
       }
     } else {
       let user = localUsers.find(u => String(u._id) === String(decoded.id) || u.username === String(decoded.username).toLowerCase().trim());
       if (user) {
-        req.user = Object.assign({}, user);
+        req.user = Object.assign({}, req.user, user);
         delete req.user.passwordHash;
         if (user.active === false) {
           req.userIsDisabled = true;
@@ -752,19 +885,34 @@ function requirePermission(perm) {
   };
 }
 
+function normalizeClubIdentifier(id) {
+  if (!id) return 'spikers';
+  const norm = String(id).toLowerCase().trim();
+  if (norm === 'spikers' || norm === 'aceit-spikers' || norm === 'c_spikers' || norm === 'volleyball') return 'spikers';
+  if (norm === 'kabaddi' || norm === 'c_kabaddi' || norm === 'aceit-kabaddi') return 'kabaddi';
+  if (norm === 'cricket' || norm === 'c_cricket' || norm === 'aceit-cricket') return 'cricket';
+  if (norm === 'shuttlers' || norm === 'c_shuttlers' || norm === 'badminton' || norm === 'aceit-shuttlers') return 'shuttlers';
+  if (norm === 'strikers-fc' || norm === 'strikers' || norm === 'c_strikers' || norm === 'football' || norm === 'soccer' || norm === 'aceit-strikers-fc') return 'strikers-fc';
+  if (norm === 'dunkers' || norm === 'c_dunkers' || norm === 'basketball' || norm === 'aceit-dunkers') return 'dunkers';
+  return norm;
+}
+
+function areClubsEqual(c1, c2) {
+  if (!c1 || !c2) return false;
+  return normalizeClubIdentifier(c1) === normalizeClubIdentifier(c2);
+}
+
 function hasClubAccess(user, clubId) {
   if (!user) return false;
   if (user.role === 'OWNER' || user.clubId === 'ALL') return true;
   if (!clubId) return true;
-  const norm = String(clubId || '').toLowerCase().trim();
+  const targetNorm = normalizeClubIdentifier(clubId);
   if (Array.isArray(user.clubs)) {
-    const normClubs = user.clubs.map(c => String(c).toLowerCase().trim());
-    if (normClubs.includes(norm)) return true;
-    if ((norm === 'spikers' || norm === 'aceit-spikers') && (normClubs.includes('spikers') || normClubs.includes('aceit-spikers'))) return true;
+    const normClubs = user.clubs.map(c => normalizeClubIdentifier(c));
+    if (normClubs.includes(targetNorm)) return true;
   }
-  const uClub = String(user.clubId || '').toLowerCase().trim();
-  if (uClub === norm) return true;
-  if ((norm === 'spikers' || norm === 'aceit-spikers') && (uClub === 'spikers' || uClub === 'aceit-spikers')) return true;
+  const uClub = normalizeClubIdentifier(user.clubId);
+  if (uClub === targetNorm) return true;
   return false;
 }
 
@@ -802,12 +950,9 @@ function filterByClub(items, reqClubId = 'spikers') {
   if (reqClubId === 'all' || reqClubId === 'ALL') {
     return items;
   }
-  const normReq = String(reqClubId || 'spikers').toLowerCase().trim();
+  const normReq = normalizeClubIdentifier(reqClubId);
   return items.filter(item => {
-    const cId = String(item.clubId || item.clubSlug || 'spikers').toLowerCase().trim();
-    if (normReq === 'spikers' || normReq === 'aceit-spikers') {
-      return cId === 'spikers' || cId === 'aceit-spikers';
-    }
+    const cId = normalizeClubIdentifier(item.clubId || item.clubSlug || 'spikers');
     return cId === normReq;
   });
 }
@@ -882,6 +1027,37 @@ const DB_CACHE_TTL_MS = 10000; // 10 seconds
 // they all share ONE pending promise instead of each firing a separate ClubDoc.findOne()
 let _dbFetchPromise = null;
 
+let _clubsCache = null;
+let _clubsCacheTime = 0;
+const CLUBS_CACHE_TTL_MS = 60000; // 60 seconds
+
+function invalidateClubsCache() {
+  _clubsCache = null;
+  _clubsCacheTime = 0;
+}
+
+async function getCachedClubs() {
+  const now = Date.now();
+  if (_clubsCache && (now - _clubsCacheTime) < CLUBS_CACHE_TTL_MS) {
+    return _clubsCache;
+  }
+  const dbConn = await connectToDatabase();
+  if (dbConn) {
+    try {
+      const clubs = await Club.find({ active: true })
+        .select('clubId name sport slug themeColor accentColor active status description')
+        .sort({ name: 1 })
+        .lean();
+      if (clubs && clubs.length > 0) {
+        _clubsCache = clubs;
+        _clubsCacheTime = Date.now();
+        return clubs;
+      }
+    } catch (e) {}
+  }
+  return localClubs.filter(c => c.active !== false);
+}
+
 function invalidateDbCache() {
   _dbCache = null;
   _dbCacheTime = 0;
@@ -942,27 +1118,28 @@ async function _doGetDB(hasUri) {
         return { success: true, data: doc };
       }
     } catch (err) {
-      console.error('[MongoDB Atlas Error] Fetch failed:', err.message);
-      if (hasUri) {
-        return { success: false, error: err.message };
-      }
+      console.warn('[MongoDB Atlas Warning] Fetch failed, using cached/local fallback:', err.message);
     }
   }
 
-  if (hasUri) {
-    // In production with MONGODB_URI configured, DO NOT silently fall back to data.json if connection failed!
-    return { success: false, error: lastMongoError || 'Could not connect to MongoDB Atlas cluster' };
-  }
-
-  // Local standalone dev mode without MONGODB_URI
+  // Graceful high-availability fallback
   const localData = readLocalFileDB();
   _dbCache = localData;
   _dbCacheTime = Date.now();
-  return { success: true, data: localData };
+  return { success: true, data: localData, fallback: true };
 }
 
 // Helper: Save full database to MongoDB Atlas
 async function saveDB(data) {
+  // Automatically migrate any base64 images to Cloudinary permanent URLs
+  if (data && typeof data === 'object') {
+    try {
+      data = await migrateBase64ImagesInObject(data);
+    } catch (e) {
+      console.warn('[Image Migration Warning]', e.message);
+    }
+  }
+
   // Invalidate cache on any write so next read is fresh from MongoDB
   invalidateDbCache();
   // Skip synchronous file writes in production (MONGODB_URI set) — useless on Vercel serverless
@@ -1039,6 +1216,33 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Upload Endpoint for Images (Cloudinary)
+app.post('/api/upload', async (req, res) => {
+  try {
+    const { image, file, dataUrl, folder } = req.body || {};
+    const imgPayload = image || file || dataUrl;
+    if (!imgPayload) {
+      return res.status(400).json({ success: false, message: 'Image data is required' });
+    }
+    const targetFolder = folder || 'aceit_spikers';
+    const uploadResult = await uploadToCloudinary(imgPayload, targetFolder);
+    if (!uploadResult.success && uploadResult.error) {
+      return res.status(500).json({ success: false, message: uploadResult.error });
+    }
+    res.json({
+      success: true,
+      url: uploadResult.url,
+      public_id: uploadResult.public_id || null,
+      format: uploadResult.format || null,
+      width: uploadResult.width || null,
+      height: uploadResult.height || null,
+      isCloudinary: hasCloudinaryConfig()
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // 1. Get full database (supports ?clubId=)
 // NOTE: This is the primary data endpoint. Served from in-memory cache (10s TTL).
 app.get('/api/db', async (req, res) => {
@@ -1047,10 +1251,11 @@ app.get('/api/db', async (req, res) => {
     return res.status(500).json({ success: false, message: `MongoDB Atlas Connection Error: ${result.error}`, error: result.error });
   }
   let data = result.data;
-  const reqClubId = (req.query.clubId || 'spikers').toLowerCase();
-  if (reqClubId !== 'all' && reqClubId !== 'ALL') {
-    let clubAbout = (data.abouts && data.abouts[reqClubId]) ? data.abouts[reqClubId] : (reqClubId === 'spikers' ? data.about : null);
-    let clubContact = (data.contacts && data.contacts[reqClubId]) ? data.contacts[reqClubId] : (reqClubId === 'spikers' ? data.contact : null);
+  const rawReqClub = req.query.clubId || 'spikers';
+  const reqClubId = normalizeClubIdentifier(rawReqClub);
+  if (rawReqClub !== 'all' && rawReqClub !== 'ALL') {
+    let clubAbout = (data.abouts && (data.abouts[reqClubId] || data.abouts[rawReqClub])) ? (data.abouts[reqClubId] || data.abouts[rawReqClub]) : (reqClubId === 'spikers' ? data.about : null);
+    let clubContact = (data.contacts && (data.contacts[reqClubId] || data.contacts[rawReqClub])) ? (data.contacts[reqClubId] || data.contacts[rawReqClub]) : (reqClubId === 'spikers' ? data.contact : null);
 
     data = {
       ...data,
@@ -1660,147 +1865,7 @@ app.delete('/api/gallery/:id', authenticateUser, requireAuth, requirePermission(
   }
 });
 
-// GET /api/events (supports ?clubId=)
-app.get('/api/events', async (req, res) => {
-  const result = await getDB();
-  if (!result.success) return res.status(500).json({ success: false, message: result.error });
-  let events = filterByClub(result.data.events || [], req.query.clubId || 'spikers');
-  res.json({ success: true, events });
-});
 
-// POST /api/events
-app.post('/api/events', authenticateUser, requireAuth, requirePermission('events.*'), async (req, res) => {
-  try {
-    const dbRes = await getDB();
-    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
-    const db = dbRes.data;
-    const item = req.body || {};
-    item.id = item.id || generateId();
-    item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
-    if (!hasClubAccess(req.user, item.clubId)) {
-      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add events for club '${item.clubId}'` });
-    }
-    db.events = db.events || [];
-    db.events.unshift(item);
-    await saveDB(db);
-    res.json({ success: true, event: item, item, events: db.events });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// PUT /api/events/:id
-app.put('/api/events/:id', authenticateUser, requireAuth, requirePermission('events.*'), async (req, res) => {
-  try {
-    const dbRes = await getDB();
-    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
-    const db = dbRes.data;
-    const { id } = req.params;
-    const updated = req.body || {};
-    db.events = db.events || [];
-    const idx = db.events.findIndex(e => String(e.id) === String(id));
-    if (idx === -1) return res.status(404).json({ success: false, message: 'Event not found' });
-    const existingClub = db.events[idx].clubId || 'spikers';
-    if (!hasClubAccess(req.user, existingClub)) return res.status(403).json({ success: false, message: 'Access forbidden' });
-    updated.id = id;
-    if (!updated.clubId) updated.clubId = existingClub;
-    db.events[idx] = updated;
-    await saveDB(db);
-    res.json({ success: true, event: updated, events: db.events });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// DELETE /api/events/:id
-app.delete('/api/events/:id', authenticateUser, requireAuth, requirePermission('events.*'), async (req, res) => {
-  try {
-    const dbRes = await getDB();
-    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
-    const db = dbRes.data;
-    const { id } = req.params;
-    db.events = db.events || [];
-    const item = db.events.find(e => String(e.id) === String(id));
-    if (!item) return res.status(404).json({ success: false, message: 'Event not found' });
-    if (!hasClubAccess(req.user, item.clubId || 'spikers')) return res.status(403).json({ success: false, message: 'Access forbidden' });
-    db.events = db.events.filter(e => String(e.id) !== String(id));
-    await saveDB(db);
-    res.json({ success: true, message: 'Event deleted', events: db.events });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// GET /api/training (supports ?clubId=)
-app.get('/api/training', async (req, res) => {
-  const result = await getDB();
-  if (!result.success) return res.status(500).json({ success: false, message: result.error });
-  let training = filterByClub(result.data.training || [], req.query.clubId || 'spikers');
-  res.json({ success: true, training });
-});
-
-// POST /api/training
-app.post('/api/training', authenticateUser, requireAuth, requirePermission('training.*'), async (req, res) => {
-  try {
-    const dbRes = await getDB();
-    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
-    const db = dbRes.data;
-    const item = req.body || {};
-    item.id = item.id || generateId();
-    item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
-    if (!hasClubAccess(req.user, item.clubId)) {
-      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add training sessions for club '${item.clubId}'` });
-    }
-    db.training = db.training || [];
-    db.training.unshift(item);
-    await saveDB(db);
-    res.json({ success: true, training: item, item, trainingList: db.training });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// PUT /api/training/:id
-app.put('/api/training/:id', authenticateUser, requireAuth, requirePermission('training.*'), async (req, res) => {
-  try {
-    const dbRes = await getDB();
-    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
-    const db = dbRes.data;
-    const { id } = req.params;
-    const updated = req.body || {};
-    db.training = db.training || [];
-    const idx = db.training.findIndex(t => String(t.id) === String(id));
-    if (idx === -1) return res.status(404).json({ success: false, message: 'Training session not found' });
-    const existingClub = db.training[idx].clubId || 'spikers';
-    if (!hasClubAccess(req.user, existingClub)) return res.status(403).json({ success: false, message: 'Access forbidden' });
-    updated.id = id;
-    if (!updated.clubId) updated.clubId = existingClub;
-    db.training[idx] = updated;
-    await saveDB(db);
-    res.json({ success: true, training: updated, trainingList: db.training });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// DELETE /api/training/:id
-app.delete('/api/training/:id', authenticateUser, requireAuth, requirePermission('training.*'), async (req, res) => {
-  try {
-    const dbRes = await getDB();
-    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
-    const db = dbRes.data;
-    const { id } = req.params;
-    db.training = db.training || [];
-    const item = db.training.find(t => String(t.id) === String(id));
-    if (!item) return res.status(404).json({ success: false, message: 'Training session not found' });
-    if (!hasClubAccess(req.user, item.clubId || 'spikers')) return res.status(403).json({ success: false, message: 'Access forbidden' });
-    db.training = db.training.filter(t => String(t.id) !== String(id));
-    await saveDB(db);
-    res.json({ success: true, message: 'Training session deleted', trainingList: db.training });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
 
 // GET /api/sponsors (supports ?clubId=)
 app.get('/api/sponsors', async (req, res) => {
@@ -1831,12 +1896,119 @@ app.post('/api/sponsors', authenticateUser, requireAuth, requirePermission('spon
   }
 });
 
+// PUT /api/sponsors/:id
+app.put('/api/sponsors/:id', authenticateUser, requireAuth, requirePermission('sponsors.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const { id } = req.params;
+    db.sponsors = db.sponsors || [];
+    const idx = db.sponsors.findIndex(s => String(s.id || s._id) === String(id));
+    if (idx === -1) return res.status(404).json({ success: false, message: 'Sponsor not found' });
+    const targetClub = db.sponsors[idx].clubId || 'spikers';
+    if (!hasClubAccess(req.user, targetClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to edit sponsors for club '${targetClub}'` });
+    }
+    db.sponsors[idx] = Object.assign({}, db.sponsors[idx], req.body, { id: id, clubId: req.body.clubId || targetClub });
+    await saveDB(db);
+    res.json({ success: true, item: db.sponsors[idx], sponsors: db.sponsors });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/sponsors/:id
+app.delete('/api/sponsors/:id', authenticateUser, requireAuth, requirePermission('sponsors.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const { id } = req.params;
+    db.sponsors = db.sponsors || [];
+    const item = db.sponsors.find(s => String(s.id || s._id) === String(id));
+    if (!item) return res.status(404).json({ success: false, message: 'Sponsor not found' });
+    if (!hasClubAccess(req.user, item.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: 'Access forbidden' });
+    }
+    db.sponsors = db.sponsors.filter(s => String(s.id || s._id) !== String(id));
+    await saveDB(db);
+    res.json({ success: true, message: 'Sponsor deleted successfully', sponsors: db.sponsors });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /api/achievements (supports ?clubId=)
 app.get('/api/achievements', async (req, res) => {
   const result = await getDB();
   if (!result.success) return res.status(500).json({ success: false, message: result.error });
-  let achievements = filterByClub(result.data.testimonials || result.data.achievements || [], req.query.clubId || 'spikers');
+  let achievements = filterByClub(result.data.achievements || result.data.testimonials || [], req.query.clubId || 'spikers');
   res.json({ success: true, achievements });
+});
+
+// POST /api/achievements
+app.post('/api/achievements', authenticateUser, requireAuth, requirePermission('about.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const item = req.body || {};
+    item.id = item.id || generateId();
+    item.clubId = item.clubId || req.query.clubId || (req.user && req.user.clubId !== 'ALL' ? req.user.clubId : 'spikers');
+    if (!hasClubAccess(req.user, item.clubId)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to add achievements for club '${item.clubId}'` });
+    }
+    db.achievements = db.achievements || [];
+    db.achievements.push(item);
+    await saveDB(db);
+    res.json({ success: true, item, achievements: db.achievements });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/achievements/:id
+app.put('/api/achievements/:id', authenticateUser, requireAuth, requirePermission('about.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const { id } = req.params;
+    db.achievements = db.achievements || [];
+    const idx = db.achievements.findIndex(a => String(a.id || a._id) === String(id));
+    if (idx === -1) return res.status(404).json({ success: false, message: 'Achievement not found' });
+    const targetClub = db.achievements[idx].clubId || 'spikers';
+    if (!hasClubAccess(req.user, targetClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to edit achievements for club '${targetClub}'` });
+    }
+    db.achievements[idx] = Object.assign({}, db.achievements[idx], req.body, { id: id, clubId: req.body.clubId || targetClub });
+    await saveDB(db);
+    res.json({ success: true, item: db.achievements[idx], achievements: db.achievements });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/achievements/:id
+app.delete('/api/achievements/:id', authenticateUser, requireAuth, requirePermission('about.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const { id } = req.params;
+    db.achievements = db.achievements || [];
+    const item = db.achievements.find(a => String(a.id || a._id) === String(id));
+    if (!item) return res.status(404).json({ success: false, message: 'Achievement not found' });
+    if (!hasClubAccess(req.user, item.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: 'Access forbidden' });
+    }
+    db.achievements = db.achievements.filter(a => String(a.id || a._id) !== String(id));
+    await saveDB(db);
+    res.json({ success: true, message: 'Achievement deleted successfully', achievements: db.achievements });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 // GET /api/testimonials (supports ?clubId=)
@@ -1868,6 +2040,49 @@ app.post('/api/testimonials', authenticateUser, requireAuth, requirePermission('
   }
 });
 
+// PUT /api/testimonials/:id
+app.put('/api/testimonials/:id', authenticateUser, requireAuth, requirePermission('testimonials.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const { id } = req.params;
+    db.testimonials = db.testimonials || [];
+    const idx = db.testimonials.findIndex(t => String(t.id || t._id) === String(id));
+    if (idx === -1) return res.status(404).json({ success: false, message: 'Testimonial not found' });
+    const targetClub = db.testimonials[idx].clubId || 'spikers';
+    if (!hasClubAccess(req.user, targetClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to edit testimonials for club '${targetClub}'` });
+    }
+    db.testimonials[idx] = Object.assign({}, db.testimonials[idx], req.body, { id: id, clubId: req.body.clubId || targetClub });
+    await saveDB(db);
+    res.json({ success: true, item: db.testimonials[idx], testimonials: db.testimonials });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/testimonials/:id
+app.delete('/api/testimonials/:id', authenticateUser, requireAuth, requirePermission('testimonials.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const { id } = req.params;
+    db.testimonials = db.testimonials || [];
+    const item = db.testimonials.find(t => String(t.id || t._id) === String(id));
+    if (!item) return res.status(404).json({ success: false, message: 'Testimonial not found' });
+    if (!hasClubAccess(req.user, item.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: 'Access forbidden' });
+    }
+    db.testimonials = db.testimonials.filter(t => String(t.id || t._id) !== String(id));
+    await saveDB(db);
+    res.json({ success: true, message: 'Testimonial deleted successfully', testimonials: db.testimonials });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // GET /api/stats (supports ?clubId=)
 app.get('/api/stats', async (req, res) => {
   const result = await getDB();
@@ -1892,6 +2107,49 @@ app.post('/api/stats', authenticateUser, requireAuth, requirePermission('stats.*
     db.stats.push(item);
     await saveDB(db);
     res.json({ success: true, item, stats: db.stats });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/stats/:id
+app.put('/api/stats/:id', authenticateUser, requireAuth, requirePermission('stats.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const { id } = req.params;
+    db.stats = db.stats || [];
+    const idx = db.stats.findIndex(s => String(s.id || s._id) === String(id));
+    if (idx === -1) return res.status(404).json({ success: false, message: 'Stat not found' });
+    const targetClub = db.stats[idx].clubId || 'spikers';
+    if (!hasClubAccess(req.user, targetClub)) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission to edit stats for club '${targetClub}'` });
+    }
+    db.stats[idx] = Object.assign({}, db.stats[idx], req.body, { id: id, clubId: req.body.clubId || targetClub });
+    await saveDB(db);
+    res.json({ success: true, item: db.stats[idx], stats: db.stats });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// DELETE /api/stats/:id
+app.delete('/api/stats/:id', authenticateUser, requireAuth, requirePermission('stats.*'), async (req, res) => {
+  try {
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const db = dbRes.data;
+    const { id } = req.params;
+    db.stats = db.stats || [];
+    const item = db.stats.find(s => String(s.id || s._id) === String(id));
+    if (!item) return res.status(404).json({ success: false, message: 'Stat not found' });
+    if (!hasClubAccess(req.user, item.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: 'Access forbidden' });
+    }
+    db.stats = db.stats.filter(s => String(s.id || s._id) !== String(id));
+    await saveDB(db);
+    res.json({ success: true, message: 'Stat deleted successfully', stats: db.stats });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -2225,17 +2483,28 @@ const handleLogin = async (req, res) => {
     let user = null;
     if (dbConn) {
       const escapeRegex = (text) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-      const inputRegex = new RegExp('^' + escapeRegex(cleanInput) + '$', 'i');
+      // Fast indexed exact lookup first
       user = await User.findOne({
-        $or: [{ username: inputRegex }, { email: inputRegex }, { rtuRollNo: inputRegex }]
+        $or: [
+          { username: cleanInput },
+          { email: cleanInput },
+          { rtuRollNo: cleanInput },
+          { rtuRollNo: cleanInput.toUpperCase() }
+        ]
       });
+      if (!user) {
+        const inputRegex = new RegExp('^' + escapeRegex(cleanInput) + '$', 'i');
+        user = await User.findOne({
+          $or: [{ username: inputRegex }, { email: inputRegex }, { rtuRollNo: inputRegex }]
+        });
+      }
       if (!user && (cleanInput === 'owner' || cleanInput === 'admin')) {
         user = await User.findOne({ role: 'OWNER' });
       }
       if (!user) {
         await seedInitialAuthAndClubs();
         user = await User.findOne({
-          $or: [{ username: inputRegex }, { email: inputRegex }, { rtuRollNo: inputRegex }]
+          $or: [{ username: cleanInput }, { email: cleanInput }, { rtuRollNo: cleanInput }]
         });
         if (!user && (cleanInput === 'owner' || cleanInput === 'admin')) {
           user = await User.findOne({ role: 'OWNER' });
@@ -2269,9 +2538,11 @@ const handleLogin = async (req, res) => {
     }
 
     const userId = user._id || user.id || 'owner_local';
-    if (user.save) {
+    // Update lastLoginAt in background without blocking response
+    if (dbConn && user._id) {
+      User.updateOne({ _id: user._id }, { $set: { lastLoginAt: new Date() } }).catch(() => {});
+    } else if (user.save) {
       user.lastLoginAt = new Date();
-      await user.save();
     }
 
     const token = jwt.sign(
@@ -2329,32 +2600,27 @@ app.post('/api/logout', handleLogout);
 
 // 4. Auth: Current User Info
 app.get('/api/auth/me', authenticateUser, async (req, res) => {
-  if (!req.user) {
-    // Return unauthenticated quickly — no DB calls needed
+  try {
+    if (!req.user) {
+      res.set('Cache-Control', 'no-store');
+      return res.json({ success: true, authenticated: false });
+    }
+
+    const clubs = await getCachedClubs();
+    const safeUser = req.user.toObject ? req.user.toObject() : Object.assign({}, req.user);
+    delete safeUser.passwordHash;
+
     res.set('Cache-Control', 'no-store');
-    return res.json({ success: true, authenticated: false });
+    res.json({
+      success: true,
+      authenticated: true,
+      user: safeUser,
+      clubs
+    });
+  } catch (err) {
+    console.error('[/api/auth/me Error]', err.message);
+    res.status(500).json({ success: false, message: err.message });
   }
-
-  let clubs = [];
-  const dbConn = await connectToDatabase();
-  if (dbConn) {
-    // Fire seed in background (non-blocking) — guarded by seedDone flag, runs once
-    if (!seedDone) seedInitialAuthAndClubs().catch(() => {});
-    clubs = await Club.find({ active: true }).sort({ name: 1 }).lean();
-  } else {
-    clubs = localClubs.filter(c => c.active !== false);
-  }
-
-  const safeUser = req.user.toObject ? req.user.toObject() : Object.assign({}, req.user);
-  delete safeUser.passwordHash;
-
-  res.set('Cache-Control', 'no-store');
-  res.json({
-    success: true,
-    authenticated: true,
-    user: safeUser,
-    clubs
-  });
 });
 
 // 5. Profile: GET Logged-in User Profile (Full Details)
@@ -2384,7 +2650,8 @@ app.get('/api/profile', authenticateUser, requireAuth, handleGetProfile);
 // 6. Profile: PUT Update Logged-in User Profile
 const handleUpdateProfile = async (req, res) => {
   try {
-    const { name, mobile, photo, bio, sport, branch, year, position, jerseyNo, height, achievements, clubs } = req.body;
+    const { name, mobile, photo, bio, sport, branch, year, position, jerseyNo, height, achievements, clubs, password, newPassword } = req.body;
+    const pwdToSet = (newPassword || password || '').trim();
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
@@ -2402,6 +2669,10 @@ const handleUpdateProfile = async (req, res) => {
       if (height !== undefined) u.height = String(height).trim();
       if (Array.isArray(achievements)) u.achievements = achievements;
       if (Array.isArray(clubs)) u.clubs = clubs.map(c => String(c).toLowerCase().trim());
+      if (pwdToSet) {
+        if (pwdToSet.length < 6) return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+        u.passwordHash = bcrypt.hashSync(pwdToSet, 10);
+      }
 
       const safe = Object.assign({}, u);
       delete safe.passwordHash;
@@ -2422,6 +2693,10 @@ const handleUpdateProfile = async (req, res) => {
     if (height !== undefined) u.height = String(height).trim();
     if (Array.isArray(achievements)) u.achievements = achievements;
     if (Array.isArray(clubs)) u.clubs = clubs.map(c => String(c).toLowerCase().trim());
+    if (pwdToSet) {
+      if (pwdToSet.length < 6) return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+      u.passwordHash = bcrypt.hashSync(pwdToSet, 10);
+    }
 
     await u.save();
     const safe = u.toObject();
@@ -2798,12 +3073,11 @@ app.get('/api/clubs', authenticateUser, async (req, res) => {
       return res.json({ success: true, clubs });
     }
 
-    // Fire seed in background (non-blocking) — guarded by seedDone flag, runs once
-    if (!seedDone) seedInitialAuthAndClubs().catch(() => {});
-    let rawClubs = await Club.find({}).sort({ createdAt: -1 }).lean();
+    let rawClubs = await getCachedClubs();
     let clubs = rawClubs.map(c => {
-      c.isFollowing = userClubs.includes(c.clubId) || userClubs.includes(c.slug);
-      return c;
+      const item = Object.assign({}, c);
+      item.isFollowing = userClubs.includes(item.clubId) || userClubs.includes(item.slug);
+      return item;
     });
     if (req.user && req.user.role === 'ADMIN' && req.user.clubId && req.user.clubId !== 'ALL') {
       clubs = clubs.filter(c => String(c._id) === String(req.user.clubId) || c.clubId === req.user.clubId || c.slug === req.user.clubId);
@@ -2821,22 +3095,36 @@ app.get('/api/clubs/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const cleanId = String(id).toLowerCase().trim();
+    const canonId = normalizeClubIdentifier(cleanId);
     const dbConn = await connectToDatabase();
 
     if (!dbConn) {
-      const club = localClubs.find(c => String(c._id) === id || (c.clubId && c.clubId.toLowerCase() === cleanId) || (c.slug && c.slug.toLowerCase() === cleanId));
+      const club = localClubs.find(c =>
+        String(c._id) === id ||
+        (c.clubId && (c.clubId.toLowerCase() === cleanId || c.clubId.toLowerCase() === canonId)) ||
+        (c.slug && (c.slug.toLowerCase() === cleanId || c.slug.toLowerCase() === canonId)) ||
+        (c.sport && c.sport.toLowerCase() === cleanId)
+      );
       if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
       res.set('Cache-Control', 'public, max-age=30, s-maxage=60');
       return res.json({ success: true, club });
     }
 
-    // Single club lookup: use indexed clubId/slug fields directly for O(log n) query
     let club = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
       club = await Club.findById(id).lean();
     }
     if (!club) {
-      club = await Club.findOne({ $or: [{ clubId: cleanId }, { slug: cleanId }] }).lean();
+      club = await Club.findOne({
+        $or: [
+          { clubId: cleanId },
+          { slug: cleanId },
+          { clubId: canonId },
+          { slug: canonId },
+          { sport: new RegExp('^' + cleanId + '$', 'i') },
+          { sport: new RegExp('^' + canonId + '$', 'i') }
+        ]
+      }).lean();
     }
     if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
     res.set('Cache-Control', 'public, max-age=30, s-maxage=60');
@@ -5147,6 +5435,11 @@ if (require.main === module) {
     console.log(`MongoDB Status: ${process.env.MONGODB_URI ? 'Atlas URI Configured' : 'Local Fallback (Set MONGODB_URI)'}`);
     console.log(`Access website: http://localhost:${PORT}/`);
     console.log(`====================================================`);
+    if (process.env.MONGODB_URI) {
+      connectToDatabase().then(conn => {
+        if (conn) seedInitialAuthAndClubs().catch(() => {});
+      }).catch(() => {});
+    }
   });
 }
 

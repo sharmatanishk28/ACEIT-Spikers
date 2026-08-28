@@ -16,6 +16,14 @@
     {
       "src": "banner2.jpg",
       "use": "@vercel/static"
+    },
+    {
+      "src": "spikers-logo.png",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "volleyball-loader.png",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
