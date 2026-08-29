@@ -1183,8 +1183,13 @@ async function saveDB(data) {
       { upsert: true, new: true }
     );
     console.log('[MongoDB Atlas Save Success] Saved document key "main" successfully!');
+    // Immediately update in-memory cache with the fresh saved state
+    _dbCache = Object.assign({}, data);
+    _dbCacheTime = Date.now();
+    _dbFetchPromise = null;
     return { success: true };
   } catch (err) {
+    invalidateDbCache();
     const errReason = err.message || String(err);
     console.error('[MongoDB Atlas Save Failed]:', errReason);
     return { success: false, error: errReason };
@@ -1384,7 +1389,30 @@ app.post('/api/save-all', authenticateUser, requireAuth, async (req, res) => {
     if (!result.success) {
       return res.status(500).json({ success: false, message: `Failed to save changes: ${result.error}`, error: result.error });
     }
-    return res.json({ success: true, message: `Club database for '${rawTarget}' updated successfully`, data: currentDB });
+
+    let responseData = currentDB;
+    if (rawTarget !== 'all' && rawTarget !== 'ALL') {
+      const targetClubId = normalizeClubIdentifier(rawTarget);
+      let clubAbout = (currentDB.abouts && (currentDB.abouts[targetClubId] || currentDB.abouts[rawTarget])) ? (currentDB.abouts[targetClubId] || currentDB.abouts[rawTarget]) : (targetClubId === 'spikers' ? currentDB.about : null);
+      let clubContact = (currentDB.contacts && (currentDB.contacts[targetClubId] || currentDB.contacts[rawTarget])) ? (currentDB.contacts[targetClubId] || currentDB.contacts[rawTarget]) : (targetClubId === 'spikers' ? currentDB.contact : null);
+      responseData = {
+        ...currentDB,
+        about: clubAbout || (targetClubId === 'spikers' ? (currentDB.about || {}) : {}),
+        contact: clubContact || (targetClubId === 'spikers' ? (currentDB.contact || {}) : {}),
+        team: filterByClub(currentDB.team, targetClubId),
+        matches: filterByClub(currentDB.matches, targetClubId),
+        events: filterByClub(currentDB.events, targetClubId),
+        training: filterByClub(currentDB.training, targetClubId),
+        news: filterByClub(currentDB.news, targetClubId),
+        gallery: filterByClub(currentDB.gallery, targetClubId),
+        sponsors: filterByClub(currentDB.sponsors, targetClubId),
+        testimonials: filterByClub(currentDB.testimonials, targetClubId),
+        stats: filterByClub(currentDB.stats, targetClubId),
+        slideshow: filterByClub(currentDB.slideshow, targetClubId)
+      };
+    }
+
+    return res.json({ success: true, message: `Club database for '${rawTarget}' updated successfully`, data: responseData });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -5161,38 +5189,195 @@ app.delete('/api/announcements/:id', authenticateUser, requireAuth, requirePermi
 });
 
 // ==========================================
-// PHASE 4: LIVE MATCH SCORING & PLAY-BY-PLAY API
+// PHASE 4: UNIVERSAL LIVE MATCH SCORING & MULTI-SPORT API
 // ==========================================
 
-// GET /api/matches/live: Return active live match status & details
+const SPORT_CONFIG = {
+  cricket: {
+    sport: 'Cricket',
+    icon: '🏏',
+    periodName: 'Innings',
+    actions: [
+      { id: 'single', label: '+1 Single', points: 1, type: 'run', isExtra: false, isWicket: false, ballIncrement: true },
+      { id: 'two_runs', label: '+2 Runs', points: 2, type: 'run', isExtra: false, isWicket: false, ballIncrement: true },
+      { id: 'three_runs', label: '+3 Runs', points: 3, type: 'run', isExtra: false, isWicket: false, ballIncrement: true },
+      { id: 'four', label: '+4 FOUR', points: 4, type: 'boundary', isExtra: false, isWicket: false, ballIncrement: true },
+      { id: 'six', label: '+6 SIX', points: 6, type: 'six', isExtra: false, isWicket: false, ballIncrement: true },
+      { id: 'wicket', label: '☝️ Wicket', points: 0, type: 'wicket', isExtra: false, isWicket: true, ballIncrement: true },
+      { id: 'wide', label: '🎯 Wide / No Ball (+1 Extra)', points: 1, type: 'extra', isExtra: true, isWicket: false, ballIncrement: false },
+      { id: 'dot', label: '⚪ Dot Ball (0 Runs)', points: 0, type: 'dot', isExtra: false, isWicket: false, ballIncrement: true }
+    ],
+    initialStats: { runs: 0, wickets: 0, overs: 0, balls: 0, wides: 0, noBalls: 0, extras: 0 }
+  },
+  football: {
+    sport: 'Football',
+    icon: '⚽',
+    periodName: 'Half',
+    actions: [
+      { id: 'goal', label: '⚽ + GOAL', points: 1, type: 'goal' },
+      { id: 'shot', label: '🎯 Shot on Target', points: 0, type: 'shot' },
+      { id: 'corner', label: '🚩 Corner Kick', points: 0, type: 'corner' },
+      { id: 'yellow_card', label: '🟨 Yellow Card', points: 0, type: 'yellow_card' },
+      { id: 'red_card', label: '🟥 Red Card', points: 0, type: 'red_card' },
+      { id: 'save', label: '🧤 Goalkeeper Save', points: 0, type: 'save' }
+    ],
+    initialStats: { goals: 0, shots: 0, corners: 0, yellowCards: 0, redCards: 0, saves: 0 }
+  },
+  basketball: {
+    sport: 'Basketball',
+    icon: '🏀',
+    periodName: 'Quarter',
+    actions: [
+      { id: 'freethrow', label: '🎯 +1 Free Throw', points: 1, type: 'freethrow' },
+      { id: 'fieldgoal', label: '🏀 +2 Field Goal', points: 2, type: 'fieldgoal' },
+      { id: 'threepointer', label: '🔥 +3 Three-Pointer', points: 3, type: 'threepointer' },
+      { id: 'slamdunk', label: '💥 +2 Slam Dunk', points: 2, type: 'slamdunk' },
+      { id: 'foul', label: '⚠️ Foul Conceded', points: 0, type: 'foul' }
+    ],
+    initialStats: { points: 0, fouls: 0, threePointers: 0, dunks: 0, freeThrows: 0 }
+  },
+  kabaddi: {
+    sport: 'Kabaddi',
+    icon: '🤼',
+    periodName: 'Half',
+    actions: [
+      { id: 'touch', label: '🤼 +1 Touch Point', points: 1, type: 'touch' },
+      { id: 'bonus', label: '⭐ +1 Bonus Point', points: 1, type: 'bonus' },
+      { id: 'bonus_touch', label: '⚡ +2 Bonus + Touch', points: 2, type: 'bonus_touch' },
+      { id: 'super_raid', label: '🔥 +3 Super Raid', points: 3, type: 'super_raid' },
+      { id: 'tackle', label: '🛑 +1 Tackle Point', points: 1, type: 'tackle' },
+      { id: 'super_tackle', label: '🛡️ +2 Super Tackle', points: 2, type: 'super_tackle' },
+      { id: 'all_out', label: '🏆 +2 All-Out', points: 2, type: 'all_out' }
+    ],
+    initialStats: { points: 0, raidPoints: 0, tacklePoints: 0, superRaids: 0, superTackles: 0, allOuts: 0 }
+  },
+  volleyball: {
+    sport: 'Volleyball',
+    icon: '🏐',
+    periodName: 'Set',
+    actions: [
+      { id: 'spike', label: '⚡ + Spike (Kill)', points: 1, type: 'spike' },
+      { id: 'block', label: '🛡️ + Block Point', points: 1, type: 'block' },
+      { id: 'ace', label: '🎯 + Service Ace', points: 1, type: 'ace' },
+      { id: 'error', label: '⚠️ + Opponent Error', points: 1, type: 'error' },
+      { id: 'point', label: '🏐 +1 Point', points: 1, type: 'point' }
+    ],
+    initialStats: { points: 0, spikes: 0, blocks: 0, aces: 0, errors: 0 }
+  },
+  badminton: {
+    sport: 'Badminton',
+    icon: '🏸',
+    periodName: 'Game / Set',
+    actions: [
+      { id: 'point', label: '🏸 +1 Point', points: 1, type: 'point' },
+      { id: 'ace', label: '🎯 Service Ace', points: 1, type: 'ace' },
+      { id: 'smash', label: '💥 Smash Point', points: 1, type: 'smash' },
+      { id: 'error', label: '⚠️ Opponent Error', points: 1, type: 'error' }
+    ],
+    initialStats: { points: 0, aces: 0, smashes: 0, errors: 0 }
+  }
+};
+
+function resolveSportFromClub(clubIdOrSport) {
+  const s = String(clubIdOrSport || '').toLowerCase().trim();
+  if (s.includes('cricket')) return 'cricket';
+  if (s.includes('strikers') || s.includes('foot') || s.includes('soccer')) return 'football';
+  if (s.includes('dunkers') || s.includes('basket') || s.includes('hoops')) return 'basketball';
+  if (s.includes('warriors') || s.includes('kabaddi')) return 'kabaddi';
+  if (s.includes('shuttlers') || s.includes('badminton')) return 'badminton';
+  if (s.includes('spikers') || s.includes('volley')) return 'volleyball';
+  return 'volleyball';
+}
+
+// Helper: Get Sport Score Template & Initial State
+function getInitialLiveStateForMatch(match) {
+  const mId = String(match.id || match._id);
+  if (localLiveMatches[mId]) return localLiveMatches[mId];
+
+  const clubId = (match.clubId || 'spikers').toLowerCase();
+  const sport = resolveSportFromClub(match.sport || clubId);
+  const cfg = SPORT_CONFIG[sport] || SPORT_CONFIG.volleyball;
+
+  const state = {
+    isLive: match.isLive || match.status === 'live',
+    sport: sport,
+    clubId: clubId,
+    period: match.liveSetNumber || match.period || 1,
+    periodName: cfg.periodName,
+    team1Score: Number(match.score1 || match.team1Score || 0),
+    team2Score: Number(match.score2 || match.team2Score || 0),
+    liveScore: {
+      team1: Number(match.score1 || match.team1Score || 0),
+      team2: Number(match.score2 || match.team2Score || 0)
+    },
+    liveScoreHome: Number(match.score1 || match.team1Score || 0),
+    liveScoreAway: Number(match.score2 || match.team2Score || 0),
+    setsWonHome: Number(match.setsWonHome || 0),
+    setsWonAway: Number(match.setsWonAway || 0),
+    periodsWonHome: Number(match.setsWonHome || 0),
+    periodsWonAway: Number(match.setsWonAway || 0),
+    currentSet: match.liveSetNumber || match.period || 1,
+    liveSetNumber: match.liveSetNumber || match.period || 1,
+    servingTeam: match.servingTeam || 'home',
+    liveServingTeam: match.servingTeam || 'home',
+    scoreSummary: match.scoreSummary || match.liveSummary || '',
+    scoreDetails: Array.isArray(match.scoreDetails) ? match.scoreDetails : (Array.isArray(match.setScores) ? match.setScores : []),
+    setScores: Array.isArray(match.setScores) ? match.setScores : (Array.isArray(match.scoreDetails) ? match.scoreDetails : []),
+    sportStats: match.sportStats || {
+      home: Object.assign({}, cfg.initialStats),
+      away: Object.assign({}, cfg.initialStats)
+    },
+    playByPlay: Array.isArray(match.playByPlay) ? match.playByPlay : []
+  };
+
+  localLiveMatches[mId] = state;
+  return state;
+}
+
+// GET /api/matches/live: Return active live match status & details (optionally scoped by ?clubId=)
 app.get('/api/matches/live', async (req, res) => {
   try {
     const dbRes = await getDB();
     if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
     const matches = dbRes.data.matches || [];
+    const clubFilter = (req.query.clubId || '').toLowerCase().trim();
     
     // Find active match marked isLive or status === 'live'
-    const liveMatch = matches.find(m => m.isLive || m.status === 'live');
-    if (!liveMatch) {
-      return res.json({ success: true, isLive: false, liveMatch: null });
+    const liveMatches = matches.filter(m => {
+      const matchLive = m.isLive || m.status === 'live';
+      if (!matchLive) return false;
+      if (!clubFilter || clubFilter === 'all') return true;
+      const mClub = (m.clubId || 'spikers').toLowerCase();
+      return mClub === clubFilter || ((mClub === 'spikers' || mClub === 'c_spikers') && (clubFilter === 'spikers' || clubFilter === 'c_spikers'));
+    });
+
+    if (liveMatches.length === 0) {
+      return res.json({ success: true, isLive: false, live: false, match: null, liveMatch: null });
     }
 
-    const mId = String(liveMatch.id || liveMatch._id);
-    const liveState = localLiveMatches[mId] || {
-      isLive: true,
-      currentSet: 1,
-      team1SetsWon: 0,
-      team2SetsWon: 0,
-      liveScore: { team1: 0, team2: 0 },
-      setScores: [],
-      liveServingTeam: 'team1',
-      playByPlay: []
-    };
+    const liveMatch = liveMatches[0];
+    const liveState = getInitialLiveStateForMatch(liveMatch);
+
+    const combinedMatch = Object.assign({}, liveMatch, {
+      liveScoreHome: liveState.liveScoreHome,
+      liveScoreAway: liveState.liveScoreAway,
+      setsWonHome: liveState.setsWonHome,
+      setsWonAway: liveState.setsWonAway,
+      liveSetNumber: liveState.liveSetNumber,
+      servingTeam: liveState.servingTeam,
+      scoreSummary: liveState.scoreSummary,
+      scoreDetails: liveState.scoreDetails,
+      sportStats: liveState.sportStats,
+      playByPlay: liveState.playByPlay,
+      sport: liveState.sport
+    });
 
     res.json({
       success: true,
       isLive: true,
-      match: liveMatch,
+      live: true,
+      match: combinedMatch,
+      liveMatch: combinedMatch,
       liveState
     });
   } catch (err) {
@@ -5210,18 +5395,22 @@ app.get('/api/matches/:id/live', async (req, res) => {
     const match = matches.find(m => String(m.id || m._id) === String(id));
     if (!match) return res.status(404).json({ success: false, message: 'Match not found' });
 
-    const liveState = localLiveMatches[String(id)] || {
-      isLive: match.isLive || match.status === 'live',
-      currentSet: 1,
-      team1SetsWon: 0,
-      team2SetsWon: 0,
-      liveScore: { team1: 0, team2: 0 },
-      setScores: [],
-      liveServingTeam: 'team1',
-      playByPlay: []
-    };
+    const liveState = getInitialLiveStateForMatch(match);
+    const combinedMatch = Object.assign({}, match, {
+      liveScoreHome: liveState.liveScoreHome,
+      liveScoreAway: liveState.liveScoreAway,
+      setsWonHome: liveState.setsWonHome,
+      setsWonAway: liveState.setsWonAway,
+      liveSetNumber: liveState.liveSetNumber,
+      servingTeam: liveState.servingTeam,
+      scoreSummary: liveState.scoreSummary,
+      scoreDetails: liveState.scoreDetails,
+      sportStats: liveState.sportStats,
+      playByPlay: liveState.playByPlay,
+      sport: liveState.sport
+    });
 
-    res.json({ success: true, match, liveState });
+    res.json({ success: true, match: combinedMatch, liveState, sportConfig: SPORT_CONFIG[liveState.sport] });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -5241,179 +5430,47 @@ app.post('/api/matches/:id/live-start', authenticateUser, requireAuth, requirePe
       return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission for club '${match.clubId || 'spikers'}'` });
     }
 
-    // Mark match as live
     match.status = 'live';
     match.isLive = true;
     await saveDB(dbData);
 
-    // Initialize or reset live state
-    localLiveMatches[String(id)] = {
-      isLive: true,
-      currentSet: 1,
-      team1SetsWon: 0,
-      team2SetsWon: 0,
-      liveScore: { team1: 0, team2: 0 },
-      setScores: [],
-      liveServingTeam: 'team1',
-      playByPlay: [
-        {
-          id: 'pbp_' + Date.now(),
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          text: `Match started! Set 1 underway between ${match.team1 || 'ACEIT Spikers'} and ${match.opp || match.team2 || 'Opponent'}.`,
-          type: 'start',
-          score: '0 - 0'
-        }
-      ]
-    };
+    const liveState = getInitialLiveStateForMatch(match);
+    liveState.isLive = true;
+    if (liveState.playByPlay.length === 0) {
+      const sportLabel = liveState.sport ? liveState.sport.toUpperCase() : 'MATCH';
+      liveState.playByPlay.push({
+        id: 'pbp_' + Date.now(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        text: `Match commenced! Official ${sportLabel} fixture underway between ${match.team1 || 'Home'} and ${match.opp || match.team2 || 'Opponent'}.`,
+        type: 'start',
+        score: '0 - 0'
+      });
+    }
 
-    // Broadcast notification to all students
-    const matchTitle = `${match.team1 || 'ACEIT Spikers'} vs ${match.opp || match.team2 || 'Opponent'}`;
-    const notifMsg = `Live scoring is now ON for ${matchTitle} at ${match.venue || 'Sports Complex'}. Follow live points!`;
-    const targetUsers = localUsers.filter(u => u.active !== false);
+    const matchTitle = `${match.team1 || 'ACEIT Team'} vs ${match.opp || match.team2 || 'Opponent'}`;
+    const notifMsg = `Live scoring is now ACTIVE for ${matchTitle} (${match.venue || 'Main Ground'}). Follow live points and scores in real-time!`;
+    const targetUsers = (localUsers || []).filter(u => u && u.active !== false);
     for (const u of targetUsers) {
-      if (u.username) {
-        await createNotification(u.username, '🏐 Match is LIVE!', notifMsg, 'match');
+      if (u && u.username) {
+        createNotification(u.username, '🔴 Match is LIVE!', notifMsg, 'match').catch(() => {});
       }
     }
 
-    res.json({ success: true, message: 'Live match scoring started!', liveState: localLiveMatches[String(id)] });
+    res.json({ success: true, message: 'Live match scoring started!', liveState, match });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// POST /api/matches/:id/live-score: Log point / spike / block / ace in real-time
+// POST /api/matches/:id/live-score: Log points / goals / sets / runs / raids across all sports in real-time
 app.post('/api/matches/:id/live-score', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { scoringTeam, pointType, playerUsername, comment } = req.body;
-    // scoringTeam: 'team1' | 'team2'
-    // pointType: 'spike' | 'block' | 'ace' | 'error' | 'point'
+    const {
+      team, scoringTeam, pointType, playerUsername, points, scoreHome, scoreAway,
+      servingTeam, summary, comment, commentary, actionId
+    } = req.body;
 
-    const dbRes = await getDB();
-    if (dbRes.success && Array.isArray(dbRes.data.matches)) {
-      const match = dbRes.data.matches.find(m => String(m.id || m._id) === String(id));
-      if (match && !hasClubAccess(req.user, match.clubId || 'spikers')) {
-        return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission for club '${match.clubId || 'spikers'}'` });
-      }
-    }
-
-    let state = localLiveMatches[String(id)];
-    if (!state) {
-      state = localLiveMatches[String(id)] = {
-        isLive: true,
-        currentSet: 1,
-        team1SetsWon: 0,
-        team2SetsWon: 0,
-        liveScore: { team1: 0, team2: 0 },
-        setScores: [],
-        liveServingTeam: 'team1',
-        playByPlay: []
-      };
-    }
-
-    const teamKey = scoringTeam === 'team2' ? 'team2' : 'team1';
-    state.liveScore[teamKey] = (state.liveScore[teamKey] || 0) + 1;
-    state.liveServingTeam = teamKey;
-
-    let pbpText = '';
-    if (comment) {
-      pbpText = comment;
-    } else if (pointType === 'spike') {
-      pbpText = `💥 Spectacular Spike point by ${playerUsername || 'ACEIT'}!`;
-    } else if (pointType === 'block') {
-      pbpText = `🛡️ Monster Block by ${playerUsername || 'ACEIT'} at the net!`;
-    } else if (pointType === 'ace') {
-      pbpText = `🎯 Clean Service Ace scored by ${playerUsername || 'ACEIT'}!`;
-    } else if (scoringTeam === 'team2') {
-      pbpText = `Point scored by opponent.`;
-    } else {
-      pbpText = `Point for ACEIT Spikers.`;
-    }
-
-    const scoreStr = `${state.liveScore.team1} - ${state.liveScore.team2}`;
-    state.playByPlay.unshift({
-      id: 'pbp_' + Date.now(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      text: pbpText,
-      type: pointType || 'point',
-      scoringTeam: teamKey,
-      playerUsername: playerUsername || '',
-      score: scoreStr
-    });
-
-    // If playerUsername provided and scoringTeam is team1, dynamically update player stats
-    if (playerUsername && teamKey === 'team1') {
-      const uname = String(playerUsername).toLowerCase().trim();
-      const u = localUsers.find(user => user.username === uname);
-      if (u) {
-        u.stats = u.stats || { matchesPlayed: 0, points: 0, spikes: 0, blocks: 0, aces: 0, mvpAwards: 0 };
-        u.stats.points = (u.stats.points || 0) + 1;
-        if (pointType === 'spike') u.stats.spikes = (u.stats.spikes || 0) + 1;
-        if (pointType === 'block') u.stats.blocks = (u.stats.blocks || 0) + 1;
-        if (pointType === 'ace') u.stats.aces = (u.stats.aces || 0) + 1;
-        u.stats.mvpPoints = calculateMvpPoints(u.stats);
-      }
-    }
-
-    res.json({ success: true, liveState: state });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// POST /api/matches/:id/live-set-end: End current set, record score and advance set
-app.post('/api/matches/:id/live-set-end', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const dbRes = await getDB();
-    if (dbRes.success && Array.isArray(dbRes.data.matches)) {
-      const match = dbRes.data.matches.find(m => String(m.id || m._id) === String(id));
-      if (match && !hasClubAccess(req.user, match.clubId || 'spikers')) {
-        return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission for club '${match.clubId || 'spikers'}'` });
-      }
-    }
-
-    let state = localLiveMatches[String(id)];
-    if (!state) return res.status(404).json({ success: false, message: 'Live match state not found' });
-
-    const setNum = state.currentSet;
-    const finalSetScore = {
-      set: setNum,
-      team1: state.liveScore.team1,
-      team2: state.liveScore.team2
-    };
-
-    if (state.liveScore.team1 > state.liveScore.team2) {
-      state.team1SetsWon = (state.team1SetsWon || 0) + 1;
-    } else {
-      state.team2SetsWon = (state.team2SetsWon || 0) + 1;
-    }
-
-    state.setScores.push(finalSetScore);
-    state.currentSet += 1;
-    state.liveScore = { team1: 0, team2: 0 };
-
-    state.playByPlay.unshift({
-      id: 'pbp_' + Date.now(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      text: `🔔 Set ${setNum} concluded: ${finalSetScore.team1} - ${finalSetScore.team2}. Overall sets: ${state.team1SetsWon} - ${state.team2SetsWon}.`,
-      type: 'set_end',
-      score: `${finalSetScore.team1} - ${finalSetScore.team2}`
-    });
-
-    res.json({ success: true, message: `Set ${setNum} recorded!`, liveState: state });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// POST /api/matches/:id/live-finish: Finalize match, record winner and update player records
-app.post('/api/matches/:id/live-finish', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { mvpUsername } = req.body;
     const dbRes = await getDB();
     if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
     const dbData = dbRes.data;
@@ -5424,17 +5481,311 @@ app.post('/api/matches/:id/live-finish', authenticateUser, requireAuth, requireP
       return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission for club '${match.clubId || 'spikers'}'` });
     }
 
-    let state = localLiveMatches[String(id)] || {
-      team1SetsWon: 3,
-      team2SetsWon: 1,
-      setScores: [{ set: 1, team1: 25, team2: 20 }, { set: 2, team1: 25, team2: 22 }, { set: 3, team1: 21, team2: 25 }, { set: 4, team1: 25, team2: 18 }]
+    const state = getInitialLiveStateForMatch(match);
+    const targetTeam = (team === 'away' || scoringTeam === 'away' || scoringTeam === 'team2') ? 'away' : 'home';
+    const deltaPoints = Number(points !== undefined ? points : (pointType === '3pointer' || pointType === 'super_raid' ? 3 : (pointType === 'basket' || pointType === 'fieldgoal' || pointType === 'slamdunk' || pointType === 'bonus_touch' || pointType === 'super_tackle' || pointType === 'all_out' ? 2 : (pointType === 'four' || pointType === 'boundary' ? 4 : (pointType === 'six' ? 6 : (pointType === 'two_runs' ? 2 : (pointType === 'three_runs' ? 3 : 1)))))));
+
+    if (scoreHome !== undefined && scoreAway !== undefined) {
+      state.liveScoreHome = Number(scoreHome);
+      state.liveScoreAway = Number(scoreAway);
+    } else {
+      if (targetTeam === 'home') state.liveScoreHome = (state.liveScoreHome || 0) + deltaPoints;
+      else state.liveScoreAway = (state.liveScoreAway || 0) + deltaPoints;
+    }
+
+    state.liveScore.team1 = state.liveScoreHome;
+    state.liveScore.team2 = state.liveScoreAway;
+    state.team1Score = state.liveScoreHome;
+    state.team2Score = state.liveScoreAway;
+
+    // Track sport-specific statistics
+    state.sportStats = state.sportStats || { home: {}, away: {} };
+    const teamStats = state.sportStats[targetTeam] || {};
+
+    const pType = pointType || actionId || 'point';
+    if (state.sport === 'cricket') {
+      teamStats.runs = (teamStats.runs || 0) + deltaPoints;
+      if (pType === 'wicket') teamStats.wickets = (teamStats.wickets || 0) + 1;
+      if (pType === 'wide') {
+        teamStats.wides = (teamStats.wides || 0) + 1;
+        teamStats.extras = (teamStats.extras || 0) + 1;
+      } else {
+        teamStats.balls = (teamStats.balls || 0) + 1;
+        teamStats.overs = Math.floor(teamStats.balls / 6) + ((teamStats.balls % 6) / 10);
+      }
+      state.scoreSummary = `${teamStats.runs}/${teamStats.wickets || 0} (${teamStats.overs || 0} ov)`;
+    } else if (state.sport === 'football') {
+      if (pType === 'goal') teamStats.goals = (teamStats.goals || 0) + 1;
+      if (pType === 'shot') teamStats.shots = (teamStats.shots || 0) + 1;
+      if (pType === 'corner') teamStats.corners = (teamStats.corners || 0) + 1;
+      if (pType === 'yellow_card') teamStats.yellowCards = (teamStats.yellowCards || 0) + 1;
+      if (pType === 'red_card') teamStats.redCards = (teamStats.redCards || 0) + 1;
+      if (pType === 'save') teamStats.saves = (teamStats.saves || 0) + 1;
+      state.scoreSummary = `${state.liveScoreHome} - ${state.liveScoreAway}`;
+    } else if (state.sport === 'basketball') {
+      teamStats.points = (teamStats.points || 0) + deltaPoints;
+      if (pType === 'foul') teamStats.fouls = (teamStats.fouls || 0) + 1;
+      if (pType === 'threepointer') teamStats.threePointers = (teamStats.threePointers || 0) + 1;
+      if (pType === 'slamdunk') teamStats.dunks = (teamStats.dunks || 0) + 1;
+      state.scoreSummary = `Q${state.period || 1} [${state.liveScoreHome} - ${state.liveScoreAway}]`;
+    } else if (state.sport === 'kabaddi') {
+      teamStats.points = (teamStats.points || 0) + deltaPoints;
+      if (pType === 'touch' || pType === 'bonus' || pType === 'bonus_touch' || pType === 'super_raid') {
+        teamStats.raidPoints = (teamStats.raidPoints || 0) + deltaPoints;
+      }
+      if (pType === 'super_raid') teamStats.superRaids = (teamStats.superRaids || 0) + 1;
+      if (pType === 'tackle' || pType === 'super_tackle') {
+        teamStats.tacklePoints = (teamStats.tacklePoints || 0) + deltaPoints;
+      }
+      if (pType === 'all_out') teamStats.allOuts = (teamStats.allOuts || 0) + 1;
+      state.scoreSummary = `${state.liveScoreHome} - ${state.liveScoreAway}`;
+    } else if (state.sport === 'volleyball' || state.sport === 'badminton') {
+      teamStats.points = (teamStats.points || 0) + deltaPoints;
+      if (pType === 'spike' || pType === 'kill' || pType === 'smash') teamStats.spikes = (teamStats.spikes || 0) + 1;
+      if (pType === 'block') teamStats.blocks = (teamStats.blocks || 0) + 1;
+      if (pType === 'ace') teamStats.aces = (teamStats.aces || 0) + 1;
+      state.scoreSummary = `Set ${state.liveSetNumber || 1} [${state.liveScoreHome}-${state.liveScoreAway}]`;
+    }
+
+    state.sportStats[targetTeam] = teamStats;
+
+    if (servingTeam) {
+      state.servingTeam = servingTeam;
+      state.liveServingTeam = servingTeam;
+    }
+    if (summary) {
+      state.scoreSummary = summary;
+    }
+
+    const team1Name = match.team1 || match.teamHome || 'ACEIT';
+    const team2Name = match.opp || match.team2 || match.teamAway || 'Opponent';
+    const scorerTeamName = targetTeam === 'home' ? team1Name : team2Name;
+
+    let pbpText = comment || commentary || '';
+    if (!pbpText) {
+      if (pType === 'spike' || pType === 'kill') pbpText = `⚡ Spectacular Spike (Kill) by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'smash') pbpText = `💥 Razor-sharp Smash Point by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'block') pbpText = `🛡️ Monster Block at the net by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'ace') pbpText = `🎯 Direct Service Ace by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'goal') pbpText = `⚽ GOAL scored by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'shot') pbpText = `🎯 Shot on target by ${playerUsername || scorerTeamName}`;
+      else if (pType === 'corner') pbpText = `🚩 Corner kick awarded to ${scorerTeamName}`;
+      else if (pType === 'yellow_card') pbpText = `🟨 Yellow Card issued to ${playerUsername || scorerTeamName}`;
+      else if (pType === 'red_card') pbpText = `🟥 RED Card issued to ${playerUsername || scorerTeamName}`;
+      else if (pType === 'save') pbpText = `🧤 Fantastic Goalkeeper Save by ${playerUsername || scorerTeamName}`;
+      else if (pType === 'freethrow') pbpText = `🎯 Free Throw scored (+1 Pt) by ${playerUsername || scorerTeamName}`;
+      else if (pType === 'fieldgoal') pbpText = `🏀 2-Point Field Goal by ${playerUsername || scorerTeamName}`;
+      else if (pType === 'threepointer') pbpText = `🔥 THREE-POINTER drained by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'slamdunk') pbpText = `💥 High-flying SLAM DUNK (+2 Pts) by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'foul') pbpText = `⚠️ Foul conceded by ${playerUsername || scorerTeamName}`;
+      else if (pType === 'touch') pbpText = `🤼 Successful Touch Point (+1 Pt) by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'bonus') pbpText = `⭐ Bonus point scored (+1 Pt) by ${playerUsername || scorerTeamName}`;
+      else if (pType === 'bonus_touch') pbpText = `⚡ Bonus + Touch Point (+2 Pts) by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'super_raid') pbpText = `🔥 SUPER RAID (+3 Pts) executed by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'tackle') pbpText = `🛑 Tackle Point (+1 Pt) secured by ${playerUsername || scorerTeamName}`;
+      else if (pType === 'super_tackle') pbpText = `🛡️ SUPER TACKLE (+2 Pts) executed by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'all_out') pbpText = `🏆 ALL-OUT (+2 Pts) inflicted on ${targetTeam === 'home' ? team2Name : team1Name}!`;
+      else if (pType === 'single') pbpText = `🏏 1 Single taken by ${playerUsername || scorerTeamName}`;
+      else if (pType === 'two_runs') pbpText = `🏏 2 Runs scored by ${playerUsername || scorerTeamName}`;
+      else if (pType === 'three_runs') pbpText = `🏏 3 Runs scored by ${playerUsername || scorerTeamName}`;
+      else if (pType === 'four' || pType === 'boundary') pbpText = `💥 FOUR! Boundary struck by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'six') pbpText = `🚀 SIX! Colossal maximum hit by ${playerUsername || scorerTeamName}!`;
+      else if (pType === 'wicket') pbpText = `☝️ WICKET FALLS! ${playerUsername || scorerTeamName} dismissed!`;
+      else if (pType === 'wide') pbpText = `🎯 Wide / No ball (+1 Extra run)`;
+      else if (pType === 'dot') pbpText = `⚪ Dot Ball delivered`;
+      else if (pType === 'error') pbpText = `⚠️ Opponent error conceded. Point to ${scorerTeamName}.`;
+      else pbpText = `+${deltaPoints} Point awarded to ${scorerTeamName}.`;
+    }
+
+    const scoreString = `${state.liveScoreHome} - ${state.liveScoreAway}`;
+    state.playByPlay.unshift({
+      id: 'pbp_' + Date.now(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      text: pbpText,
+      commentary: pbpText,
+      type: pType,
+      pointType: pType,
+      scoringTeam: targetTeam,
+      scorerName: playerUsername || '',
+      playerUsername: playerUsername || '',
+      scoreHome: state.liveScoreHome,
+      scoreAway: state.liveScoreAway,
+      score: scoreString
+    });
+
+    // Auto-attribute points/stats to player if username is specified
+    if (playerUsername && targetTeam === 'home') {
+      const uname = String(playerUsername).toLowerCase().trim();
+      const u = (localUsers || []).find(user => user && user.username === uname);
+      if (u) {
+        u.stats = u.stats || { matchesPlayed: 0, points: 0, spikes: 0, blocks: 0, aces: 0, mvpAwards: 0, mvpPoints: 0 };
+        u.stats.points = (u.stats.points || 0) + deltaPoints;
+        if (pType === 'spike' || pType === 'kill' || pType === 'smash') u.stats.spikes = (u.stats.spikes || 0) + 1;
+        if (pType === 'block') u.stats.blocks = (u.stats.blocks || 0) + 1;
+        if (pType === 'ace') u.stats.aces = (u.stats.aces || 0) + 1;
+        u.stats.mvpPoints = (u.stats.points || 0) * 2 + (u.stats.spikes || 0) * 3 + (u.stats.blocks || 0) * 3 + (u.stats.aces || 0) * 4 + ((u.stats.mvpAwards || 0) * 30);
+      }
+    }
+
+    // Persist live scores immediately to match in MongoDB
+    match.score1 = state.liveScoreHome;
+    match.score2 = state.liveScoreAway;
+    match.team1Score = state.liveScoreHome;
+    match.team2Score = state.liveScoreAway;
+    match.liveSummary = state.scoreSummary || `${state.periodName} ${state.liveSetNumber} (${state.liveScoreHome}-${state.liveScoreAway})`;
+    match.scoreSummary = state.scoreSummary || match.liveSummary;
+    match.liveScoreHome = state.liveScoreHome;
+    match.liveScoreAway = state.liveScoreAway;
+    match.servingTeam = state.servingTeam;
+    match.sportStats = state.sportStats;
+    match.playByPlay = state.playByPlay.slice(0, 40);
+
+    await saveDB(dbData);
+
+    res.json({
+      success: true,
+      liveState: state,
+      match: Object.assign({}, match, state)
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/matches/:id/live-set-end: Finalize current Set / Half / Period, record score breakdown and advance
+app.post('/api/matches/:id/live-set-end', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { winner, periodWinner } = req.body;
+
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const dbData = dbRes.data;
+    const matches = dbData.matches || [];
+    const match = matches.find(m => String(m.id || m._id) === String(id));
+    if (!match) return res.status(404).json({ success: false, message: 'Match not found' });
+    if (!hasClubAccess(req.user, match.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission for club '${match.clubId || 'spikers'}'` });
+    }
+
+    const state = getInitialLiveStateForMatch(match);
+    const setNum = state.liveSetNumber || state.currentSet || 1;
+    const setWin = winner || periodWinner || (state.liveScoreHome > state.liveScoreAway ? 'home' : (state.liveScoreAway > state.liveScoreHome ? 'away' : 'home'));
+
+    if (setWin === 'home' || setWin === 'team1') {
+      state.setsWonHome = (state.setsWonHome || 0) + 1;
+      state.periodsWonHome = state.setsWonHome;
+    } else {
+      state.setsWonAway = (state.setsWonAway || 0) + 1;
+      state.periodsWonAway = state.setsWonAway;
+    }
+
+    const periodRecord = {
+      set: setNum,
+      setNumber: setNum,
+      period: setNum,
+      team1: state.liveScoreHome,
+      team2: state.liveScoreAway,
+      scoreHome: state.liveScoreHome,
+      scoreAway: state.liveScoreAway,
+      winner: setWin
     };
 
+    state.scoreDetails = state.scoreDetails || [];
+    state.scoreDetails.push(periodRecord);
+    state.setScores = state.scoreDetails;
+
+    state.playByPlay.unshift({
+      id: 'pbp_' + Date.now(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      text: `🔔 ${state.periodName} ${setNum} concluded: ${state.liveScoreHome} - ${state.liveScoreAway}. Overall: ${state.setsWonHome} - ${state.setsWonAway}.`,
+      commentary: `${state.periodName} ${setNum} finalized (${state.liveScoreHome}-${state.liveScoreAway})`,
+      type: 'set_end',
+      pointType: 'set_end',
+      scoreHome: state.liveScoreHome,
+      scoreAway: state.liveScoreAway,
+      score: `${state.liveScoreHome} - ${state.liveScoreAway}`
+    });
+
+    state.liveSetNumber = setNum + 1;
+    state.currentSet = state.liveSetNumber;
+    state.period = state.liveSetNumber;
+
+    // Reset current point pad for sports with set-by-set resets (Volleyball, Badminton, etc.)
+    if (state.sport === 'volleyball' || state.sport === 'badminton' || state.sport === 'tennis') {
+      state.liveScoreHome = 0;
+      state.liveScoreAway = 0;
+      state.liveScore.team1 = 0;
+      state.liveScore.team2 = 0;
+    }
+
+    // Persist set breakdown to MongoDB
+    match.setsWonHome = state.setsWonHome;
+    match.setsWonAway = state.setsWonAway;
+    match.sets = `${state.setsWonHome} - ${state.setsWonAway}`;
+    match.setScores = state.scoreDetails;
+    match.scoreDetails = state.scoreDetails;
+    match.liveSetNumber = state.liveSetNumber;
+    match.liveSummary = `${state.periodName} ${state.liveSetNumber} | Sets: ${state.setsWonHome}-${state.setsWonAway}`;
+
+    await saveDB(dbData);
+
+    res.json({
+      success: true,
+      message: `${state.periodName} ${setNum} recorded!`,
+      liveState: state,
+      match: Object.assign({}, match, state)
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// POST /api/matches/:id/live-finish: Finalize match, record final score/winner permanently to MongoDB
+app.post('/api/matches/:id/live-finish', authenticateUser, requireAuth, requirePermission('matches.*'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { winner, mvpUsername, finalScore1, finalScore2, scoreSummary } = req.body;
+    const dbRes = await getDB();
+    if (!dbRes.success) return res.status(500).json({ success: false, message: dbRes.error });
+    const dbData = dbRes.data;
+    const matches = dbData.matches || [];
+    const match = matches.find(m => String(m.id || m._id) === String(id));
+    if (!match) return res.status(404).json({ success: false, message: 'Match not found' });
+    if (!hasClubAccess(req.user, match.clubId || 'spikers')) {
+      return res.status(403).json({ success: false, message: `Access forbidden: You do not have permission for club '${match.clubId || 'spikers'}'` });
+    }
+
+    const state = getInitialLiveStateForMatch(match);
+
+    const s1 = finalScore1 !== undefined ? Number(finalScore1) : state.liveScoreHome;
+    const s2 = finalScore2 !== undefined ? Number(finalScore2) : state.liveScoreAway;
+
+    let computedWinner = winner;
+    if (!computedWinner || computedWinner === 'none') {
+      if (state.sport === 'volleyball' || state.sport === 'badminton') {
+        computedWinner = (state.setsWonHome > state.setsWonAway) ? 'team1' : ((state.setsWonAway > state.setsWonHome) ? 'team2' : 'draw');
+      } else {
+        computedWinner = (s1 > s2) ? 'team1' : ((s2 > s1) ? 'team2' : 'draw');
+      }
+    }
+
+    // Mark match as completed and record all scores permanently in MongoDB
     match.status = 'completed';
     match.isLive = false;
-    match.winner = state.team1SetsWon >= state.team2SetsWon ? 'team1' : 'team2';
-    match.sets = `${state.team1SetsWon} - ${state.team2SetsWon}`;
-    match.setScores = state.setScores;
+    match.winner = computedWinner;
+    match.score1 = s1;
+    match.score2 = s2;
+    match.team1Score = s1;
+    match.team2Score = s2;
+    match.setsWonHome = state.setsWonHome;
+    match.setsWonAway = state.setsWonAway;
+    match.sets = (state.setsWonHome || state.setsWonAway) ? `${state.setsWonHome} - ${state.setsWonAway}` : `${s1} - ${s2}`;
+    match.setScores = state.scoreDetails;
+    match.scoreDetails = state.scoreDetails;
+    match.scoreSummary = scoreSummary || match.sets;
+    match.liveSummary = `Final: ${s1} - ${s2}`;
+
     await saveDB(dbData);
 
     state.isLive = false;
@@ -5447,7 +5798,7 @@ app.post('/api/matches/:id/live-finish', authenticateUser, requireAuth, requireP
         mvpUser.stats = mvpUser.stats || { matchesPlayed: 0, points: 0, spikes: 0, blocks: 0, aces: 0, mvpAwards: 0 };
         mvpUser.stats.mvpAwards = (mvpUser.stats.mvpAwards || 0) + 1;
         mvpUser.stats.mvpPoints = calculateMvpPoints(mvpUser.stats);
-        
+
         // Award MVP Gold Badge
         mvpUser.badges = mvpUser.badges || [];
         if (!mvpUser.badges.some(b => b.badgeKey === 'MVP_GOLD')) {
