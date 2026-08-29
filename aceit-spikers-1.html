@@ -762,20 +762,35 @@
         font-size: 13px;
       }
       .nav-user-chip {
-        padding: 4px 8px;
-        font-size: 11px;
-        gap: 5px;
-        max-width: 90px;
+        padding: 2px;
+        background: transparent;
+        border: none;
+        max-width: none;
+        gap: 0;
       }
       .nav-user-chip span {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        display: none !important;
       }
       .nav-user-avatar {
-        width: 20px;
-        height: 20px;
-        font-size: 10px;
+        width: 32px;
+        height: 32px;
+        font-size: 13px;
+        font-weight: 800;
+        border-radius: 50%;
+        border: 1.5px solid var(--border);
+        box-shadow: var(--shadow-sm);
+        flex-shrink: 0;
+      }
+      .notif-dropdown {
+        position: fixed !important;
+        top: 56px !important;
+        left: 10px !important;
+        right: 10px !important;
+        width: auto !important;
+        max-width: none !important;
+        margin: 0 auto !important;
+        border-radius: 14px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
       }
       .nav-links {
         left: 8px;
@@ -4692,7 +4707,7 @@
       top: calc(100% + 10px);
       right: 0;
       width: 360px;
-      max-width: calc(100vw - 32px);
+      max-width: min(360px, calc(100vw - 20px));
       background: var(--bg-card);
       border: 1.5px solid var(--border);
       border-radius: 16px;
@@ -4701,6 +4716,7 @@
       display: none;
       flex-direction: column;
       overflow: hidden;
+      box-sizing: border-box;
       animation: fadeInDown 0.2s ease-out;
     }
     .notif-dropdown.open {
@@ -4713,10 +4729,42 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      box-sizing: border-box;
     }
     .notif-list-scroll {
-      max-height: 380px;
+      max-height: min(380px, 60vh);
       overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    .notif-content-box {
+      flex: 1;
+      min-width: 0;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .notif-item-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--charcoal);
+      margin-bottom: 2px;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .notif-item-msg {
+      font-size: 12px;
+      color: var(--charcoal-soft);
+      line-height: 1.35;
+      margin-bottom: 4px;
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+    .notif-item-time {
+      font-size: 10.5px;
+      color: var(--charcoal-soft);
+      font-family: var(--font-mono);
+      opacity: 0.85;
     }
     .notif-item {
       padding: 12px 16px;
@@ -6776,185 +6824,25 @@
 
       function defaultDB(clubId) {
         clubId = (clubId || getActiveClubId()).toLowerCase();
-        var isSpikers = (clubId === 'spikers' || clubId === 'c_spikers');
-        if (!isSpikers) {
-          var targetClub = (systemClubs || []).find(function(c) {
-            var cid = (c.slug || c.clubId || c._id || c.id || '').toLowerCase();
-            return cid === clubId.toLowerCase();
-          }) || { name: 'ACEIT ' + (clubId.charAt(0).toUpperCase() + clubId.slice(1)), sport: clubId, slug: clubId };
-          var aboutDef = getSportAboutDefaults(targetClub);
-          var slideshowDef = getSportSlideshowDefaults(targetClub);
-
-          return {
-            training: [],
-            team: [],
-            gallery: [],
-            categories: {
-              team: ['first team', 'reserves', 'alumni'],
-              gallery: ['matches', 'training', 'team', 'events']
-            },
-            deletedCategories: { team: [], gallery: [] },
-            customCategories: { team: [], gallery: [] },
-            matches: [],
-            news: [],
-            sponsors: [],
-            testimonials: [],
-            events: [],
-            stats: [
-              { id: uid(), label: 'Matches', target: 0 },
-              { id: uid(), label: 'Wins', target: 0 },
-              { id: uid(), label: 'Athletes', target: 0 },
-              { id: uid(), label: 'Coaches', target: 2 }
-            ],
-            about: aboutDef,
-            contact: {
-              address: 'Arya College of Engineering & IT, Jaipur, Rajasthan',
-              email: 'sports@aceit.edu.in',
-              phone: '+91 98765 43210',
-              hours: 'Mon–Sat, 6:00 AM – 8:00 PM',
-              insta: '#',
-              fb: '#',
-              yt: '#',
-              wa: '#'
-            },
-            slideshow: slideshowDef
-          };
-        }
         return {
-          training: [
-            { id: uid(), icon: '🌅', title: 'Morning Session', time: '06:00 – 07:30', desc: 'Mon / Wed / Fri — footwork, serving accuracy, and reception drills.' },
-            { id: uid(), icon: '🌆', title: 'Evening Session', time: '17:30 – 19:30', desc: 'Daily — full-court scrimmage, attack combinations, block timing.' },
-            { id: uid(), icon: '🏆', title: 'Weekend Practice', time: 'Sat 09:00 – 12:00', desc: 'Match simulation and set-play rehearsal ahead of fixtures.' },
-            { id: uid(), icon: '💪', title: 'Strength Training', time: 'Tue / Thu 18:00', desc: 'Conditioning, jump strength, and injury-prevention work in the gym.' }
-          ],
-          team: [
-            { id: uid(), n: 'Shubham Patidar', num: 1, pos: 'Captain / Outside Hitter', cat: 'Boys Team', h: "6'1\"", exp: '4 yrs', cap: true, insta: '', photo: '' },
-            { id: uid(), n: 'Arjun Verma', num: 5, pos: 'Setter', cat: 'Boys Team', h: "5'10\"", exp: '3 yrs', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Ananya Sharma', num: 8, pos: 'Outside Hitter', cat: 'Girls Team', h: "5'9\"", exp: '2 yrs', cap: true, insta: '', photo: '' },
-            { id: uid(), n: 'Rohan Mehta', num: 9, pos: 'Middle Blocker', cat: 'Boys Team', h: "6'3\"", exp: '2 yrs', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Vikramaditya Singh', num: 10, pos: 'Setter (Pass-out)', cat: 'Alumni', h: "6'0\"", exp: '5 yrs', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Karan Singh', num: 11, pos: 'Libero', cat: 'Boys Team', h: "5'8\"", exp: '3 yrs', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Priya Rathore', num: 15, pos: 'Setter', cat: 'Girls Team', h: "5'7\"", exp: '2 yrs', cap: false, insta: '', photo: '' },
-            { id: uid(), n: 'Aditya Rao', num: 14, pos: 'Opposite', cat: 'Boys Team', h: "6'0\"", exp: '2 yrs', cap: false, insta: '', photo: '' }
-          ],
-          gallery: [
-            { id: uid(), cat: 'matches', h: 260, label: 'Match Day' }, { id: uid(), cat: 'training', h: 180, label: 'Training' },
-            { id: uid(), cat: 'team', h: 220, label: 'Team' }, { id: uid(), cat: 'events', h: 200, label: 'Event' },
-            { id: uid(), cat: 'tournaments', h: 240, label: 'Tournament' }, { id: uid(), cat: 'matches', h: 200, label: 'Match Day' },
-            { id: uid(), cat: 'training', h: 260, label: 'Training' }, { id: uid(), cat: 'team', h: 180, label: 'Team' },
-            { id: uid(), cat: 'matches', h: 220, label: 'Match Day' }, { id: uid(), cat: 'events', h: 240, label: 'Event' },
-            { id: uid(), cat: 'training', h: 200, label: 'Training' }, { id: uid(), cat: 'team', h: 260, label: 'Team' },
-            { id: uid(), cat: 'matches', h: 180, label: 'Match Day' }
-          ],
+          training: [],
+          team: [],
+          gallery: [],
           categories: {
-            team: ['boys team', 'girls team', 'alumni'],
+            team: ['boys team', 'girls team', 'first team', 'reserves', 'alumni'],
             gallery: ['matches', 'training', 'team', 'events', 'tournaments']
           },
-          deletedCategories: {
-            team: ['2nd year'],
-            gallery: []
-          },
-          customCategories: {
-            team: [],
-            gallery: []
-          },
-          matches: (function () {
-            var now = new Date();
-            function addDays(n) { var r = new Date(now); r.setDate(r.getDate() + n); return r.toISOString(); }
-            return [
-              { id: uid(), team1: 'ACEIT Spikers', team1Logo: '', opp: 'Poornima University', team2: 'Poornima University', team2Logo: '', date: addDays(5), venue: 'ACEIT Indoor Court', status: 'upcoming', winner: 'none' },
-              { id: uid(), team1: 'ACEIT Spikers', team1Logo: '', opp: 'JECRC Titans', team2: 'JECRC Titans', team2Logo: '', date: addDays(12), venue: 'JECRC Arena, Jaipur', status: 'upcoming', winner: 'none' },
-              { id: uid(), team1: 'ACEIT Spikers', team1Logo: '', opp: 'Manipal Smashers', team2: 'Manipal Smashers', team2Logo: '', date: addDays(21), venue: 'ACEIT Indoor Court', status: 'upcoming', winner: 'none' },
-              { id: uid(), team1: 'ACEIT Spikers', team1Logo: '', opp: 'MNIT Warriors', team2: 'MNIT Warriors', team2Logo: '', date: addDays(30), venue: 'MNIT Sports Complex', status: 'upcoming', winner: 'none' }
-            ];
-          })(),
-          news: [
-            { id: uid(), tag: 'Featured', date: '20 Jul 2026', title: 'Spikers clinch regional title after thrilling 5-set final', body: 'ACEIT Spikers edged out a tightly contested final to bring home the regional championship trophy for the second year running.', featured: true },
-            { id: uid(), tag: 'Announcement', date: '14 Jul 2026', title: 'New training block begins August 1', body: 'An updated strength & conditioning block kicks off next month for all first-team players.', featured: false },
-            { id: uid(), tag: 'Tournament', date: '02 Jul 2026', title: 'Spikers advance to inter-college semifinal', body: 'A dominant straight-sets win books our place in the semifinal round.', featured: false }
-          ],
-          sponsors: [
-            { id: uid(), name: 'Wonder Cement' }, { id: uid(), name: 'FireNodeX' }, { id: uid(), name: 'Arya College' },
-            { id: uid(), name: 'Sports Authority' }, { id: uid(), name: 'Nova Gear' }, { id: uid(), name: 'FireCraft Network' }
-          ],
-          testimonials: [
-            { id: uid(), q: 'Joining Spikers made me a better player and a better teammate. The discipline here is real.', n: 'Arjun Verma', r: 'Setter' },
-            { id: uid(), q: 'Our coaches push us hard, but they care harder. That balance is what wins matches.', n: 'Karan Singh', r: 'Libero' },
-            { id: uid(), q: 'This club taught me more about leadership than any classroom could.', n: 'Shubham Patidar', r: 'Team Captain' }
-          ],
-          events: [
-            {
-              id: uid(),
-              title: 'ACEIT Inter-College Volleyball Cup 2026',
-              description: 'Annual inter-college championship featuring top collegiate teams across Rajasthan.',
-              date: '25 Sep 2026',
-              time: '09:00 AM - 06:00 PM',
-              venue: 'ACEIT Sports Complex - Main Indoor Court',
-              poster: '',
-              regBtnText: 'Register Now',
-              regUrl: 'https://tally.so/r/RGeGvd',
-              regEnabled: true
-            }
-          ],
-          stats: [
-            { id: uid(), label: 'Championships', target: 7 },
-            { id: uid(), label: 'Tournament Wins', target: 24 },
-            { id: uid(), label: 'Players', target: 38 },
-            { id: uid(), label: 'Coaches', target: 5 },
-            { id: uid(), label: 'Training Sessions', target: 410 },
-            { id: uid(), label: 'Years Active', target: 6 }
-          ],
-          about: {
-            eyebrow: 'Who we are',
-            title: 'Built on the court,\ndefined by character.',
-            sub: 'ACEIT Spikers brings together players who train hard, compete fair, and show up for one another — on and off the court.',
-            mission: 'To build a competitive volleyball program that develops skilled, disciplined athletes while creating a home for anyone who wants to play, grow, and belong.',
-            vision: 'To be recognised as the standard-bearer for collegiate volleyball at ACEIT — a club that wins with class and trains the next generation of captains.'
-          },
-          contact: {
-            address: 'Arya College of Engineering & IT, Jaipur, Rajasthan',
-            email: 'spikers@aceit.edu.in',
-            phone: '+91 98765 43210',
-            hours: 'Mon–Sat, 6:00 AM – 8:00 PM',
-            insta: '#',
-            fb: '#',
-            yt: '#',
-            wa: '#'
-          },
-          slideshow: [
-            {
-              id: 'slide_1',
-              title: 'WINNER TEAM SPIKERS 2.0',
-              date: 'AI&DS 3RD YEAR TEAM · Champions',
-              image: 'banner1.jpg',
-              link: '#matches',
-              btnText: 'View Highlights'
-            },
-            {
-              id: 'slide_2',
-              title: 'Championship Season 2026',
-              date: 'Upcoming Tournament · 15 Sept 2026',
-              image: 'banner2.jpg',
-              link: '#matches',
-              btnText: 'View Match Schedule'
-            },
-            {
-              id: 'slide_3',
-              title: 'Intense Team Training & Practice',
-              date: 'Daily Practice · Arya Campus Grounds',
-              image: 'banner1.jpg',
-              link: '#training',
-              btnText: 'View Timetable'
-            },
-            {
-              id: 'slide_4',
-              title: 'ACEIT Inter-College Volleyball Cup',
-              date: 'Main Indoor Court · 25 Sep 2026',
-              image: 'banner2.jpg',
-              link: '#events',
-              btnText: 'Explore Event'
-            }
-          ]
+          deletedCategories: { team: [], gallery: [] },
+          customCategories: { team: [], gallery: [] },
+          matches: [],
+          news: [],
+          sponsors: [],
+          testimonials: [],
+          events: [],
+          stats: [],
+          about: {},
+          contact: {},
+          slideshow: []
         };
       }
 
@@ -7540,8 +7428,8 @@
           applyClubBranding(foundClub);
         }
 
-        // Fetch club metadata for dynamic branding from API
-        authFetch(API_BASE + '/clubs/' + encodeURIComponent(activeClub))
+        // Parallelize club metadata and club database requests
+        var clubMetaReq = authFetch(API_BASE + '/clubs/' + encodeURIComponent(activeClub))
           .then(function(r) { return r.json(); })
           .then(function(res) {
             if (res && res.success && res.club) {
@@ -7550,8 +7438,7 @@
           })
           .catch(function(e) { console.warn('Club metadata fetch error', e); });
 
-        // Fetch scoped club dataset
-        authFetch(API_BASE + '/db?clubId=' + encodeURIComponent(activeClub))
+        var clubDbReq = authFetch(API_BASE + '/db?clubId=' + encodeURIComponent(activeClub))
           .then(function (res) { return res.json(); })
           .then(function (res) {
             if (res && res.success && res.data) {
@@ -7569,13 +7456,16 @@
               if (!DB.categories || typeof DB.categories !== 'object') { DB.categories = {}; }
               if (!DB.deletedCategories || typeof DB.deletedCategories !== 'object') { DB.deletedCategories = {}; }
               if (!DB.customCategories || typeof DB.customCategories !== 'object') { DB.customCategories = {}; }
-              if (onComplete) onComplete();
               renderAllPublic();
             }
           })
           .catch(function (err) {
             console.warn('[API Sync Error]', err);
           });
+
+        Promise.all([clubMetaReq, clubDbReq]).then(function () {
+          if (onComplete) onComplete();
+        });
       }
 
 
@@ -7833,11 +7723,22 @@
         renderGalleryFilters();
         if (!masonry) return;
         masonry.innerHTML = '';
-        (DB.gallery || []).filter(function (g) {
+        var items = (DB.gallery || []).filter(function (g) {
           var gCats = getCategories(g);
           var filter = (currentGalleryFilter || 'all').trim().toLowerCase();
           return filter === 'all' || gCats.indexOf(filter) !== -1;
-        }).forEach(function (g) {
+        });
+
+        if (items.length === 0) {
+          masonry.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--charcoal-soft);background:var(--bg-card);border:1.5px dashed var(--border);border-radius:14px;">' +
+            '<div style="font-size:32px;margin-bottom:8px;">📸</div>' +
+            '<h4 style="margin:0 0 6px;color:var(--charcoal);font-size:16px;">No Gallery Photos Yet</h4>' +
+            '<p style="margin:0;font-size:13px;">Official event, match, and practice photos will appear here once uploaded.</p>' +
+            '</div>';
+          return;
+        }
+
+        items.forEach(function (g) {
           var el = document.createElement('div');
           el.className = 'g-item';
           var hasPhoto = !!g.photo;
@@ -7869,7 +7770,17 @@
       function renderTrainingPublic() {
         if (!trainingGrid) return;
         trainingGrid.innerHTML = '';
-        (DB.training || []).forEach(function (tr) {
+        var list = DB.training || [];
+        if (list.length === 0) {
+          var sportName = (currentActiveClub && currentActiveClub.sport) ? currentActiveClub.sport : 'Athletics';
+          trainingGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--charcoal-soft);background:var(--bg-card);border:1.5px dashed var(--border);border-radius:14px;">' +
+            '<div style="font-size:32px;margin-bottom:8px;">⚡</div>' +
+            '<h4 style="margin:0 0 6px;color:var(--charcoal);font-size:16px;">Training Schedule Finalization</h4>' +
+            '<p style="margin:0;font-size:13px;">Official ' + esc(sportName.toLowerCase()) + ' training sessions and court timings will be posted ahead of the semester fixtures.</p>' +
+            '</div>';
+          return;
+        }
+        list.forEach(function (tr) {
           var el = document.createElement('div');
           el.className = 'train-card card reveal visible';
           el.innerHTML =
@@ -7884,8 +7795,19 @@
       var matchesGrid = document.getElementById('matchesGrid');
       var countdownTimer = null;
       function renderMatchesPublic() {
+        if (!matchesGrid) return;
         matchesGrid.innerHTML = '';
-        DB.matches.forEach(function (m, i) {
+        var list = DB.matches || [];
+        if (list.length === 0) {
+          var sportName = (currentActiveClub && currentActiveClub.sport) ? currentActiveClub.sport : 'Athletics';
+          matchesGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--charcoal-soft);background:var(--bg-card);border:1.5px dashed var(--border);border-radius:14px;">' +
+            '<div style="font-size:32px;margin-bottom:8px;">🏆</div>' +
+            '<h4 style="margin:0 0 6px;color:var(--charcoal);font-size:16px;">No Fixtures Scheduled</h4>' +
+            '<p style="margin:0;font-size:13px;">Upcoming ' + esc(sportName.toLowerCase()) + ' matches and tournament schedules will be updated once draws are released.</p>' +
+            '</div>';
+          return;
+        }
+        list.forEach(function (m, i) {
           var el = document.createElement('div');
           el.className = 'match-card card reveal visible';
           var d = new Date(m.date);
@@ -7962,8 +7884,18 @@
 
       var newsGrid = document.getElementById('newsGrid');
       function renderNewsPublic() {
+        if (!newsGrid) return;
         newsGrid.innerHTML = '';
-        DB.news.forEach(function (n) {
+        var list = DB.news || [];
+        if (list.length === 0) {
+          newsGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--charcoal-soft);background:var(--bg-card);border:1.5px dashed var(--border);border-radius:14px;">' +
+            '<div style="font-size:32px;margin-bottom:8px;">📰</div>' +
+            '<h4 style="margin:0 0 6px;color:var(--charcoal);font-size:16px;">No News Articles Published</h4>' +
+            '<p style="margin:0;font-size:13px;">Team headlines and championship recaps will appear here as stories break.</p>' +
+            '</div>';
+          return;
+        }
+        list.forEach(function (n) {
           var el = document.createElement('div');
           el.className = 'news-card card reveal visible' + (n.featured ? ' featured' : '');
           el.innerHTML = '<div class="news-thumb"><span class="news-tag">' + esc(n.tag) + '</span></div><div class="news-body"><span class="date mono">' + esc(n.date) + '</span><h3>' + esc(n.title) + '</h3><p>' + esc(n.body) + '</p></div>';
@@ -7973,9 +7905,14 @@
 
       var sponsorRow = document.getElementById('sponsorRow');
       function renderSponsorsPublic() {
+        if (!sponsorRow) return;
         sponsorRow.innerHTML = '';
-        var names = DB.sponsors.map(function (s) { return s.name; });
-        var doubled = names.concat(names.length ? names : ['Add a sponsor']);
+        var names = (DB.sponsors || []).map(function (s) { return s.name; }).filter(Boolean);
+        if (names.length === 0) {
+          sponsorRow.innerHTML = '<div class="sponsor-item" style="opacity:0.6;font-style:italic;">Official Partners &amp; Sponsors</div>';
+          return;
+        }
+        var doubled = names.length > 1 ? names.concat(names) : names;
         doubled.forEach(function (s) {
           var el = document.createElement('div');
           el.className = 'sponsor-item';
@@ -7988,26 +7925,37 @@
       var testiIdx = 0;
       var testiInterval = null;
       function renderTestimonialsPublic() {
+        if (!testiWrap) return;
         testiWrap.innerHTML = '';
-        DB.testimonials.forEach(function (t, i) {
+        var list = DB.testimonials || [];
+        if (list.length === 0) {
+          testiWrap.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--charcoal-soft);">' +
+            '<div style="font-size:28px;margin-bottom:8px;">💬</div>' +
+            '<p style="margin:0;font-size:14px;font-style:italic;">&ldquo;Student athlete and captain testimonials will be published here.&rdquo;</p>' +
+            '</div>';
+          return;
+        }
+        list.forEach(function (t, i) {
           var el = document.createElement('div');
           el.className = 'testi-slide' + (i === 0 ? ' active' : '');
           el.innerHTML = '<p class="testi-quote">&ldquo;' + esc(t.q) + '&rdquo;</p><div class="testi-name">' + esc(t.n) + '</div><div class="testi-role mono">' + esc(t.r) + '</div>';
           testiWrap.appendChild(el);
         });
-        var dotsWrap = document.createElement('div');
-        dotsWrap.className = 'testi-dots';
-        DB.testimonials.forEach(function (t, i) {
-          var d = document.createElement('div');
-          d.className = 'testi-dot' + (i === 0 ? ' active' : '');
-          d.addEventListener('click', function () { showTesti(i); });
-          dotsWrap.appendChild(d);
-        });
-        testiWrap.appendChild(dotsWrap);
+        if (list.length > 1) {
+          var dotsWrap = document.createElement('div');
+          dotsWrap.className = 'testi-dots';
+          list.forEach(function (t, i) {
+            var d = document.createElement('div');
+            d.className = 'testi-dot' + (i === 0 ? ' active' : '');
+            d.addEventListener('click', function () { showTesti(i); });
+            dotsWrap.appendChild(d);
+          });
+          testiWrap.appendChild(dotsWrap);
+        }
         testiIdx = 0;
         if (testiInterval) clearInterval(testiInterval);
-        if (DB.testimonials.length > 1) {
-          testiInterval = setInterval(function () { showTesti((testiIdx + 1) % DB.testimonials.length); }, 5000);
+        if (list.length > 1) {
+          testiInterval = setInterval(function () { showTesti((testiIdx + 1) % list.length); }, 5000);
         }
       }
       function showTesti(i) {
@@ -8020,8 +7968,15 @@
       var statsGridEl = document.querySelector('.stats-grid');
       var statsCounted = false;
       function renderStatsPublic() {
+        if (!statsGridEl) return;
         statsGridEl.innerHTML = '';
-        DB.stats.forEach(function (s) {
+        var list = DB.stats || [];
+        if (list.length === 0) {
+          if (statsBandEl) statsBandEl.style.display = 'none';
+          return;
+        }
+        if (statsBandEl) statsBandEl.style.display = 'block';
+        list.forEach(function (s) {
           var el = document.createElement('div');
           el.className = 'stat-item';
           el.innerHTML = '<div class="stat-num" data-target="' + s.target + '">0</div><div class="stat-label">' + esc(s.label) + '</div>';
@@ -8273,7 +8228,8 @@
         });
 
         if (!items.length) {
-          items = getSportSlideshowDefaults(club);
+          section.style.display = 'none';
+          return;
         }
 
         section.style.display = 'block';
@@ -8702,11 +8658,13 @@
         chip.id = 'navProfileChip';
         chip.title = 'View & Edit Profile';
 
-        var initial = (currentUser.name || currentUser.username || 'U').charAt(0).toUpperCase();
-        var avatarStyle = currentUser.photo ? 'background-image:url(\'' + currentUser.photo + '\');' : '';
-        var avatarContent = currentUser.photo ? '' : initial;
+        var cleanName = (currentUser.name || currentUser.username || '').trim();
+        var initial = cleanName ? cleanName.charAt(0).toUpperCase() : 'U';
+        var userPhoto = (currentUser.photo && typeof currentUser.photo === 'string' && currentUser.photo.trim().length > 0) ? currentUser.photo.trim() : '';
+        var avatarStyle = userPhoto ? 'background-image:url(\'' + userPhoto + '\');background-size:cover;background-position:center;' : '';
+        var avatarContent = userPhoto ? '' : initial;
 
-        var firstName = (currentUser.name || currentUser.username || '').split(' ')[0];
+        var firstName = cleanName.split(' ')[0] || cleanName || 'User';
 
         chip.innerHTML = '<div class="nav-user-avatar"' + (avatarStyle ? ' style="' + avatarStyle + '"' : '') + '>' + avatarContent + '</div>' +
           '<span>' + esc(firstName) + '</span>';
@@ -12852,10 +12810,27 @@
       }
 
       function markNotificationAsRead(id) {
-        authFetch(API_BASE + '/notifications/' + id + '/read', { method: 'PUT' })
+        if (!id) return;
+        // Optimistic UI update: ONLY change this notification's read state
+        var strId = String(id);
+        var target = currentNotifications.find(function (n) {
+          return String(n._id || n.id) === strId;
+        });
+        if (target) {
+          target.read = true;
+        }
+        var unread = currentNotifications.filter(function (n) { return !n.read; }).length;
+        updateNotifBadges(unread);
+        renderNavNotificationDropdown(currentNotifications);
+        if (document.getElementById('spTabContentNotifs') && document.getElementById('spTabContentNotifs').style.display !== 'none') {
+          renderStudentNotificationsTab(currentSpNotifFilter || 'all');
+        }
+
+        authFetch(API_BASE + '/notifications/' + encodeURIComponent(id) + '/read', { method: 'PUT' })
           .then(function (r) { return r.json(); })
           .then(function (res) {
-            if (res && res.success) {
+            if (!res || !res.success) {
+              // Revert if server failed
               fetchNotifications();
             }
           })
@@ -12863,10 +12838,19 @@
       }
 
       function markAllNotificationsAsRead() {
+        if (!currentNotifications || !currentNotifications.length) return;
+        // Optimistic UI update: mark all read locally
+        currentNotifications.forEach(function (n) { n.read = true; });
+        updateNotifBadges(0);
+        renderNavNotificationDropdown(currentNotifications);
+        if (document.getElementById('spTabContentNotifs') && document.getElementById('spTabContentNotifs').style.display !== 'none') {
+          renderStudentNotificationsTab(currentSpNotifFilter || 'all');
+        }
+
         authFetch(API_BASE + '/notifications/read-all', { method: 'PUT' })
           .then(function (r) { return r.json(); })
           .then(function (res) {
-            if (res && res.success) {
+            if (!res || !res.success) {
               fetchNotifications();
             }
           })
