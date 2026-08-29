@@ -10843,18 +10843,14 @@
             try {
               var parsed = JSON.parse(ev.target.result);
               DB = parsed;
-              saveDB(DB);
-              renderAllPublic();
-              syncDBOnline(function () {
+              saveDB(DB, null, function () {
                 renderAllPublic();
-              });
-              setInterval(function () {
                 syncDBOnline(function () {
-                  renderTeamPublic();
+                  renderAllPublic();
                 });
-              }, 6000);
-              renderAdminTab('data');
-              showAlert('Data imported successfully.');
+                renderAdminTab('data');
+                showAlert('Data imported successfully.');
+              });
             } catch (err) {
               showAlert('That file could not be read. Please choose a valid exported JSON file.');
             }
@@ -10862,19 +10858,16 @@
           reader.readAsText(file);
         });
         document.getElementById('btnReset').addEventListener('click', function () {
-          showConfirm('Reset ALL club data (players, matches, news, gallery, etc.) back to the original defaults? This cannot be undone.', function () {
+          showConfirm('Reset ALL club data (players, matches, news, gallery, etc.) for this club? This will clear records to an empty state.', function () {
             DB = defaultDB();
-            saveDB(DB);
-            renderAllPublic();
-            syncDBOnline(function () {
+            saveDB(DB, null, function () {
               renderAllPublic();
-            });
-            setInterval(function () {
               syncDBOnline(function () {
-                renderTeamPublic();
+                renderAllPublic();
               });
-            }, 6000);
-            renderAdminTab('data');
+              renderAdminTab('data');
+              showAlert('Club records reset to clean empty state.');
+            });
           });
         });
         document.getElementById('savePinBtn').addEventListener('click', function () {
@@ -11698,6 +11691,7 @@
           { key: 'gallery.*', label: 'Gallery' },
           { key: 'training.*', label: 'Training' },
           { key: 'events.*', label: 'Events' },
+          { key: 'slideshow.*', label: 'Hero Slideshow' },
           { key: 'testimonials.*', label: 'Testimonials' },
           { key: 'sponsors.*', label: 'Sponsors' },
           { key: 'stats.*', label: 'Stats' },
@@ -11997,6 +11991,7 @@
           { key: 'gallery.*', label: 'Manage Gallery Photos' },
           { key: 'training.*', label: 'Manage Training Timetable' },
           { key: 'events.*', label: 'Manage Events & Tournaments' },
+          { key: 'slideshow.*', label: 'Manage Hero Slideshow' },
           { key: 'applications.*', label: 'Review Club Tryouts/Applications' },
           { key: 'users.*', label: 'Manage Users & Permissions' },
           { key: 'clubs.*', label: 'Manage Dynamic Sports/Clubs' },
