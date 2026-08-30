@@ -262,13 +262,14 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Mount Modular API v2 Architecture
+const v2ApiRouter = require('./src/api');
+app.use('/api/v2', v2ApiRouter);
+
 app.use(express.static(__dirname));
 
-// Dynamic Public Club Page Route Handlers
+// Dynamic Public Club Page Route Handlers (HTML Views)
 app.get('/club/:clubId', (req, res) => {
-  res.sendFile(path.join(__dirname, 'aceit-spikers-1.html'));
-});
-app.get('/clubs/:clubId', (req, res) => {
   res.sendFile(path.join(__dirname, 'aceit-spikers-1.html'));
 });
 app.get('/club.html', (req, res) => {
@@ -373,8 +374,8 @@ async function connectToDatabase() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 15000,
-      connectTimeoutMS: 15000,
+      serverSelectionTimeoutMS: 3000,
+      connectTimeoutMS: 3000,
       socketTimeoutMS: 45000,
       maxPoolSize: 10,
       dbName: 'spikers'
@@ -1017,19 +1018,19 @@ function writeLocalFileDB(data) {
 }
 
 // ==========================================
-// IN-MEMORY GETDB CACHE — 10-second TTL, invalidated on writes
-// Collapses 8-12 sequential MongoDB reads per page into 1
+// IN-MEMORY GETDB CACHE — 60-second TTL, invalidated on writes
+// Initialized immediately with readLocalFileDB() for instant 0ms cold-start responses
 // ==========================================
-let _dbCache = null;
-let _dbCacheTime = 0;
-const DB_CACHE_TTL_MS = 10000; // 10 seconds
+let _dbCache = readLocalFileDB();
+let _dbCacheTime = Date.now();
+const DB_CACHE_TTL_MS = 60000; // 60 seconds TTL for fast public view performance
 
 // In-flight deduplication: when multiple requests hit getDB() simultaneously on a cold cache,
 // they all share ONE pending promise instead of each firing a separate ClubDoc.findOne()
 let _dbFetchPromise = null;
 
-let _clubsCache = null;
-let _clubsCacheTime = 0;
+let _clubsCache = localClubs.filter(c => c.active !== false);
+let _clubsCacheTime = Date.now();
 const CLUBS_CACHE_TTL_MS = 60000; // 60 seconds
 
 function invalidateClubsCache() {
@@ -1279,8 +1280,8 @@ app.get('/api/db', async (req, res) => {
       slideshow: filterByClub(data.slideshow, reqClubId)
     };
   }
-  // Public data can be cached briefly; authenticated data must not
-  res.set('Cache-Control', 'public, max-age=10, s-maxage=15');
+  // Public data is cached with stale-while-revalidate for sub-second page loads
+  res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=300');
   res.json({ success: true, ...data, data });
 });
 
@@ -3119,44 +3120,23 @@ app.get('/api/clubs', authenticateUser, async (req, res) => {
   }
 });
 
-// 4b. Clubs: GET Single Club by ID, clubId, or slug
+// 4b. Clubs: GET Single Club by ID, clubId, or slug (Fast cached path)
 app.get('/api/clubs/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const cleanId = String(id).toLowerCase().trim();
     const canonId = normalizeClubIdentifier(cleanId);
-    const dbConn = await connectToDatabase();
 
-    if (!dbConn) {
-      const club = localClubs.find(c =>
-        String(c._id) === id ||
-        (c.clubId && (c.clubId.toLowerCase() === cleanId || c.clubId.toLowerCase() === canonId)) ||
-        (c.slug && (c.slug.toLowerCase() === cleanId || c.slug.toLowerCase() === canonId)) ||
-        (c.sport && c.sport.toLowerCase() === cleanId)
-      );
-      if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
-      res.set('Cache-Control', 'public, max-age=30, s-maxage=60');
-      return res.json({ success: true, club });
-    }
+    const allClubs = await getCachedClubs();
+    const club = allClubs.find(c =>
+      String(c._id) === id ||
+      (c.clubId && (c.clubId.toLowerCase() === cleanId || c.clubId.toLowerCase() === canonId)) ||
+      (c.slug && (c.slug.toLowerCase() === cleanId || c.slug.toLowerCase() === canonId)) ||
+      (c.sport && c.sport.toLowerCase() === cleanId)
+    );
 
-    let club = null;
-    if (mongoose.Types.ObjectId.isValid(id)) {
-      club = await Club.findById(id).lean();
-    }
-    if (!club) {
-      club = await Club.findOne({
-        $or: [
-          { clubId: cleanId },
-          { slug: cleanId },
-          { clubId: canonId },
-          { slug: canonId },
-          { sport: new RegExp('^' + cleanId + '$', 'i') },
-          { sport: new RegExp('^' + canonId + '$', 'i') }
-        ]
-      }).lean();
-    }
     if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
-    res.set('Cache-Control', 'public, max-age=30, s-maxage=60');
+    res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=300');
     res.json({ success: true, club });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -5834,9 +5814,16 @@ if (require.main === module) {
     console.log(`MongoDB Status: ${process.env.MONGODB_URI ? 'Atlas URI Configured' : 'Local Fallback (Set MONGODB_URI)'}`);
     console.log(`Access website: http://localhost:${PORT}/`);
     console.log(`====================================================`);
+    // Eagerly pre-warm database cache so the very first public visitor receives an instant response (< 5ms)
+    getDB().catch(() => {});
+    getCachedClubs().catch(() => {});
+
     if (process.env.MONGODB_URI) {
       connectToDatabase().then(conn => {
-        if (conn) seedInitialAuthAndClubs().catch(() => {});
+        if (conn) {
+          seedInitialAuthAndClubs().catch(() => {});
+          getDB().catch(() => {});
+        }
       }).catch(() => {});
     }
   });

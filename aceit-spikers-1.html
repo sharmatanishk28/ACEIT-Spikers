@@ -7308,7 +7308,16 @@
         };
       }
 
+      var PUBLIC_DB_CACHE_PREFIX = 'aceit_db_cache_';
       function loadDB() {
+        var activeClub = getActiveClubId();
+        try {
+          var raw = localStorage.getItem(PUBLIC_DB_CACHE_PREFIX + activeClub);
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') return parsed;
+          }
+        } catch (e) { }
         return {
           training: [],
           team: [],
@@ -7931,6 +7940,9 @@
               if (!DB.categories || typeof DB.categories !== 'object') { DB.categories = {}; }
               if (!DB.deletedCategories || typeof DB.deletedCategories !== 'object') { DB.deletedCategories = {}; }
               if (!DB.customCategories || typeof DB.customCategories !== 'object') { DB.customCategories = {}; }
+              try {
+                localStorage.setItem(PUBLIC_DB_CACHE_PREFIX + activeClub, JSON.stringify(DB));
+              } catch (e) { }
               renderAllPublic();
             }
           })
