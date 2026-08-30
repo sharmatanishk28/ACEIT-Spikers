@@ -1205,6 +1205,75 @@ async function saveDB(data) {
       { upsert: true, new: true }
     );
     console.log('[MongoDB Atlas Save Success] Saved document key "main" successfully!');
+
+    // Synchronize to individual normalized collections in background for perfect multi-paradigm consistency
+    try {
+      const { Player: MPlayer, Event: MEvent, Gallery: MGallery, Match: MMatch, News: MNews, Training: MTraining, Sponsor: MSponsor, Testimonial: MTestimonial } = require('./src/models');
+      if (Array.isArray(data.team)) {
+        await MPlayer.deleteMany({});
+        if (data.team.length > 0) {
+          await MPlayer.insertMany(data.team.map(p => ({
+            clubId: p.clubId || 'spikers',
+            name: p.n || p.name || 'Player',
+            number: p.num !== undefined ? String(p.num) : (p.no !== undefined ? String(p.no) : ''),
+            role: p.pos || p.r || p.role || 'Player',
+            photo: p.photo || '',
+            bio: p.bio || '',
+            height: p.h || p.height || '',
+            weight: p.w || p.weight || '',
+            experience: p.exp || p.experience || '',
+            order: 0,
+            active: true
+          })));
+        }
+      }
+      if (Array.isArray(data.events)) {
+        await MEvent.deleteMany({});
+        if (data.events.length > 0) {
+          await MEvent.insertMany(data.events.map(e => ({
+            clubId: e.clubId || 'spikers',
+            title: e.title || 'Event',
+            description: e.description || '',
+            date: e.date || 'TBD',
+            time: e.time || '',
+            venue: e.venue || 'TBD',
+            poster: e.poster || '',
+            regBtnText: e.regBtnText || 'Register Now',
+            regUrl: e.regUrl || '',
+            regEnabled: e.regEnabled !== false,
+            status: 'upcoming'
+          })));
+        }
+      }
+      if (Array.isArray(data.gallery)) {
+        await MGallery.deleteMany({});
+        if (data.gallery.length > 0) {
+          await MGallery.insertMany(data.gallery.map(g => ({
+            clubId: g.clubId || 'spikers',
+            title: g.label || g.title || 'Photo',
+            imageUrl: g.photo || g.imageUrl || '',
+            category: g.cat || g.category || 'matches',
+            order: 0
+          })));
+        }
+      }
+      if (Array.isArray(data.matches)) {
+        await MMatch.deleteMany({});
+        if (data.matches.length > 0) {
+          await MMatch.insertMany(data.matches.map(m => ({
+            clubId: m.clubId || 'spikers',
+            team1: m.team1 || 'ACEIT Spikers',
+            team2: m.team2 || m.opp || 'Opponent',
+            venue: m.venue || 'ACEIT Grounds',
+            date: m.date || new Date().toISOString(),
+            status: m.status || 'upcoming'
+          })));
+        }
+      }
+    } catch (syncErr) {
+      console.warn('[Normalized Sync Notice]', syncErr.message);
+    }
+
     // Immediately update in-memory cache with the fresh saved state
     _dbCache = Object.assign({}, data);
     _dbCacheTime = Date.now();
