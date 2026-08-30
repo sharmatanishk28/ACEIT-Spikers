@@ -1018,20 +1018,20 @@ function writeLocalFileDB(data) {
 }
 
 // ==========================================
-// IN-MEMORY GETDB CACHE — 60-second TTL, invalidated on writes
-// Initialized immediately with readLocalFileDB() for instant 0ms cold-start responses
+// IN-MEMORY GETDB CACHE — 15-second TTL, strictly populated from MongoDB Atlas
+// Invalidated immediately on any database write
 // ==========================================
-let _dbCache = readLocalFileDB();
-let _dbCacheTime = Date.now();
-const DB_CACHE_TTL_MS = 60000; // 60 seconds TTL for fast public view performance
+let _dbCache = null;
+let _dbCacheTime = 0;
+const DB_CACHE_TTL_MS = 15000; // 15 seconds TTL for high performance without stale lock-in
 
 // In-flight deduplication: when multiple requests hit getDB() simultaneously on a cold cache,
 // they all share ONE pending promise instead of each firing a separate ClubDoc.findOne()
 let _dbFetchPromise = null;
 
-let _clubsCache = localClubs.filter(c => c.active !== false);
-let _clubsCacheTime = Date.now();
-const CLUBS_CACHE_TTL_MS = 60000; // 60 seconds
+let _clubsCache = null;
+let _clubsCacheTime = 0;
+const CLUBS_CACHE_TTL_MS = 15000; // 15 seconds
 
 function invalidateClubsCache() {
   _clubsCache = null;
@@ -1047,7 +1047,7 @@ async function getCachedClubs() {
   if (dbConn) {
     try {
       const clubs = await Club.find({ active: true })
-        .select('clubId name sport slug themeColor accentColor active status description')
+        .select('clubId name sport slug themeColor accentColor active status description logo loaderLogo coverImage')
         .sort({ name: 1 })
         .lean();
       if (clubs && clubs.length > 0) {
@@ -1098,9 +1098,25 @@ async function _doGetDB(hasUri) {
       if (!doc) {
         const count = await ClubDoc.countDocuments();
         if (count === 0) {
-          const initial = readLocalFileDB();
-          doc = (await ClubDoc.create({ key: 'main', ...initial, pin: process.env.ADMIN_PIN || '2026' })).toObject();
-          console.log('[MongoDB Atlas] Collection empty. Auto-seeded initial data from data.json!');
+          doc = (await ClubDoc.create({
+            key: 'main',
+            team: [],
+            matches: [],
+            events: [],
+            training: [],
+            news: [],
+            gallery: [],
+            sponsors: [],
+            testimonials: [],
+            stats: [],
+            slideshow: [],
+            about: {},
+            contact: {},
+            abouts: {},
+            contacts: {},
+            categories: { team: [], gallery: [] },
+            pin: process.env.ADMIN_PIN || '2026'
+          })).toObject();
         } else {
           doc = await ClubDoc.findOne({}).lean();
         }
@@ -1120,15 +1136,20 @@ async function _doGetDB(hasUri) {
         return { success: true, data: doc };
       }
     } catch (err) {
-      console.warn('[MongoDB Atlas Warning] Fetch failed, using cached/local fallback:', err.message);
+      console.warn('[MongoDB Atlas Warning] Fetch failed:', err.message);
+      return { success: false, error: err.message };
     }
   }
 
-  // Graceful high-availability fallback
-  const localData = readLocalFileDB();
-  _dbCache = localData;
-  _dbCacheTime = Date.now();
-  return { success: true, data: localData, fallback: true };
+  // If MongoDB is not connected in local development mode without URI, fallback gracefully to file
+  if (!hasUri) {
+    const localData = readLocalFileDB();
+    _dbCache = localData;
+    _dbCacheTime = Date.now();
+    return { success: true, data: localData, fallback: true };
+  }
+
+  return { success: false, error: lastMongoError || 'MongoDB connection not available' };
 }
 
 // Helper: Save full database to MongoDB Atlas
@@ -1280,8 +1301,12 @@ app.get('/api/db', async (req, res) => {
       slideshow: filterByClub(data.slideshow, reqClubId)
     };
   }
-  // Public data is cached with stale-while-revalidate for sub-second page loads
-  res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=300');
+  // Dynamic cache header: authenticated users always get no-cache; public users get immediate revalidation
+  if (req.headers.authorization || req.cookies?.token || req.cookies?.auth_token || req.query.fresh === '1') {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  } else {
+    res.set('Cache-Control', 'public, max-age=0, must-revalidate');
+  }
   res.json({ success: true, ...data, data });
 });
 
@@ -3130,7 +3155,7 @@ app.get('/api/clubs/:id', async (req, res) => {
     );
 
     if (!club) return res.status(404).json({ success: false, message: 'Club not found' });
-    res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=300');
+    res.set('Cache-Control', 'public, max-age=0, must-revalidate');
     res.json({ success: true, club });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
