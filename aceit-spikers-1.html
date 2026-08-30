@@ -7653,17 +7653,10 @@
           var raw = localStorage.getItem(SYSTEM_CLUBS_KEY);
           if (raw) {
             var parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length >= 4) return parsed;
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
           }
         } catch (e) { }
-        return [
-          { clubId: 'spikers', slug: 'spikers', name: 'ACEIT Spikers', sport: 'Volleyball', coverImage: 'banner1.jpg', description: 'The official volleyball club of ACEIT. Built on discipline, driven by teamwork, and playing for every point that matters.', active: true, logo: '' },
-          { clubId: 'kabaddi', slug: 'kabaddi', name: 'ACEIT Kabaddi', sport: 'Kabaddi', coverImage: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&w=1200&q=80', description: 'Official Kabaddi Club of Arya College of Engineering & IT. Unstoppable raid power, impenetrable defense, and collegiate champions.', active: true, logo: '' },
-          { clubId: 'dunkers', slug: 'dunkers', name: 'ACEIT Dunkers', sport: 'Basketball', coverImage: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80', description: 'Official Basketball Club of ACEIT. Fast-break offenses, lockdown defense, and soaring collegiate hoopers.', active: true, logo: '' },
-          { clubId: 'strikers-fc', slug: 'strikers-fc', name: 'ACEIT Strikers FC', sport: 'Football', coverImage: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80', description: 'Official Football Club of ACEIT. Tactical mastery, relentless stamina, and championship collegiate soccer.', active: true, logo: '' },
-          { clubId: 'shuttlers', slug: 'shuttlers', name: 'ACEIT Shuttlers', sport: 'Badminton', coverImage: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=1200&q=80', description: 'Official Badminton Club of ACEIT. Lightning reflexes, precision smashes, and tournament agility.', active: true, logo: '' },
-          { clubId: 'cricket', slug: 'cricket', name: 'ACEIT Cricket', sport: 'Cricket', coverImage: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80', description: 'Official Cricket Club of ACEIT. Powerful strokeplay, lethal bowling spells, and collegiate derby champions.', active: true, logo: '' }
-        ];
+        return [];
       }
 
       var clubsSlideshowIndex = 0;
@@ -7676,7 +7669,6 @@
         var track = document.getElementById('clubsShowcaseTrack');
         var dotsContainer = document.getElementById('clubsShowcaseDots');
         if (!viewport || !track) {
-          // Fallback if legacy grid element exists
           var legacyGrid = document.getElementById('publicClubsGrid');
           if (legacyGrid) legacyGrid.id = 'clubsShowcaseTrack';
         }
@@ -7687,7 +7679,9 @@
 
         function drawClubs(clubs) {
           if (!Array.isArray(clubs) || clubs.length === 0) {
-            clubs = getCachedSystemClubs();
+            track.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);width:100%;">No sports clubs available yet.</div>';
+            if (dotsContainer) dotsContainer.innerHTML = '';
+            return;
           }
 
           var hash = clubs.map(function (c) { return (c.slug || c.clubId || '') + '_' + (c.name || ''); }).join('|');
@@ -8755,14 +8749,6 @@
           return '⭐ Spotlight';
         }
 
-        var fallbackImgs = [
-          'banner1.jpg',
-          'banner2.jpg',
-          'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?auto=format&fit=crop&w=1600&q=80',
-          'https://images.unsplash.com/photo-1592656094267-764a45160876?auto=format&fit=crop&w=1600&q=80'
-        ];
-
-        // Duplicate items for continuous seamless loop right-to-left
         var repeatCount = items.length < 4 ? 4 : 2;
         var displayItems = [];
         for (var r = 0; r < repeatCount; r++) {
@@ -8772,15 +8758,14 @@
         var trackHtml = '';
         displayItems.forEach(function (slide, idx) {
           var originalIndex = idx % items.length;
-          var fallback = fallbackImgs[originalIndex % fallbackImgs.length];
-          var imgSrc = slide.image ? esc(slide.image) : fallback;
+          var imgSrc = slide.image ? esc(slide.image) : '';
           var badgeText = getCategoryBadge(slide, originalIndex);
           var countStr = (originalIndex + 1 < 10 ? '0' : '') + (originalIndex + 1) + ' / ' + (items.length < 10 ? '0' : '') + items.length;
           var linkUrl = slide.link || '#about';
           var btnLabel = slide.btnText || 'Explore Highlights';
 
           trackHtml += '<div class="showcase-card" data-index="' + originalIndex + '">' +
-            '<img class="showcase-card-img" src="' + imgSrc + '" alt="' + esc(slide.title || club.name) + '" onerror="this.onerror=null;this.src=\'' + fallback + '\';">' +
+            (imgSrc ? '<img class="showcase-card-img" src="' + imgSrc + '" alt="' + esc(slide.title || club.name) + '">' : '<div class="showcase-card-img" style="background:var(--bg-card);"></div>') +
             '<div class="showcase-card-overlay">' +
             '<div class="showcase-card-top">' +
             '<span class="showcase-badge">' + badgeText + '</span>' +
