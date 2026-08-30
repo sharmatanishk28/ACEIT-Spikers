@@ -140,7 +140,14 @@ router.post('/login', async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'Account is deactivated. Please contact administrator/owner.' });
     }
 
-    let match = bcrypt.compareSync(String(password), user.passwordHash);
+    let match = false;
+    if (user.passwordHash && typeof user.passwordHash === 'string') {
+      try {
+        match = bcrypt.compareSync(String(password), user.passwordHash);
+      } catch (e) {
+        match = false;
+      }
+    }
     if (!match && (user.role === 'OWNER' || user.role === 'ADMIN') && (String(password) === env.ADMIN_PIN || String(password) === env.OWNER_PASSWORD)) {
       match = true;
     }

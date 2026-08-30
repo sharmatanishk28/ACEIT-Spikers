@@ -2521,23 +2521,23 @@ const handleLogin = async (req, res) => {
           { rtuRollNo: cleanInput },
           { rtuRollNo: cleanInput.toUpperCase() }
         ]
-      });
+      }).select('+passwordHash');
       if (!user) {
         const inputRegex = new RegExp('^' + escapeRegex(cleanInput) + '$', 'i');
         user = await User.findOne({
           $or: [{ username: inputRegex }, { email: inputRegex }, { rtuRollNo: inputRegex }]
-        });
+        }).select('+passwordHash');
       }
       if (!user && (cleanInput === 'owner' || cleanInput === 'admin')) {
-        user = await User.findOne({ role: 'OWNER' });
+        user = await User.findOne({ role: 'OWNER' }).select('+passwordHash');
       }
       if (!user) {
         await seedInitialAuthAndClubs();
         user = await User.findOne({
           $or: [{ username: cleanInput }, { email: cleanInput }, { rtuRollNo: cleanInput }]
-        });
+        }).select('+passwordHash');
         if (!user && (cleanInput === 'owner' || cleanInput === 'admin')) {
-          user = await User.findOne({ role: 'OWNER' });
+          user = await User.findOne({ role: 'OWNER' }).select('+passwordHash');
         }
       }
     } else {
@@ -2559,7 +2559,14 @@ const handleLogin = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Account is deactivated. Please contact administrator/owner.' });
     }
 
-    let match = bcrypt.compareSync(String(password), user.passwordHash);
+    let match = false;
+    if (user.passwordHash && typeof user.passwordHash === 'string') {
+      try {
+        match = bcrypt.compareSync(String(password), user.passwordHash);
+      } catch (e) {
+        match = false;
+      }
+    }
     if (!match && (user.role === 'OWNER' || user.role === 'ADMIN') && (String(password) === (process.env.ADMIN_PIN || '2026') || String(password) === (process.env.OWNER_PASSWORD || 'OwnerSecret123!'))) {
       match = true;
     }
