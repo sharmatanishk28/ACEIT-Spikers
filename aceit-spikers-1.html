@@ -13907,6 +13907,7 @@
       }
 
       /* ============ PHASE 4: INITIALIZATION CALLS ============ */
+      syncDBOnline();
       checkLiveMatchTicker();
       if (liveTickerInterval) clearInterval(liveTickerInterval);
       liveTickerInterval = setInterval(checkLiveMatchTicker, 10000);

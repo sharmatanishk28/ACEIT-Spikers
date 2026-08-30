@@ -1209,65 +1209,123 @@ async function saveDB(data) {
     // Synchronize to individual normalized collections in background for perfect multi-paradigm consistency
     try {
       const { Player: MPlayer, Event: MEvent, Gallery: MGallery, Match: MMatch, News: MNews, Training: MTraining, Sponsor: MSponsor, Testimonial: MTestimonial } = require('./src/models');
-      if (Array.isArray(data.team)) {
-        await MPlayer.deleteMany({});
-        if (data.team.length > 0) {
-          await MPlayer.insertMany(data.team.map(p => ({
-            clubId: p.clubId || 'spikers',
-            name: p.n || p.name || 'Player',
-            number: p.num !== undefined ? String(p.num) : (p.no !== undefined ? String(p.no) : ''),
-            role: p.pos || p.r || p.role || 'Player',
-            photo: p.photo || '',
-            bio: p.bio || '',
-            height: p.h || p.height || '',
-            weight: p.w || p.weight || '',
-            experience: p.exp || p.experience || '',
-            order: 0,
-            active: true
-          })));
+      
+      // 1. Non-destructive sync for Players (upsert by ID/name+clubId)
+      if (Array.isArray(data.team) && data.team.length > 0) {
+        for (const p of data.team) {
+          const pClub = (p.clubId || 'spikers').toLowerCase();
+          const pName = p.n || p.name || 'Player';
+          const pRole = p.pos || p.r || p.role || 'Player';
+          const pNum = p.num !== undefined ? String(p.num) : (p.no !== undefined ? String(p.no) : '');
+          const query = (p._id && mongoose.Types.ObjectId.isValid(p._id))
+            ? { _id: p._id }
+            : { clubId: pClub, name: pName };
+          await MPlayer.findOneAndUpdate(
+            query,
+            {
+              $set: {
+                clubId: pClub,
+                name: pName,
+                number: pNum,
+                role: pRole,
+                photo: p.photo || '',
+                bio: p.bio || '',
+                height: p.h || p.height || '',
+                weight: p.w || p.weight || '',
+                experience: p.exp || p.experience || '',
+                active: true
+              }
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
         }
       }
-      if (Array.isArray(data.events)) {
-        await MEvent.deleteMany({});
-        if (data.events.length > 0) {
-          await MEvent.insertMany(data.events.map(e => ({
-            clubId: e.clubId || 'spikers',
-            title: e.title || 'Event',
-            description: e.description || '',
-            date: e.date || 'TBD',
-            time: e.time || '',
-            venue: e.venue || 'TBD',
-            poster: e.poster || '',
-            regBtnText: e.regBtnText || 'Register Now',
-            regUrl: e.regUrl || '',
-            regEnabled: e.regEnabled !== false,
-            status: 'upcoming'
-          })));
+
+      // 2. Non-destructive sync for Events
+      if (Array.isArray(data.events) && data.events.length > 0) {
+        for (const e of data.events) {
+          const eClub = (e.clubId || 'spikers').toLowerCase();
+          const eTitle = e.title || 'Event';
+          const query = (e._id && mongoose.Types.ObjectId.isValid(e._id))
+            ? { _id: e._id }
+            : { clubId: eClub, title: eTitle };
+          await MEvent.findOneAndUpdate(
+            query,
+            {
+              $set: {
+                clubId: eClub,
+                title: eTitle,
+                description: e.description || '',
+                date: e.date || 'TBD',
+                time: e.time || '',
+                venue: e.venue || 'TBD',
+                poster: e.poster || '',
+                regBtnText: e.regBtnText || 'Register Now',
+                regUrl: e.regUrl || '',
+                regEnabled: e.regEnabled !== false,
+                status: e.status || 'upcoming'
+              }
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
         }
       }
-      if (Array.isArray(data.gallery)) {
-        await MGallery.deleteMany({});
-        if (data.gallery.length > 0) {
-          await MGallery.insertMany(data.gallery.map(g => ({
-            clubId: g.clubId || 'spikers',
-            title: g.label || g.title || 'Photo',
-            imageUrl: g.photo || g.imageUrl || '',
-            category: g.cat || g.category || 'matches',
-            order: 0
-          })));
+
+      // 3. Non-destructive sync for Gallery
+      if (Array.isArray(data.gallery) && data.gallery.length > 0) {
+        for (const g of data.gallery) {
+          const gClub = (g.clubId || 'spikers').toLowerCase();
+          const gImg = g.photo || g.imageUrl || '';
+          if (gImg) {
+            const query = (g._id && mongoose.Types.ObjectId.isValid(g._id))
+              ? { _id: g._id }
+              : { clubId: gClub, imageUrl: gImg };
+            await MGallery.findOneAndUpdate(
+              query,
+              {
+                $set: {
+                  clubId: gClub,
+                  title: g.label || g.title || 'Photo',
+                  imageUrl: gImg,
+                  category: g.cat || g.category || 'matches'
+                }
+              },
+              { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
+          }
         }
       }
-      if (Array.isArray(data.matches)) {
-        await MMatch.deleteMany({});
-        if (data.matches.length > 0) {
-          await MMatch.insertMany(data.matches.map(m => ({
-            clubId: m.clubId || 'spikers',
-            team1: m.team1 || 'ACEIT Spikers',
-            team2: m.team2 || m.opp || 'Opponent',
-            venue: m.venue || 'ACEIT Grounds',
-            date: m.date || new Date().toISOString(),
-            status: m.status || 'upcoming'
-          })));
+
+      // 4. Non-destructive sync for Matches
+      if (Array.isArray(data.matches) && data.matches.length > 0) {
+        for (const m of data.matches) {
+          const mClub = (m.clubId || 'spikers').toLowerCase();
+          const team1 = m.team1 || 'ACEIT Spikers';
+          const team2 = m.team2 || m.opp || 'Opponent';
+          const date = m.date || new Date().toISOString();
+          const query = (m._id && mongoose.Types.ObjectId.isValid(m._id))
+            ? { _id: m._id }
+            : { clubId: mClub, team1: team1, team2: team2, date: date };
+          await MMatch.findOneAndUpdate(
+            query,
+            {
+              $set: {
+                clubId: mClub,
+                team1: team1,
+                team2: team2,
+                opp: team2,
+                venue: m.venue || 'ACEIT Grounds',
+                date: date,
+                status: m.status || 'upcoming',
+                winner: m.winner || 'none',
+                isLive: !!m.isLive,
+                score1: m.score1 !== undefined ? m.score1 : 0,
+                score2: m.score2 !== undefined ? m.score2 : 0,
+                sets: m.sets || ''
+              }
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
         }
       }
     } catch (syncErr) {
