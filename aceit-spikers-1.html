@@ -7925,25 +7925,29 @@
         var clubDbReq = authFetch(API_BASE + '/db?clubId=' + encodeURIComponent(activeClub))
           .then(function (res) { return res.json(); })
           .then(function (res) {
-            if (res && res.success && res.data) {
-              DB = res.data;
-              if (!Array.isArray(DB.training)) { DB.training = []; }
-              if (!Array.isArray(DB.slideshow)) { DB.slideshow = []; }
-              if (!Array.isArray(DB.team)) { DB.team = []; }
-              if (!Array.isArray(DB.matches)) { DB.matches = []; }
-              if (!Array.isArray(DB.news)) { DB.news = []; }
-              if (!Array.isArray(DB.sponsors)) { DB.sponsors = []; }
-              if (!Array.isArray(DB.stats)) { DB.stats = []; }
-              if (!Array.isArray(DB.events)) { DB.events = []; }
-              if (!DB.about || typeof DB.about !== 'object') { DB.about = {}; }
-              if (!DB.contact || typeof DB.contact !== 'object') { DB.contact = {}; }
-              if (!DB.categories || typeof DB.categories !== 'object') { DB.categories = {}; }
-              if (!DB.deletedCategories || typeof DB.deletedCategories !== 'object') { DB.deletedCategories = {}; }
-              if (!DB.customCategories || typeof DB.customCategories !== 'object') { DB.customCategories = {}; }
-              try {
-                localStorage.setItem(PUBLIC_DB_CACHE_PREFIX + activeClub, JSON.stringify(DB));
-              } catch (e) { }
-              renderAllPublic();
+            if (res && res.success) {
+              var incoming = res.data || res;
+              if (incoming && typeof incoming === 'object') {
+                DB = incoming;
+                if (!Array.isArray(DB.training)) { DB.training = []; }
+                if (!Array.isArray(DB.slideshow)) { DB.slideshow = []; }
+                if (!Array.isArray(DB.team)) { DB.team = []; }
+                if (!Array.isArray(DB.matches)) { DB.matches = []; }
+                if (!Array.isArray(DB.news)) { DB.news = []; }
+                if (!Array.isArray(DB.sponsors)) { DB.sponsors = []; }
+                if (!Array.isArray(DB.stats)) { DB.stats = []; }
+                if (!Array.isArray(DB.events)) { DB.events = []; }
+                if (!Array.isArray(DB.gallery)) { DB.gallery = []; }
+                if (!DB.about || typeof DB.about !== 'object') { DB.about = {}; }
+                if (!DB.contact || typeof DB.contact !== 'object') { DB.contact = {}; }
+                if (!DB.categories || typeof DB.categories !== 'object') { DB.categories = {}; }
+                if (!DB.deletedCategories || typeof DB.deletedCategories !== 'object') { DB.deletedCategories = {}; }
+                if (!DB.customCategories || typeof DB.customCategories !== 'object') { DB.customCategories = {}; }
+                try {
+                  localStorage.setItem(PUBLIC_DB_CACHE_PREFIX + activeClub, JSON.stringify(DB));
+                } catch (e) { }
+                renderAllPublic();
+              }
             }
           })
           .catch(function (err) {
