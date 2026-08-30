@@ -2513,32 +2513,19 @@ const handleLogin = async (req, res) => {
     let user = null;
     if (dbConn) {
       const escapeRegex = (text) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-      // Fast indexed exact lookup first
+      const inputRegex = new RegExp('^' + escapeRegex(cleanInput) + '$', 'i');
       user = await User.findOne({
         $or: [
           { username: cleanInput },
           { email: cleanInput },
           { rtuRollNo: cleanInput },
-          { rtuRollNo: cleanInput.toUpperCase() }
+          { rtuRollNo: cleanInput.toUpperCase() },
+          { username: inputRegex },
+          { email: inputRegex }
         ]
       }).select('+passwordHash');
-      if (!user) {
-        const inputRegex = new RegExp('^' + escapeRegex(cleanInput) + '$', 'i');
-        user = await User.findOne({
-          $or: [{ username: inputRegex }, { email: inputRegex }, { rtuRollNo: inputRegex }]
-        }).select('+passwordHash');
-      }
       if (!user && (cleanInput === 'owner' || cleanInput === 'admin')) {
         user = await User.findOne({ role: 'OWNER' }).select('+passwordHash');
-      }
-      if (!user) {
-        await seedInitialAuthAndClubs();
-        user = await User.findOne({
-          $or: [{ username: cleanInput }, { email: cleanInput }, { rtuRollNo: cleanInput }]
-        }).select('+passwordHash');
-        if (!user && (cleanInput === 'owner' || cleanInput === 'admin')) {
-          user = await User.findOne({ role: 'OWNER' }).select('+passwordHash');
-        }
       }
     } else {
       user = localUsers.find(u => 
